@@ -317,3 +317,34 @@ jobs:
           name: ios-symbols
           path: build/symbols/ios/
           retention-days: 90
+
+  publish-release:
+    name: Publish rolling release
+    if: github.ref == 'refs/heads/main'
+    needs: [build-android, build-web, build-linux, build-windows, build-macos, build-ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Package release assets
+        run: |
+          mkdir -p release
+          cp artifacts/android-apk/*arm64*.apk release/gravity-fintracker-latest-successful-build-android-arm64.apk 2>/dev/null || true
+          cp artifacts/android-aab/*.aab release/gravity-fintracker-latest-successful-build-android.aab 2>/dev/null || true
+          ( cd artifacts/windows-build && zip -r ../../release/gravity-fintracker-latest-successful-build-windows.zip . )
+          ( cd artifacts/macos-build && zip -r ../../release/gravity-fintracker-latest-successful-build-macos.zip . )
+          ( cd artifacts/linux-build && zip -r ../../release/gravity-fintracker-latest-successful-build-linux.zip . )
+          ls -la release/
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-successful-build
+          make_latest: true
+          files: release/*
