@@ -1,4 +1,3 @@
-import 'package:fintracker/config/constants.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';

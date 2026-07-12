@@ -1,8 +1,6 @@
-import 'package:events_emitter/events_emitter.dart';
 import 'package:fintracker/dao/account_dao.dart';
 import 'package:fintracker/dao/category_dao.dart';
 import 'package:fintracker/dao/recurring_dao.dart';
-import 'package:fintracker/events.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/recurring.model.dart';
