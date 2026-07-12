@@ -23,10 +23,11 @@ if (flutterVersionName == null) {
 
 android {
     namespace "me.nafish.fintracker"
-    compileSdk 35
+    compileSdk 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -38,7 +39,7 @@ android {
     defaultConfig {
         applicationId "me.nafish.fintracker"
         minSdk 21        // Android 5.0 Lollipop — lowest compatible
-        targetSdk 35     // Android 15+ / Android 17 compatible
+        targetSdk 36     // Android 16+ compatible
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
@@ -49,6 +50,10 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }
 
 flutter {
