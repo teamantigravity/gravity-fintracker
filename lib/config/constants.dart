@@ -1,8 +1,8 @@
 class AppConstants {
   static const String appName = 'Gravity Fintracker';
   static const String appTagline = 'Private by design. Powerful by nature.';
-  static const String appVersion = '2.1.0';
-  static const String appBuildNumber = '4';
+  static const String appVersion = '1.0.0';
+  static const String appBuildNumber = '1';
   static const String orgName = 'Team Antigravity';
   static const String repoUrl = 'https://github.com/teamantigravity/gravity-fintracker';
 
@@ -20,13 +20,15 @@ class AppConstants {
   static const double proMonthlyPrice = 3.99;
   static const double proYearlyPrice = 34.99;
 
-  // RevenueCat (configure before release)
-  static const String revenueCatAppleKey = 'REPLACE_WITH_APPLE_KEY';
-  static const String revenueCatGoogleKey = 'REPLACE_WITH_GOOGLE_KEY';
+  // RevenueCat — disabled until app is published on stores
+  // Set keys and enableSubscriptions = true once published
+  static const String revenueCatAppleKey = '';
+  static const String revenueCatGoogleKey = '';
 
-  // Supabase (configure before release)
-  static const String supabaseUrl = 'REPLACE_WITH_SUPABASE_URL';
-  static const String supabaseAnonKey = 'REPLACE_WITH_SUPABASE_ANON_KEY';
+  // Supabase
+  static const String supabaseUrl = 'https://ivjcgeyugeywqqxxtgyx.supabase.co';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2amNnZXl1Z2V5d3FxeHh0Z3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MDM0NTEsImV4cCI6MjA5OTM3OTQ1MX0.sLW3VUXb48RdcKM1Y5Dpa1poyXCYAGTgAS2DfGH3jz4';
+  static const String supabasePublishableKey = 'sb_publishable_ai8P_M9In2r7nqSCIbIvhw_6dqLmLyO';
 
   // Feature flags
   static const bool enableSync = false; // Enable after Supabase config
