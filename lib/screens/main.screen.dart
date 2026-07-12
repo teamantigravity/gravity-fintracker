@@ -3,6 +3,7 @@ import 'package:fintracker/screens/accounts/accounts.screen.dart';
 import 'package:fintracker/screens/categories/categories.screen.dart';
 import 'package:fintracker/screens/home/home.screen.dart';
 import 'package:fintracker/screens/onboard/onboard_screen.dart';
+import 'package:fintracker/screens/recurring/recurring.screen.dart';
 import 'package:fintracker/screens/settings/settings.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,6 +39,7 @@ class _MainScreenState extends State<MainScreen>{
               HomeScreen(),
               AccountsScreen(),
               CategoriesScreen(),
+              RecurringScreen(),
               SettingsScreen()
             ],
             onPageChanged: (int index){
@@ -52,6 +54,7 @@ class _MainScreenState extends State<MainScreen>{
               NavigationDestination(icon: Icon(Symbols.home, fill: 1,), label: "Home"),
               NavigationDestination(icon: Icon(Symbols.wallet, fill: 1,), label: "Accounts"),
               NavigationDestination(icon: Icon(Symbols.category, fill: 1,), label: "Categories"),
+              NavigationDestination(icon: Icon(Symbols.repeat, fill: 1,), label: "Recurring"),
               NavigationDestination(icon: Icon(Symbols.settings, fill: 1,), label: "Settings"),
             ],
             onDestinationSelected: (int selected){

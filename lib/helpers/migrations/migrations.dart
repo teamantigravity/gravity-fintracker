@@ -40,3 +40,20 @@ void v1(Database database) async {
       "isDefault INTEGER"
       ")");
 }
+
+void v2(Database database) async {
+  debugPrint("Running second migration — recurring transactions....");
+  await database.execute("CREATE TABLE IF NOT EXISTS recurring_transactions ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "title TEXT NULL, "
+      "description TEXT NULL, "
+      "account INTEGER,"
+      "category INTEGER,"
+      "amount REAL,"
+      "type TEXT,"
+      "interval TEXT,"
+      "startDate TEXT,"
+      "nextDueDate TEXT,"
+      "isActive INTEGER DEFAULT 1"
+      ")");
+}

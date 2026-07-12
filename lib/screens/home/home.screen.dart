@@ -7,13 +7,17 @@ import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/screens/home/widgets/account_slider.dart';
+import 'package:fintracker/screens/home/widgets/income_expense_chart.dart';
 import 'package:fintracker/screens/home/widgets/payment_list_item.dart';
+import 'package:fintracker/screens/home/widgets/smart_insights.dart';
+import 'package:fintracker/screens/home/widgets/spending_chart.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
-import 'package:fintracker/theme/colors.dart';
+import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 
 String greeting() {
@@ -45,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Account> _accounts = [];
   double _income = 0;
   double _expense = 0;
-  //double _savings = 0;
+  bool _showCharts = false;
   DateTimeRange _range = DateTimeRange(
       start: DateTime.now().subtract(Duration(days: DateTime.now().day -1)),
       end: DateTime.now()
@@ -81,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if(payment.type == PaymentType.debit) expense += payment.amount;
     }
 
-    //fetch accounts
     List<Account> accounts = await _accountDao.find(withSummery: true);
 
     setState(() {
@@ -123,154 +126,248 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      // appBar: AppBar(
-      //   leading: IconButton(
-      //     icon: const Icon(Icons.menu),
-      //     onPressed: (){
-      //       Scaffold.of(context).openDrawer();
-      //     },
-      //   ),
-      //   title: const Text("Home", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
-      // ),
       body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Greeting header
               Container(
-                margin: const EdgeInsets.only(left: 15, right: 15, bottom: 15, top: 60),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                margin: const EdgeInsets.only(left: 20, right: 20, bottom: 16, top: 60),
+                child: Row(
                   children: [
-                    Text("Hi! Good ${greeting()}"),
-                    BlocConsumer<AppCubit, AppState>(
-                        listener: (context, state){
-
-                        },
-                        builder: (context, state)=>Text(state.username ?? "Guest", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),)
-                    )
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Good ${greeting()}",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withOpacity(0.5),
+                            ),
+                          ),
+                          BlocConsumer<AppCubit, AppState>(
+                              listener: (context, state){},
+                              builder: (context, state) => Text(
+                                state.username ?? "Guest",
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              )
+                          )
+                        ],
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: () => setState(() => _showCharts = !_showCharts),
+                        icon: Icon(
+                          _showCharts ? Symbols.list : Symbols.bar_chart,
+                          fill: 1,
+                          size: 22,
+                        ),
+                        tooltip: _showCharts ? "Show list" : "Show charts",
+                      ),
+                    ),
                   ],
                 ),
               ),
-              AccountsSlider(accounts: _accounts,),
-              const SizedBox(height: 15,),
+
+              // Account cards
+              AccountsSlider(accounts: _accounts),
+              const SizedBox(height: 16),
+
+              // Income/Expense summary cards
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryCard(
+                        label: "Income",
+                        amount: _income,
+                        color: AppTheme.incomeColor,
+                        icon: Symbols.arrow_downward,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _SummaryCard(
+                        label: "Expense",
+                        amount: _expense,
+                        color: AppTheme.expenseColor,
+                        icon: Symbols.arrow_upward,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Charts section
+              if (_showCharts && _payments.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                SpendingChart(payments: _payments),
+                IncomeExpenseChart(payments: _payments),
+              ],
+
+              // Smart Insights
+              if (_payments.isNotEmpty)
+                SmartInsightsCard(payments: _payments),
+
+              // Payments header
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                     children: [
-                      const Text("Payments", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
+                      Text("Transactions",
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      ),
                       const Expanded(child: SizedBox()),
-                      MaterialButton(
-                        onPressed: (){
-                          handleChooseDateRange();
-                        },
-                        height: double.minPositive,
-                        padding: EdgeInsets.zero,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        child: Row(
-                          children: [
-                            Text("${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}", style: Theme.of(context).textTheme.bodySmall,),
-                            const Icon(Icons.arrow_drop_down_outlined)
-                          ],
+                      InkWell(
+                        onTap: handleChooseDateRange,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}",
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(Icons.arrow_drop_down_outlined, size: 18, color: colorScheme.primary),
+                            ],
+                          ),
                         ),
                       ),
                     ]
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                        child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              color: ThemeColors.success.withOpacity(0.2),
-                            ),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text.rich(
-                                      TextSpan(
-                                          children: [
-                                            //TextSpan(text: "▼", style: TextStyle(color: ThemeColors.success)),
-                                            TextSpan(text:"Income", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                                          ]
-                                      )
-                                  ),
-                                  const SizedBox(height: 5,),
-                                  CurrencyText(_income, style:  const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ThemeColors.success),)
-                                ],
-                              ),
-                            )
-                        )
-                    ),
-                    const SizedBox(width: 10,),
-                    Expanded(
-                        child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              color: ThemeColors.error.withOpacity(0.2),
-                            ),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text.rich(
-                                      TextSpan(
-                                          children: [
-                                            //TextSpan(text: "▲", style: TextStyle(color: ThemeColors.error)),
-                                            TextSpan(text:"Expense", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                                          ]
-                                      )
-                                  ),
-                                  const SizedBox(height: 5,),
-                                  CurrencyText(_expense, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ThemeColors.error),)
-                                ],
-                              ),
-                            )
-                        )
-                    ),
-                  ],
-                ),
-              ),
-              _payments.isNotEmpty? ListView.separated(
-                padding:  EdgeInsets.zero,
+              const SizedBox(height: 4),
+
+              // Payments list
+              _payments.isNotEmpty ? ListView.separated(
+                padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
                 itemBuilder: (BuildContext context, index){
                   return PaymentListItem(payment: _payments[index], onTap: (){
                     Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>PaymentForm(type: _payments[index].type, payment: _payments[index],)));
                   });
-
                 },
                 separatorBuilder: (BuildContext context, int index){
                   return Container(
                     width: double.infinity,
-                    color: Colors.grey.withAlpha(25),
-                    height: 1,
+                    color: colorScheme.outlineVariant.withOpacity(0.2),
+                    height: 0.5,
                     margin: const EdgeInsets.only(left: 75, right: 20),
                   );
                 },
                 itemCount: _payments.length,
-              ):Container(
-                padding: const EdgeInsets.symmetric(vertical: 25),
+              ) : Container(
+                padding: const EdgeInsets.symmetric(vertical: 40),
                 alignment: Alignment.center,
-                child: const Text("No payments!"),
+                child: Column(
+                  children: [
+                    Icon(
+                      Symbols.receipt_long,
+                      size: 48,
+                      color: colorScheme.onSurface.withOpacity(0.15),
+                      fill: 1,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "No transactions yet",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface.withOpacity(0.3),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Tap + to add your first transaction",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurface.withOpacity(0.2),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(height: 80),
             ],
           )
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: ()=> openAddPaymentPage(PaymentType.credit),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  final String label;
+  final double amount;
+  final Color color;
+  final IconData icon;
+
+  const _SummaryCard({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: color.withOpacity(0.08),
+        border: Border.all(
+          color: color.withOpacity(0.15),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: color.withOpacity(0.8),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          CurrencyText(
+            amount,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

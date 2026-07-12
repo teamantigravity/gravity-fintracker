@@ -1,79 +1,171 @@
-# FinTracker - Expense Tracker App
+# Gravity Fintracker — Private by Design. Powerful by Nature.
 
+[![Build](https://github.com/teamantigravity/gravity-fintracker/actions/workflows/build.yml/badge.svg)](https://github.com/teamantigravity/gravity-fintracker/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-blue.svg)](https://flutter.dev)
+[![Privacy](https://img.shields.io/badge/Privacy-100%25-green.svg)](#privacy)
+[![Encryption](https://img.shields.io/badge/Encryption-Quantum%20Resistant-purple.svg)](#quantum-resistant-encryption)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Web-lightgrey.svg)](#)
 
-FinTracker is a Flutter application that helps you track your expenses and manage category budgets. It provides a user-friendly interface to enter and categorize your expenses, giving you insights into your spending habits and helping you stay within your budget.
+**Gravity Fintracker** is a quantum-encrypted, privacy-first expense tracker by **Team Antigravity**. Your financial data stays on your device. No analytics, no tracking, no ads — just clean finance management with optional quantum-resistant encrypted sync.
 
-![FinTracker Screenshot](screenshots/fintracker_screenshot.jpg)
+---
 
+## Why Gravity Fintracker?
 
-## Download
+| Feature | Gravity Fintracker | Other Finance Apps |
+|---|:---:|:---:|
+| Quantum-resistant encryption | ✅ | ❌ |
+| Zero tracking & analytics | ✅ | ❌ |
+| Data stays on device | ✅ | ❌ |
+| E2E encrypted sync | ✅ | ❌ |
+| Smart spending insights (local) | ✅ | Cloud-based |
+| Open source | ✅ | ❌ |
+| No account required | ✅ | ❌ |
+| 6 platforms | ✅ | 1-2 |
+| No ads, ever | ✅ | ❌ |
 
-You can download FinTracker from the Google Play Store:
-
-[![Google Play Store](https://img.shields.io/badge/Download-Play%20Store-brightgreen.svg)](https://play.google.com/store/apps/details?id=me.nafish.fintracker)
+---
 
 ## Features
 
-- Track and record your expenses conveniently.
-- Categorize your expenses into different categories.
-- Set monthly budgets for each category and monitor your spending.
-- View detailed expense reports and statistics.
-- Easily search and filter your expenses.
-- Export expense data for further analysis.
+### Free (Unlimited)
+- **Expense & Income Tracking** — Categories, accounts, notes, date/time
+- **Smart Insights** — AI-like spending analysis, 100% local, zero cloud
+- **Interactive Charts** — Pie chart breakdown + daily bar charts (fl_chart)
+- **Category Budgets** — Monthly budgets with progress tracking
+- **Multiple Accounts** — Cash, bank, credit card — track them all
+- **JSON & CSV Export** — Full data portability
+- **Theme System** — Light, Dark, AMOLED Dark, System
+- **Biometric Lock** — Fingerprint / Face ID app protection
+- **Privacy Dashboard** — Real-time 100% privacy score
+- **Recurring Transactions** — Automate bills, subscriptions, income
 
-## Installation
+### Pro (Subscription)
+- **Quantum-Encrypted Sync** — AES-256-GCM + HKDF-SHA512, zero-knowledge
+- **Multi-Device** — Phone + Tablet + Desktop, all in sync
+- **Automatic Cloud Backups** — Daily encrypted backups
+- **Advanced Reports** — PDF export, year-over-year trends
 
-1. Clone the repository:
+---
 
-```bash
-git clone https://github.com/nafishahmeddev/fintracker.git
+## Quantum-Resistant Encryption
+
+Gravity Fintracker uses a **hybrid quantum-hardened** encryption architecture:
+
+1. **AES-256-GCM** — Symmetric encryption with 256-bit keys (128-bit effective security against Grover's algorithm)
+2. **HKDF-SHA512** — RFC 5869 key derivation with 256-bit post-quantum collision resistance
+3. **100K-round SHA-512** — Key stretching from passphrase
+4. **CSPRNG** — Unique salt + IV per encryption operation
+5. **Versioned ciphertext** — Forward-compatible format (`v2:<salt>:<iv>:<ciphertext>`)
+
+The server stores **only ciphertext**. Your encryption key **never leaves your device**.
+
+---
+
+## Architecture
+
+```
+lib/
+├── bloc/cubit/          # State management (Flutter Bloc)
+├── config/              # App constants, feature flags, API key placeholders
+├── dao/                 # Data access objects (SQLite)
+├── helpers/             # DB, currency, color utilities, migrations
+├── model/               # Data models (Payment, Account, Category, Recurring)
+├── screens/
+│   ├── home/            # Dashboard with charts + smart insights
+│   ├── accounts/        # Account management
+│   ├── categories/      # Category management
+│   ├── recurring/       # Recurring transactions CRUD
+│   ├── settings/        # Settings, theme, biometric, export
+│   ├── premium/         # Paywall, privacy dashboard
+│   └── onboard/         # Onboarding flow
+├── services/
+│   ├── sync_service     # Quantum-encrypted E2E sync (Supabase)
+│   ├── subscription     # RevenueCat subscription management
+│   └── insights         # Local smart spending analysis
+├── theme/               # Light / Dark / AMOLED theme system
+└── widgets/             # Reusable UI components
 ```
 
-2. Change to the project directory:
+### CI/CD
+- **GitHub Actions** — Automated builds for Android (APK + AAB), iOS, Web, Linux, Windows, macOS
+- **Aggressive caching** — Flutter SDK, pub cache, Gradle, CocoaPods all cached
+- **Concurrency control** — Cancels superseded builds
+
+---
+
+## Getting Started
 
 ```bash
-cd fintracker
-```
-
-3. Install dependencies:
-
-```bash
+git clone https://github.com/teamantigravity/gravity-fintracker.git
+cd gravity-fintracker
 flutter pub get
-```
-
-4. Run the app:
-
-```bash
 flutter run
 ```
 
-## Usage
+### Build for production
 
-- Upon launching the app, you will be presented with the home screen.
-- Click on the "+" button to add a new expense.
-- Enter the expense details, including the amount, category, and description.
-- Click "Save" to add the expense.
-- Navigate to the "Categories" tab to manage your expense categories and budgets.
-- Set monthly budgets for each category by clicking on the category and entering the desired amount.
+```bash
+flutter build apk --release --split-per-abi   # Android APK
+flutter build appbundle --release              # Android AAB
+flutter build web --release                    # Web
+flutter build linux --release                  # Linux
+flutter build windows --release                # Windows
+flutter build macos --release                  # macOS
+flutter build ios --release --no-codesign      # iOS
+```
+
+---
+
+## Configuration (for release)
+
+1. **RevenueCat** — Set `revenueCatAppleKey` and `revenueCatGoogleKey` in `lib/config/constants.dart`
+2. **Supabase** — Set `supabaseUrl` and `supabaseAnonKey` in `lib/config/constants.dart`
+3. **Feature flags** — Set `enableSync = true` and `enableSubscriptions = true`
+4. **Signing** — Configure Android keystore in `android/key.properties`
+
+---
+
+## Privacy
+
+Gravity Fintracker's guarantees:
+
+- **0 bytes** sent to any server (Free tier)
+- **0 third-party trackers** — no Firebase, Crashlytics, or analytics SDKs
+- **0 ads** — monetization through optional Pro subscription only
+- **Quantum-resistant encryption** for all synced data
+- **Open source** — audit our code yourself
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Flutter 3.x (Dart) |
+| State | flutter_bloc (Cubit) |
+| Database | sqflite + migrations |
+| Charts | fl_chart |
+| Biometric | local_auth |
+| Encryption | encrypt (AES-256) + crypto (HKDF-SHA512) |
+| Key Storage | flutter_secure_storage |
+| Typography | Google Fonts (Inter) |
+| Icons | Material Symbols |
+| Backend (Pro) | Supabase (managed, zero maintenance) |
+| Payments (Pro) | RevenueCat |
+| CI/CD | GitHub Actions (6 platforms) |
+
+---
 
 ## Roadmap
-Check out our detailed [roadmap](https://github.com/nafishahmeddev/fintracker/blob/master/roadmap.md) for planned features and updates!
 
-## Contributing
+See [ROADMAP.md](roadmap.md) for the full development roadmap.
 
-Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
+---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+MIT License — see [LICENSE](LICENSE) for details.
 
-## Acknowledgements
-
-- This app was built using the Flutter framework. Learn more about Flutter at [flutter.dev](https://flutter.dev).
-- The design and inspiration for this app came from various expense tracker apps available in the market.
-- Special thanks to the open-source community for their valuable contributions.
-
-## Contact
-
-For any questions or inquiries, please email us at [hello@nafish.me](mailto:hello@nafish.me).
+Built with ❤️ by **Team Antigravity**.

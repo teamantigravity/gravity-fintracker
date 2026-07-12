@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Gravity "G" letterform made of Google colors -->
+    <!-- The icon safe zone is 72dp centered (18dp inset on each side) -->
+
+    <!-- Google Blue - Main G arc (top-right, continuing to bottom) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30
+            C40.7,30 30,40.7 30,54
+            C30,67.3 40.7,78 54,78
+            C62.5,78 69.5,73.5 73.5,67.5
+            L63.5,63.5
+            C61,66.5 58,68.5 54,68.5
+            C46.3,68.5 40,62.2 40,54.5
+            C40,46.8 46.3,40.5 54,40.5
+            C58.5,40.5 62.2,42.8 64.5,46
+            L74.2,40.3
+            C70,34 62.5,30 54,30Z" />
+
+    <!-- Google Green bar (right side horizontal bar of G) -->
+    <path
+        android:fillColor="#34A853"
+        android:pathData="M54,50 L74,50 L74,59 L54,59Z" />
+
+    <!-- Google Red - small accent dot top right -->
+    <path
+        android:fillColor="#EA4335"
+        android:pathData="M71,34 a4,4 0 1,1 0,0.01Z" />
+
+    <!-- Google Yellow - small accent dot bottom -->
+    <path
+        android:fillColor="#FBBC05"
+        android:pathData="M37,71 a4,4 0 1,1 0,0.01Z" />
+</vector>

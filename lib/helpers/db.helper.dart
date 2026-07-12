@@ -1,7 +1,9 @@
 
 import "dart:convert";
 import "dart:io";
+import "package:csv/csv.dart";
 import "package:flutter/material.dart";
+import "package:intl/intl.dart";
 import "package:path/path.dart";
 import "package:fintracker/helpers/migrations/migrations.dart";
 import "package:sqflite_common_ffi/sqflite_ffi.dart";
@@ -17,14 +19,14 @@ Future<Database> getDBInstance() async {
       sqfliteFfiInit();
       var databaseFactory = databaseFactoryFfi;
       db = await databaseFactory.openDatabase("database.db", options: OpenDatabaseOptions(
-          version: 1,
+          version: 2,
           onCreate: onCreate,
           onUpgrade: onUpgrade
       ));
     } else {
       String databasesPath = await getDatabasesPath();
       String dbPath = join(databasesPath, 'database.db');
-      db = await openDatabase(dbPath, version: 1, onCreate: onCreate, onUpgrade: onUpgrade);
+      db = await openDatabase(dbPath, version: 2, onCreate: onCreate, onUpgrade: onUpgrade);
     }
 
     database = db;
@@ -37,7 +39,8 @@ Future<Database> getDBInstance() async {
 
 typedef MigrationCallback = Function(Database database);
 List<MigrationCallback>migrations = [
-  v1
+  v1,
+  v2
 ];
 void onCreate(Database database,  int version) async {
   for(MigrationCallback callback in migrations){
@@ -54,9 +57,9 @@ void onUpgrade(Database database, int oldVersion, int version) async {
 
 Future<void> resetDatabase() async {
   Database database = await getDBInstance();
-  database.delete("payments", where: "id>0");
-  database.delete("accounts", where: "id>0");
-  database.delete("categories", where: "id>0");
+  await database.delete("payments", where: "id>0");
+  await database.delete("accounts", where: "id>0");
+  await database.delete("categories", where: "id>0");
 
   await database.insert("accounts", {
     "name": "Cash",
@@ -126,6 +129,41 @@ Future<dynamic> export() async {
   return file.path;
 }
 
+
+Future<String> exportCsv() async {
+  List<dynamic> payments = await database!.rawQuery(
+    "SELECT p.id, p.title, p.description, p.amount, p.type, p.datetime, "
+    "c.name as categoryName, a.name as accountName "
+    "FROM payments p "
+    "LEFT JOIN categories c ON c.id = p.category "
+    "LEFT JOIN accounts a ON a.id = p.account "
+    "ORDER BY p.datetime DESC"
+  );
+
+  List<List<dynamic>> rows = [
+    ['ID', 'Date', 'Title', 'Description', 'Category', 'Account', 'Type', 'Amount']
+  ];
+
+  for (var payment in payments) {
+    rows.add([
+      payment['id'],
+      payment['datetime'],
+      payment['title'] ?? '',
+      payment['description'] ?? '',
+      payment['categoryName'] ?? '',
+      payment['accountName'] ?? '',
+      payment['type'] == 'CR' ? 'Income' : 'Expense',
+      payment['amount'],
+    ]);
+  }
+
+  String csvData = const ListToCsvConverter().convert(rows);
+  final path = await getExternalDocumentPath();
+  String name = "gravity-fintracker-${DateFormat('yyyyMMdd-HHmmss').format(DateTime.now())}.csv";
+  File file = File('$path/$name');
+  await file.writeAsString(csvData);
+  return file.path;
+}
 
 Future<void> import(String path) async {
   File file = File(path);
