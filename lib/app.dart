@@ -1,4 +1,5 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
+import 'package:fintracker/screens/lock/app_lock_gate.dart';
 import 'package:fintracker/screens/main.screen.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,7 @@ class App extends StatelessWidget {
     return BlocBuilder<AppCubit, AppState>(
         builder: (context, state) {
           final platformBrightness = MediaQuery.of(context).platformBrightness;
-          final theme = AppTheme.getTheme(state.themeMode, platformBrightness);
+          final theme = AppTheme.getTheme(state.themeMode, platformBrightness, seedColor: Color(state.themeColor));
           final isDark = theme.brightness == Brightness.dark;
 
           SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -27,7 +28,10 @@ class App extends StatelessWidget {
             title: 'Gravity Fintracker',
             debugShowCheckedModeBanner: false,
             theme: theme,
-            home: const MainScreen(),
+            home: AppLockGate(
+              appLockEnabled: state.appLockEnabled,
+              child: const MainScreen(),
+            ),
             localizationsDelegates: const [
               GlobalWidgetsLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,

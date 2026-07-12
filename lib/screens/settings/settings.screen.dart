@@ -6,13 +6,13 @@ import 'package:fintracker/helpers/color.helper.dart';
 import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/screens/premium/paywall.screen.dart';
 import 'package:fintracker/screens/premium/privacy_dashboard.screen.dart';
+import 'package:fintracker/services/biometric_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/dialog/confirm.modal.dart';
 import 'package:fintracker/widgets/dialog/loading_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -23,8 +23,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final LocalAuthentication _localAuth = LocalAuthentication();
-  bool _biometricAvailable = false;
+  final BiometricService _biometrics = BiometricService();
+  BiometricCapability _capability = BiometricCapability.unavailable;
+  bool _capabilityChecked = false;
 
   @override
   void initState() {
@@ -33,10 +34,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _checkBiometrics() async {
-    try {
-      bool available = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
-      if (mounted) setState(() => _biometricAvailable = available);
-    } catch (_) {}
+    final capability = await _biometrics.getCapability();
+    if (mounted) {
+      setState(() {
+        _capability = capability;
+        _capabilityChecked = true;
+      });
+    }
   }
 
   @override
@@ -132,42 +136,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   onTap: () => _showThemeSelector(context, state.themeMode),
                 ),
+                ListTile(
+                  leading: CircleAvatar(backgroundColor: Color(state.themeColor), child: const Icon(Symbols.colors, color: Colors.white)),
+                  title: Text('Accent Color', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text("Personalize with Google's brand colors", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: AppTheme.accentOptions.map((color) {
+                      final selected = state.themeColor == color.toARGB32();
+                      return GestureDetector(
+                        onTap: () => context.read<AppCubit>().updateThemeColor(color.toARGB32()),
+                        child: Container(
+                          margin: const EdgeInsets.only(left: 6),
+                          width: selected ? 26 : 20,
+                          height: selected ? 26 : 20,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: selected ? Border.all(color: colorScheme.onSurface.withOpacity(0.3), width: 2) : null,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
 
                 // SECURITY SECTION
-                _SectionHeader(title: "Security"),
-                if (_biometricAvailable && AppConstants.enableBiometricLock)
+                if (_capabilityChecked && _capability != BiometricCapability.unavailable && AppConstants.enableBiometricLock) ...[
+                  _SectionHeader(title: "Security"),
                   SwitchListTile(
                     secondary: CircleAvatar(
                       backgroundColor: colorScheme.primary.withOpacity(0.1),
-                      child: Icon(Symbols.fingerprint, color: colorScheme.primary),
+                      child: Icon(
+                        _capability == BiometricCapability.biometric ? Symbols.fingerprint : Symbols.lock,
+                        color: colorScheme.primary,
+                      ),
                     ),
                     title: Text('App Lock', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                     subtitle: Text(
-                      "Require biometric to open app",
+                      _capability == BiometricCapability.biometric
+                          ? "Require biometric to open app"
+                          : "Require device PIN/pattern to open app",
                       style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                     ),
                     value: state.appLockEnabled,
                     onChanged: (value) async {
                       if (value) {
-                        try {
-                          bool authenticated = await _localAuth.authenticate(
-                            localizedReason: 'Verify your identity to enable app lock',
+                        final result = await _biometrics.authenticate(
+                          reason: 'Verify your identity to enable app lock',
+                        );
+                        if (!mounted) return;
+                        if (result == AuthResult.success) {
+                          context.read<AppCubit>().updateAppLock(true);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(_biometrics.friendlyMessage(result))),
                           );
-                          if (authenticated && mounted) {
-                            context.read<AppCubit>().updateAppLock(true);
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Biometric error: $e")),
-                            );
-                          }
                         }
                       } else {
                         context.read<AppCubit>().updateAppLock(false);
                       }
                     },
                   ),
+                ],
 
                 // PRIVACY SECTION
                 _SectionHeader(title: "Privacy"),

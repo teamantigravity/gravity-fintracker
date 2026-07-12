@@ -31,7 +31,7 @@ class PaymentDao {
 
     //type check
     if(type != null){
-      where += "AND type='${type == PaymentType.credit?"DR":"CR"}' ";
+      where += "AND type='${type == PaymentType.credit?"CR":"DR"}' ";
     }
 
     //icon check
@@ -57,8 +57,14 @@ class PaymentDao {
     );
     for (var row in rows) {
       Map<String, dynamic> payment = Map<String, dynamic>.from(row);
-      Account account = accounts.firstWhere((a) => a.id == payment["account"]);
-      Category category = categories.firstWhere((c) => c.id == payment["category"]);
+      Account account = accounts.firstWhere(
+        (a) => a.id == payment["account"],
+        orElse: () => Account(name: "Unknown account", holderName: "", accountNumber: "", icon: Icons.help_outline, color: Colors.grey),
+      );
+      Category category = categories.firstWhere(
+        (c) => c.id == payment["category"],
+        orElse: () => Category(name: "Uncategorized", icon: Icons.help_outline, color: Colors.grey),
+      );
       payment["category"] = category.toJson();
       payment["account"] = account.toJson();
       payments.add(Payment.fromJson(payment));

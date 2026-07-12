@@ -1,8 +1,8 @@
 class AppConstants {
   static const String appName = 'Gravity Fintracker';
   static const String appTagline = 'Private by design. Powerful by nature.';
-  static const String appVersion = '1.0.0';
-  static const String appBuildNumber = '1';
+  static const String appVersion = '1.1.0';
+  static const String appBuildNumber = '2';
   static const String orgName = 'Team Antigravity';
   static const String repoUrl = 'https://github.com/teamantigravity/gravity-fintracker';
 
@@ -21,14 +21,16 @@ class AppConstants {
   static const double proYearlyPrice = 34.99;
 
   // RevenueCat — disabled until app is published on stores
-  // Set keys and enableSubscriptions = true once published
-  static const String revenueCatAppleKey = '';
-  static const String revenueCatGoogleKey = '';
+  // Injected at build time via --dart-define. Never hardcode secrets in source.
+  static const String revenueCatAppleKey = String.fromEnvironment('REVENUECAT_APPLE_KEY');
+  static const String revenueCatGoogleKey = String.fromEnvironment('REVENUECAT_GOOGLE_KEY');
 
-  // Supabase
-  static const String supabaseUrl = 'https://ivjcgeyugeywqqxxtgyx.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2amNnZXl1Z2V5d3FxeHh0Z3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MDM0NTEsImV4cCI6MjA5OTM3OTQ1MX0.sLW3VUXb48RdcKM1Y5Dpa1poyXCYAGTgAS2DfGH3jz4';
-  static const String supabasePublishableKey = 'sb_publishable_ai8P_M9In2r7nqSCIbIvhw_6dqLmLyO';
+  // Supabase — injected at build time via --dart-define (see README "Secrets" section).
+  // Local dev: flutter run --dart-define-from-file=env/secrets.json
+  // CI: values are sourced from GitHub Actions encrypted secrets.
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const String supabasePublishableKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
   // Feature flags
   static const bool enableSync = false; // Enable after Supabase config

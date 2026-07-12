@@ -7,30 +7,19 @@ import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/screens/home/widgets/account_slider.dart';
+import 'package:fintracker/screens/home/widgets/hero_header.dart';
 import 'package:fintracker/screens/home/widgets/income_expense_chart.dart';
-import 'package:fintracker/screens/home/widgets/payment_list_item.dart';
+import 'package:fintracker/screens/home/widgets/quick_actions.dart';
 import 'package:fintracker/screens/home/widgets/smart_insights.dart';
 import 'package:fintracker/screens/home/widgets/spending_chart.dart';
+import 'package:fintracker/screens/home/widgets/transaction_group_list.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
-import 'package:fintracker/theme/app_theme.dart';
-import 'package:fintracker/widgets/currency.dart';
+import 'package:fintracker/services/streak_service.dart';
+import 'package:fintracker/widgets/staggered_fade_in.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
-
-
-String greeting() {
-  var hour = DateTime.now().hour;
-  if (hour < 12) {
-    return 'Morning';
-  }
-  if (hour < 17) {
-    return 'Afternoon';
-  }
-  return 'Evening';
-}
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,9 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
   EventListener? _categoryEventListener;
   EventListener? _paymentEventListener;
   List<Payment> _payments = [];
+  List<Payment> _allPayments = []; // unfiltered, used for the logging streak
   List<Account> _accounts = [];
-  double _income = 0;
-  double _expense = 0;
   bool _showCharts = false;
   DateTimeRange _range = DateTimeRange(
       start: DateTime.now().subtract(Duration(days: DateTime.now().day -1)),
@@ -56,6 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
   );
   Account? _account;
   Category? _category;
+
+  double get _income => _payments.where((p) => p.type == PaymentType.credit).fold(0.0, (s, p) => s + p.amount);
+  double get _expense => _payments.where((p) => p.type == PaymentType.debit).fold(0.0, (s, p) => s + p.amount);
+  double get _netWorth => _accounts.fold(0.0, (s, a) => s + (a.balance ?? 0));
+  int get _streak => StreakService.currentStreak(_allPayments);
 
   void openAddPaymentPage(PaymentType type) async {
     Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>PaymentForm(type: type)));
@@ -76,21 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _fetchTransactions() async {
+  Future<void> _fetchTransactions() async {
     List<Payment> trans = await _paymentDao.find(range: _range, category: _category, account:_account);
-    double income = 0;
-    double expense = 0;
-    for (var payment in trans) {
-      if(payment.type == PaymentType.credit) income += payment.amount;
-      if(payment.type == PaymentType.debit) expense += payment.amount;
-    }
-
+    List<Payment> all = await _paymentDao.find();
     List<Account> accounts = await _accountDao.find(withSummery: true);
 
     setState(() {
       _payments = trans;
-      _income = income;
-      _expense = expense;
+      _allPayments = all;
       _accounts = accounts;
     });
   }
@@ -130,99 +116,56 @@ class _HomeScreenState extends State<HomeScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      body: SingleChildScrollView(
+      body: RefreshIndicator(
+        onRefresh: _fetchTransactions,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting header
-              Container(
-                margin: const EdgeInsets.only(left: 20, right: 20, bottom: 16, top: 60),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Good ${greeting()}",
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.5),
-                            ),
-                          ),
-                          BlocConsumer<AppCubit, AppState>(
-                              listener: (context, state){},
-                              builder: (context, state) => Text(
-                                state.username ?? "Guest",
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              )
-                          )
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        onPressed: () => setState(() => _showCharts = !_showCharts),
-                        icon: Icon(
-                          _showCharts ? Symbols.list : Symbols.bar_chart,
-                          fill: 1,
-                          size: 22,
-                        ),
-                        tooltip: _showCharts ? "Show list" : "Show charts",
-                      ),
-                    ),
-                  ],
+              StaggeredFadeIn(
+                index: 0,
+                child: BlocBuilder<AppCubit, AppState>(
+                  builder: (context, state) => HeroHeader(
+                    username: state.username ?? "Guest",
+                    netWorth: _netWorth,
+                    periodIncome: _income,
+                    periodExpense: _expense,
+                    streak: _streak,
+                    showingCharts: _showCharts,
+                    onToggleCharts: () => setState(() => _showCharts = !_showCharts),
+                  ),
                 ),
               ),
 
               // Account cards
-              AccountsSlider(accounts: _accounts),
-              const SizedBox(height: 16),
+              StaggeredFadeIn(index: 1, child: AccountsSlider(accounts: _accounts)),
+              const SizedBox(height: 20),
 
-              // Income/Expense summary cards
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _SummaryCard(
-                        label: "Income",
-                        amount: _income,
-                        color: AppTheme.incomeColor,
-                        icon: Symbols.arrow_downward,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _SummaryCard(
-                        label: "Expense",
-                        amount: _expense,
-                        color: AppTheme.expenseColor,
-                        icon: Symbols.arrow_upward,
-                      ),
-                    ),
-                  ],
+              // Quick actions — unambiguous, unlike a single default-typed FAB
+              StaggeredFadeIn(
+                index: 2,
+                child: QuickActions(
+                  onAddExpense: () => openAddPaymentPage(PaymentType.debit),
+                  onAddIncome: () => openAddPaymentPage(PaymentType.credit),
                 ),
               ),
+              const SizedBox(height: 20),
 
               // Charts section
               if (_showCharts && _payments.isNotEmpty) ...[
-                const SizedBox(height: 8),
                 SpendingChart(payments: _payments),
                 IncomeExpenseChart(payments: _payments),
+                const SizedBox(height: 8),
               ],
 
               // Smart Insights
-              if (_payments.isNotEmpty)
-                SmartInsightsCard(payments: _payments),
+              if (_payments.isNotEmpty) ...[
+                StaggeredFadeIn(index: 3, child: SmartInsightsCard(payments: _payments)),
+                const SizedBox(height: 12),
+              ],
 
               // Payments header
-              const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -255,27 +198,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ]
                 ),
               ),
-              const SizedBox(height: 4),
 
               // Payments list
-              _payments.isNotEmpty ? ListView.separated(
-                padding: EdgeInsets.zero,
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemBuilder: (BuildContext context, index){
-                  return PaymentListItem(payment: _payments[index], onTap: (){
-                    Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>PaymentForm(type: _payments[index].type, payment: _payments[index],)));
-                  });
+              _payments.isNotEmpty ? TransactionGroupList(
+                payments: _payments,
+                onTap: (payment) {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>PaymentForm(type: payment.type, payment: payment,)));
                 },
-                separatorBuilder: (BuildContext context, int index){
-                  return Container(
-                    width: double.infinity,
-                    color: colorScheme.outlineVariant.withOpacity(0.2),
-                    height: 0.5,
-                    margin: const EdgeInsets.only(left: 75, right: 20),
-                  );
-                },
-                itemCount: _payments.length,
               ) : Container(
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 alignment: Alignment.center,
@@ -296,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "Tap + to add your first transaction",
+                      "Use the buttons above to add your first transaction",
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withOpacity(0.2),
                       ),
@@ -306,68 +235,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 80),
             ],
-          )
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: ()=> openAddPaymentPage(PaymentType.credit),
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
-  final String label;
-  final double amount;
-  final Color color;
-  final IconData icon;
-
-  const _SummaryCard({
-    required this.label,
-    required this.amount,
-    required this.color,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: color.withOpacity(0.08),
-        border: Border.all(
-          color: color.withOpacity(0.15),
-          width: 0.5,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: color.withOpacity(0.8),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          CurrencyText(
-            amount,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,7 +1,7 @@
 # Gravity Fintracker — Private by Design. Powerful by Nature.
 
 [![Build](https://github.com/teamantigravity/gravity-fintracker/actions/workflows/build.yml/badge.svg)](https://github.com/teamantigravity/gravity-fintracker/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-blue.svg)](https://flutter.dev)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-green.svg)](#privacy)
 [![Encryption](https://img.shields.io/badge/Encryption-Quantum%20Resistant-purple.svg)](#quantum-resistant-encryption)
@@ -164,8 +164,50 @@ See [ROADMAP.md](roadmap.md) for the full development roadmap.
 
 ---
 
+## Building from source
+
+### Secrets
+
+No secret ever lives in source control. All configuration (Supabase URL/keys,
+RevenueCat keys) is injected at build time via `--dart-define`:
+
+```bash
+cp env/secrets.example.json env/secrets.json   # fill in real values, gitignored
+flutter run --dart-define-from-file=env/secrets.json
+```
+
+CI (`.github/workflows/build.yml`) sources the same values from GitHub Actions
+encrypted repository secrets and passes them as individual `--dart-define`
+flags to every build job.
+
+### Android signing
+
+Release builds are signed, not debug-signed. Generate a keystore once and
+point `android/key.properties` (gitignored) at it:
+
+```properties
+storePassword=...
+keyPassword=...
+keyAlias=...
+storeFile=../your-release.keystore
+```
+
+If `key.properties` is absent (e.g. a fork's CI run), the build falls back to
+debug signing automatically — it never fails the build.
+
+### Obfuscation
+
+Release builds for Android, iOS, Windows, macOS and Linux are built with
+`--obfuscate --split-debug-info=build/symbols/<platform>`. Debug symbol maps
+are uploaded as CI artifacts (90-day retention) so stack traces from
+obfuscated crash reports can still be de-symbolicated with
+`flutter symbolize`. Web is excluded — dart2js already minifies release
+output and `--obfuscate` isn't applicable to that compilation target.
+
+---
+
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+GNU Affero General Public License v3.0 (AGPL-3.0) — see [LICENSE](LICENSE) for details.
 
 Built with ❤️ by **Team Antigravity**.

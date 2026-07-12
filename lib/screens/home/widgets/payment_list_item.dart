@@ -12,6 +12,11 @@ class PaymentListItem extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     bool isCredit = payment.type == PaymentType.credit ;
+    final hasTitle = payment.title.trim().isNotEmpty;
+    final primaryText = hasTitle ? payment.title : payment.category.name;
+    final time = DateFormat("HH:mm").format(payment.datetime);
+    final subtitleText = hasTitle ? "${payment.category.name} · $time" : time;
+
     return ListTile(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
       onTap: onTap,
@@ -24,18 +29,16 @@ class PaymentListItem extends StatelessWidget{
           ),
           child:  Icon( payment.category.icon, size: 22, color: payment.category.color,)
       ),
-      title: Text(payment.category.name, style: Theme.of(context).textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500)),),
-      subtitle: Text.rich(
-        TextSpan(
-            children: [
-              TextSpan(text: (DateFormat("dd MMM yyyy, HH:mm").format(payment.datetime))),
-            ],
-            style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis)
-        ),
+      title: Text(primaryText, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500)),),
+      subtitle: Text(
+        subtitleText,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey),
       ),
       trailing: CurrencyText(
           isCredit? payment.amount : -payment.amount,
-          style: Theme.of(context).textTheme.bodyMedium?.apply(color: isCredit? ThemeColors.success:ThemeColors.error)
+          style: Theme.of(context).textTheme.bodyMedium?.apply(color: isCredit? ThemeColors.success:ThemeColors.error, fontWeightDelta: 1)
       ),
     ) ;
   }

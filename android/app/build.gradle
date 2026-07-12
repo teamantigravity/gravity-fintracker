@@ -21,8 +21,17 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def keystorePropertiesFile = rootProject.file('key.properties')
+def keystoreProperties = new Properties()
+def hasKeystoreProperties = keystorePropertiesFile.exists()
+if (hasKeystoreProperties) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 android {
-    namespace "me.nafish.fintracker"
+    namespace "com.teamantigravity.gravityfintracker"
     compileSdk 36
     ndkVersion flutter.ndkVersion
 
@@ -37,7 +46,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "me.nafish.fintracker"
+        applicationId "com.teamantigravity.gravityfintracker"
         minSdk 21        // Android 5.0 Lollipop — lowest compatible
         targetSdk 36     // Android 16+ compatible
         versionCode flutterVersionCode.toInteger()
@@ -45,9 +54,23 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        release {
+            if (hasKeystoreProperties) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig hasKeystoreProperties ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

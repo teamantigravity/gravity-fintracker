@@ -21,7 +21,7 @@ class AppState {
     bool? isPro = prefs.getBool("isPro");
 
     AppState appState = AppState();
-    appState.themeColor = themeColor ?? Colors.green.value;
+    appState.themeColor = themeColor ?? 0xFF4285F4; // Google Blue
     appState.username = username;
     appState.currency = currency;
     appState.themeMode = _parseThemeMode(themeModeStr);

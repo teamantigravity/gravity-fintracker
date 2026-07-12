@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 enum AppThemeMode { light, dark, amoled, system }
 
 class AppTheme {
-  static const Color _seedColor = Color(0xFF6750A4);
+  static const Color defaultSeedColor = Color(0xFF4285F4); // Google Blue
 
   static const Color successLight = Color(0xFF0AA553);
   static const Color successDark = Color(0xFF4CAF50);
@@ -17,9 +17,9 @@ class AppTheme {
     return GoogleFonts.interTextTheme(base);
   }
 
-  static ThemeData light() {
+  static ThemeData light({Color seedColor = defaultSeedColor}) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: seedColor,
       brightness: Brightness.light,
     );
     final base = ThemeData(
@@ -53,9 +53,9 @@ class AppTheme {
     );
   }
 
-  static ThemeData dark() {
+  static ThemeData dark({Color seedColor = defaultSeedColor}) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: seedColor,
       brightness: Brightness.dark,
     );
     final base = ThemeData(
@@ -89,9 +89,9 @@ class AppTheme {
     );
   }
 
-  static ThemeData amoled() {
+  static ThemeData amoled({Color seedColor = defaultSeedColor}) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: seedColor,
       brightness: Brightness.dark,
     ).copyWith(
       surface: Colors.black,
@@ -142,18 +142,27 @@ class AppTheme {
     );
   }
 
-  static ThemeData getTheme(AppThemeMode mode, Brightness platformBrightness) {
+  static ThemeData getTheme(AppThemeMode mode, Brightness platformBrightness, {Color seedColor = defaultSeedColor}) {
     switch (mode) {
       case AppThemeMode.light:
-        return light();
+        return light(seedColor: seedColor);
       case AppThemeMode.dark:
-        return dark();
+        return dark(seedColor: seedColor);
       case AppThemeMode.amoled:
-        return amoled();
+        return amoled(seedColor: seedColor);
       case AppThemeMode.system:
-        return platformBrightness == Brightness.dark ? dark() : light();
+        return platformBrightness == Brightness.dark ? dark(seedColor: seedColor) : light(seedColor: seedColor);
     }
   }
+
+  /// Selectable accent options — Google's four brand colors, offered as a
+  /// tasteful personalization choice rather than a decorative afterthought.
+  static const List<Color> accentOptions = [
+    Color(0xFF4285F4), // Blue
+    Color(0xFFEA4335), // Red
+    Color(0xFFFBBC05), // Yellow
+    Color(0xFF34A853), // Green
+  ];
 
   static NavigationBarThemeData _navigationBarTheme() {
     return NavigationBarThemeData(
