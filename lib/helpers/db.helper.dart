@@ -115,11 +115,13 @@ Future<String> export({String? directory, String? filePath}) async {
   List<dynamic> categories = await database!.query("categories",);
   List<dynamic> payments = await database!.query("payments",);
   List<dynamic> recurring = await database!.query("recurring_transactions",);
+  List<dynamic> savingsGoals = await database!.query("savings_goals",);
   Map<String, dynamic> data = {};
   data["accounts"] = accounts;
   data["categories"] = categories;
   data["payments"] = payments;
   data["recurring_transactions"] = recurring;
+  data["savings_goals"] = savingsGoals;
 
   if (filePath != null && filePath.isNotEmpty) {
     File file = File(filePath);
@@ -194,6 +196,7 @@ Future<void> import(String path) async {
     await database!.transaction((transaction) async{
       await transaction.delete("recurring_transactions");
       await transaction.delete("payments");
+      await transaction.delete("savings_goals");
       await transaction.delete("categories");
       await transaction.delete("accounts");
 
@@ -201,6 +204,7 @@ Future<void> import(String path) async {
       List<dynamic> accounts = (data["accounts"] ?? []);
       List<dynamic> payments = (data["payments"] ?? []);
       List<dynamic> recurring = (data["recurring_transactions"] ?? []);
+      List<dynamic> savingsGoals = (data["savings_goals"] ?? []);
 
       for(Map<String, dynamic> category in categories.cast<Map<String, dynamic>>()){
         int id0 = category["id"] ?? 0;
@@ -234,6 +238,15 @@ Future<void> import(String path) async {
         item["account"] = accountId;
         item["category"] = categoryId;
         await transaction.insert("recurring_transactions", item);
+      }
+
+      for(Map<String, dynamic> goal in savingsGoals.cast<Map<String, dynamic>>()){
+        goal.remove("id");
+        final accountId = goal["account"];
+        if (accountId != null) {
+          goal["account"] = accountsMap[accountId] ?? accountId;
+        }
+        await transaction.insert("savings_goals", goal);
       }
 
       return transaction;

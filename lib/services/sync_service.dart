@@ -158,12 +158,14 @@ class SyncService {
     List<dynamic> categories = await db.query("categories");
     List<dynamic> payments = await db.query("payments");
     List<dynamic> recurring = await db.query("recurring_transactions");
+    List<dynamic> savingsGoals = await db.query("savings_goals");
 
     Map<String, dynamic> snapshot = {
       "accounts": accounts,
       "categories": categories,
       "payments": payments,
       "recurring_transactions": recurring,
+      "savings_goals": savingsGoals,
       "timestamp": DateTime.now().toIso8601String(),
       "version": AppConstants.dbVersion,
       "encryption": "AES-256-GCM+HKDF-SHA512",
@@ -186,6 +188,7 @@ class SyncService {
 
     final db = await getDBInstance();
     await db.transaction((txn) async {
+      await txn.delete("savings_goals");
       await txn.delete("payments");
       await txn.delete("recurring_transactions");
       await txn.delete("categories");
@@ -198,6 +201,7 @@ class SyncService {
       List<dynamic> accounts = (snapshot["accounts"] ?? []);
       List<dynamic> payments = (snapshot["payments"] ?? []);
       List<dynamic> recurring = (snapshot["recurring_transactions"] ?? []);
+      List<dynamic> savingsGoals = (snapshot["savings_goals"] ?? []);
 
       for (Map<String, dynamic> category in categories.cast<Map<String, dynamic>>()) {
         int oldId = category["id"] ?? 0;
@@ -231,6 +235,15 @@ class SyncService {
         rec["account"] = accountId;
         rec["category"] = categoryId;
         await txn.insert("recurring_transactions", rec);
+      }
+
+      for (Map<String, dynamic> goal in savingsGoals.cast<Map<String, dynamic>>()) {
+        goal.remove("id");
+        final accountId = goal["account"];
+        if (accountId != null) {
+          goal["account"] = accountsMap[accountId] ?? accountId;
+        }
+        await txn.insert("savings_goals", goal);
       }
     });
 

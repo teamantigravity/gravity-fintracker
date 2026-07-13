@@ -4,13 +4,11 @@ import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:flutter/material.dart';
 import 'package:fintracker/data/icons.dart';
-typedef Callback = void Function();
 
 class AccountForm extends StatefulWidget {
   final Account? account;
-  final Callback? onSave;
 
-  const AccountForm({super.key, this.account, this.onSave});
+  const AccountForm({super.key, this.account});
 
   @override
   State<StatefulWidget> createState() => _AccountForm();
@@ -50,16 +48,9 @@ class _AccountForm extends State<AccountForm>{
       return;
     }
     await _accountDao.upsert(_account!);
-    if(widget.onSave != null) {
-      widget.onSave!();
-    }
     if (!context.mounted) return;
     Navigator.pop(context);
     globalEvent.emit("account_update");
-  }
-
-  void pickIcon(context)async {
-
   }
   @override
   Widget build(BuildContext context) {
@@ -202,7 +193,7 @@ class _AccountForm extends State<AccountForm>{
                               height: 50,
                               width: 50,
                               decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(40),
                                   border: Border.all(
                                       color: _account!.icon == AppIcons.icons[index] ? Theme.of(context).colorScheme.primary: Colors.transparent,

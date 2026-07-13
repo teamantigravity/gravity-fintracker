@@ -78,7 +78,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       margin: const EdgeInsets.only(bottom: 20),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                       decoration: BoxDecoration(
-                          color: account.color.withOpacity(0.2),
+                          color: account.color.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(18),
                       ),
                       child: Column(

@@ -1,15 +1,17 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 /// Centralized platform capability detection.
 ///
 /// This service keeps platform-specific decisions in one place so that the UI
 /// and other services can gracefully fall back when a feature is not available.
 class PlatformService {
-  static bool get isAndroid => Platform.isAndroid;
-  static bool get isIOS => Platform.isIOS;
-  static bool get isMacOS => Platform.isMacOS;
-  static bool get isWindows => Platform.isWindows;
-  static bool get isLinux => Platform.isLinux;
+  static bool get isAndroid => !kIsWeb && Platform.isAndroid;
+  static bool get isIOS => !kIsWeb && Platform.isIOS;
+  static bool get isMacOS => !kIsWeb && Platform.isMacOS;
+  static bool get isWindows => !kIsWeb && Platform.isWindows;
+  static bool get isLinux => !kIsWeb && Platform.isLinux;
 
   static bool get isMobile => isAndroid || isIOS;
   static bool get isApple => isIOS || isMacOS;

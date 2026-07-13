@@ -8,7 +8,7 @@ import 'package:fintracker/model/recurring.model.dart';
 class CashflowForecastService {
   static Future<CashflowForecast> forecast({int days = 90}) async {
     final payments = await PaymentDao().find();
-    final accounts = await AccountDao().find();
+    final accounts = await AccountDao().find(withSummery: true);
     final recurring = await RecurringDao().find();
 
     final now = DateTime.now();

@@ -43,8 +43,10 @@ class VoiceTransactionService {
           completer.complete(_parse(result.recognizedWords));
         }
       },
-      listenMode: ListenMode.confirmation,
-      cancelOnError: true,
+      listenOptions: SpeechListenOptions(
+        listenMode: ListenMode.confirmation,
+        cancelOnError: true,
+      ),
     );
 
     timer = Timer(timeout, () async {

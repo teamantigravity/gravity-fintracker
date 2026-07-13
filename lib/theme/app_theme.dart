@@ -51,7 +51,7 @@ class AppTheme {
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: DividerThemeData(
-        color: colorScheme.outlineVariant.withOpacity(0.3),
+        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
         thickness: 0.5,
       ),
     );
@@ -87,7 +87,7 @@ class AppTheme {
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: DividerThemeData(
-        color: colorScheme.outlineVariant.withOpacity(0.3),
+        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
         thickness: 0.5,
       ),
     );
@@ -189,14 +189,14 @@ class AppTheme {
     return CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
     );
   }
 
   static InputDecorationTheme _inputDecorationTheme(ColorScheme colorScheme) {
     return InputDecorationTheme(
       filled: true,
-      fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,

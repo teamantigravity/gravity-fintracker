@@ -107,14 +107,14 @@ class _RecurringScreenState extends State<RecurringScreen> {
                   Icon(
                     Symbols.repeat,
                     size: 64,
-                    color: theme.colorScheme.onSurface.withOpacity(0.2),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
                     fill: 1,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     "No recurring transactions",
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -122,7 +122,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
                     "Automate your bills, subscriptions,\nand income tracking",
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.3),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                   ),
                 ],
@@ -134,7 +134,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
               separatorBuilder: (_, __) => Container(
                 height: 0.5,
                 margin: const EdgeInsets.only(left: 72, right: 16),
-                color: theme.dividerColor.withOpacity(0.3),
+                color: theme.dividerColor.withValues(alpha: 0.3),
               ),
               itemBuilder: (context, index) {
                 final item = _recurring[index];
@@ -145,8 +145,8 @@ class _RecurringScreenState extends State<RecurringScreen> {
                   background: Container(
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 20),
-                    color: AppTheme.expenseColor.withOpacity(0.1),
-                    child: Icon(Symbols.delete, color: AppTheme.expenseColor),
+                    color: AppTheme.expenseColor.withValues(alpha: 0.1),
+                    child: const Icon(Symbols.delete, color: AppTheme.expenseColor),
                   ),
                   onDismissed: (_) => _deleteRecurring(item.id!),
                   child: ListTile(
@@ -155,7 +155,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
                       width: 42,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: item.category.color.withOpacity(0.1),
+                        color: item.category.color.withValues(alpha: 0.1),
                       ),
                       child: Icon(item.category.icon, size: 20, color: item.category.color),
                     ),
@@ -169,7 +169,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
                     subtitle: Text(
                       "${item.intervalLabel} · Next: ${item.nextDueDate != null ? DateFormat('dd MMM').format(item.nextDueDate!) : 'N/A'}",
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
                     trailing: Row(
@@ -261,7 +261,7 @@ class _RecurringFormState extends State<_RecurringForm> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withOpacity(0.2),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -299,7 +299,7 @@ class _RecurringFormState extends State<_RecurringForm> {
 
             // Category dropdown
             DropdownButtonFormField<Category>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: const InputDecoration(labelText: "Category"),
               items: widget.categories.map((c) => DropdownMenuItem(
                 value: c,
@@ -317,7 +317,7 @@ class _RecurringFormState extends State<_RecurringForm> {
 
             // Account dropdown
             DropdownButtonFormField<Account>(
-              value: _selectedAccount,
+              initialValue: _selectedAccount,
               decoration: const InputDecoration(labelText: "Account"),
               items: widget.accounts.map((a) => DropdownMenuItem(
                 value: a,
@@ -329,7 +329,7 @@ class _RecurringFormState extends State<_RecurringForm> {
 
             // Interval dropdown
             DropdownButtonFormField<RecurringInterval>(
-              value: _interval,
+              initialValue: _interval,
               decoration: const InputDecoration(labelText: "Frequency"),
               items: RecurringInterval.values.map((i) => DropdownMenuItem(
                 value: i,

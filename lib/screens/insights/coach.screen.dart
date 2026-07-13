@@ -55,7 +55,7 @@ class _MessageBubble extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: color.withOpacity(0.1),
+            backgroundColor: color.withValues(alpha: 0.1),
             child: Icon(icon, size: 18, color: color),
           ),
           const SizedBox(width: 12),
@@ -63,7 +63,7 @@ class _MessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Text(message.text, style: theme.textTheme.bodyMedium?.copyWith(height: 1.4)),

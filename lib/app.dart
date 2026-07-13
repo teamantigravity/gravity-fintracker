@@ -50,19 +50,19 @@ class App extends StatelessWidget {
             ],
             builder: (context, child) {
               return Shortcuts(
-                shortcuts: {
-                  const SingleActivator(LogicalKeyboardKey.keyN, control: true): const NewPaymentIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyN, meta: true): const NewPaymentIntent(),
-                  const SingleActivator(LogicalKeyboardKey.digit1, control: true): const NavigateToTabIntent(0),
-                  const SingleActivator(LogicalKeyboardKey.digit1, meta: true): const NavigateToTabIntent(0),
-                  const SingleActivator(LogicalKeyboardKey.digit2, control: true): const NavigateToTabIntent(1),
-                  const SingleActivator(LogicalKeyboardKey.digit2, meta: true): const NavigateToTabIntent(1),
-                  const SingleActivator(LogicalKeyboardKey.digit3, control: true): const NavigateToTabIntent(2),
-                  const SingleActivator(LogicalKeyboardKey.digit3, meta: true): const NavigateToTabIntent(2),
-                  const SingleActivator(LogicalKeyboardKey.digit4, control: true): const NavigateToTabIntent(3),
-                  const SingleActivator(LogicalKeyboardKey.digit4, meta: true): const NavigateToTabIntent(3),
-                  const SingleActivator(LogicalKeyboardKey.digit5, control: true): const NavigateToTabIntent(4),
-                  const SingleActivator(LogicalKeyboardKey.digit5, meta: true): const NavigateToTabIntent(4),
+                shortcuts: const {
+                  SingleActivator(LogicalKeyboardKey.keyN, control: true): NewPaymentIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyN, meta: true): NewPaymentIntent(),
+                  SingleActivator(LogicalKeyboardKey.digit1, control: true): NavigateToTabIntent(0),
+                  SingleActivator(LogicalKeyboardKey.digit1, meta: true): NavigateToTabIntent(0),
+                  SingleActivator(LogicalKeyboardKey.digit2, control: true): NavigateToTabIntent(1),
+                  SingleActivator(LogicalKeyboardKey.digit2, meta: true): NavigateToTabIntent(1),
+                  SingleActivator(LogicalKeyboardKey.digit3, control: true): NavigateToTabIntent(2),
+                  SingleActivator(LogicalKeyboardKey.digit3, meta: true): NavigateToTabIntent(2),
+                  SingleActivator(LogicalKeyboardKey.digit4, control: true): NavigateToTabIntent(3),
+                  SingleActivator(LogicalKeyboardKey.digit4, meta: true): NavigateToTabIntent(3),
+                  SingleActivator(LogicalKeyboardKey.digit5, control: true): NavigateToTabIntent(4),
+                  SingleActivator(LogicalKeyboardKey.digit5, meta: true): NavigateToTabIntent(4),
                 },
                 child: Actions(
                   actions: {

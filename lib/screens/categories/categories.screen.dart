@@ -63,7 +63,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               onTap: (){
                 showDialog(context: context, builder: (builder)=>CategoryForm(category: category,));
               },
-              leading: CircleAvatar(backgroundColor: category.color.withOpacity(0.2),child: Icon(category.icon, color: category.color,),),
+              leading: CircleAvatar(backgroundColor: category.color.withValues(alpha: 0.2),child: Icon(category.icon, color: category.color,),),
               title: Text(category.name, overflow: TextOverflow.ellipsis,style: Theme.of(context).textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),),
               subtitle: expenseProgress.isFinite? ClipRRect(
                 borderRadius: BorderRadius.circular(8),

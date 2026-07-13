@@ -3,12 +3,11 @@ import 'package:intl/intl.dart';
 class CurrencyHelper {
   static String format(
       double amount, {
-        String? symbol = "₹",
-        String? name = "INR",
-        String? locale = "en_IN",
+        String? symbol = "\$",
+        String? locale,
       }) {
-    final String safeSymbol = symbol ?? "₹";
-    return NumberFormat('$safeSymbol##,##,##,###.####', locale).format(amount);
+    final String safeSymbol = symbol ?? "\$";
+    return NumberFormat.currency(symbol: safeSymbol, locale: locale, decimalDigits: 2).format(amount);
   }
 }
 

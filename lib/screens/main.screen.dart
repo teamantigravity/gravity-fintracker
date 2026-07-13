@@ -68,6 +68,7 @@ class MainScreenState extends State<MainScreen>{
     return PageView(
       controller: _controller,
       physics: const NeverScrollableScrollPhysics(),
+      onPageChanged: _onPageChanged,
       children: const [
         HomeScreen(),
         AccountsScreen(),
@@ -75,7 +76,6 @@ class MainScreenState extends State<MainScreen>{
         RecurringScreen(),
         SettingsScreen()
       ],
-      onPageChanged: _onPageChanged,
     );
   }
 
@@ -85,7 +85,7 @@ class MainScreenState extends State<MainScreen>{
       builder: (context, state){
         AppCubit cubit = context.read<AppCubit>();
         if(cubit.state.currency == null || cubit.state.username == null){
-          return OnboardScreen();
+          return const OnboardScreen();
         }
 
         final screenWidth = MediaQuery.of(context).size.width;

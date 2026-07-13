@@ -18,17 +18,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-typedef OnCloseCallback = Function(Payment payment);
 final DateFormat formatter = DateFormat('dd/MM/yyyy hh:mm a');
 class PaymentForm extends StatefulWidget{
   final PaymentType  type;
   final Payment?  payment;
-  final OnCloseCallback? onClose;
   final String? prefillTitle;
   final double? prefillAmount;
   final DateTime? prefillDate;
 
-  const PaymentForm({super.key, required this.type, this.payment, this.onClose, this.prefillTitle, this.prefillAmount, this.prefillDate});
+  const PaymentForm({super.key, required this.type, this.payment, this.prefillTitle, this.prefillAmount, this.prefillDate});
 
   @override
   State<PaymentForm> createState() => _PaymentForm();
@@ -182,9 +180,6 @@ class _PaymentForm extends State<PaymentForm>{
         description: _description
     );
     await _paymentDao.upsert(payment);
-    if (widget.onClose != null) {
-      widget.onClose!(payment);
-    }
     if (!context.mounted) return;
     Navigator.of(context).pop();
     globalEvent.emit("payment_update");
@@ -402,7 +397,7 @@ class _PaymentForm extends State<PaymentForm>{
                                       width: 190,
                                       child: MaterialButton(
                                           minWidth: double.infinity,
-                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                           shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(18),
                                               side: const BorderSide(
@@ -424,7 +419,7 @@ class _PaymentForm extends State<PaymentForm>{
                                             child: Row(
                                               children: [
                                                 CircleAvatar(
-                                                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                                                   child: const Icon(Icons.add, color: Colors.white),
                                                 ),
                                                 const SizedBox(width: 10,),
@@ -449,7 +444,7 @@ class _PaymentForm extends State<PaymentForm>{
                                           constraints:   const BoxConstraints(minWidth: 0,),
                                           child:  IntrinsicWidth(
                                             child:MaterialButton(
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                                 shape: RoundedRectangleBorder(
                                                     borderRadius: BorderRadius.circular(18),
                                                     side: BorderSide(
@@ -473,7 +468,7 @@ class _PaymentForm extends State<PaymentForm>{
                                                   child: Row(
                                                     children: [
                                                       CircleAvatar(
-                                                        backgroundColor: account.color.withOpacity(0.2),
+                                                        backgroundColor: account.color.withValues(alpha: 0.2),
                                                         child: Icon(account.icon, color: account.color),
                                                       ),
                                                       const SizedBox(width: 10,),
@@ -514,7 +509,7 @@ class _PaymentForm extends State<PaymentForm>{
                                           child:  IntrinsicWidth(
                                             child:MaterialButton(
                                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                                 shape: RoundedRectangleBorder(
                                                     borderRadius: BorderRadius.circular(15),
                                                     side: const BorderSide(
@@ -550,7 +545,7 @@ class _PaymentForm extends State<PaymentForm>{
                                         constraints:   const BoxConstraints(minWidth: 0,),
                                         child:  IntrinsicWidth(
                                             child:MaterialButton(
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                                 shape: RoundedRectangleBorder(
                                                     borderRadius: BorderRadius.circular(15),
                                                     side: BorderSide(

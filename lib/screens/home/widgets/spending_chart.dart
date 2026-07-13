@@ -88,7 +88,7 @@ class _SpendingChartState extends State<SpendingChart> {
                         final percentage = total > 0 ? (entries[i].amount / total * 100) : 0.0;
 
                         return PieChartSectionData(
-                          color: entries[i].color.withOpacity(isTouched ? 1 : 0.85),
+                          color: entries[i].color.withValues(alpha: isTouched ? 1 : 0.85),
                           value: entries[i].amount,
                           title: '${percentage.toStringAsFixed(0)}%',
                           radius: radius,

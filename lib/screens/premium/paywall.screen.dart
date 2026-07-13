@@ -73,7 +73,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
+                    color: colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -98,7 +98,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Text(
                   "Privacy-first finance, everywhere.",
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.6),
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
 
@@ -117,7 +117,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description: "Phone, tablet, desktop — all in sync.",
                   color: colorScheme.tertiary,
                 ),
-                _FeatureItem(
+                const _FeatureItem(
                   icon: Symbols.repeat,
                   title: "Recurring Transactions",
                   description: "Automate bills, subscriptions, and income tracking.",
@@ -129,17 +129,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description: "PDF & CSV export, year-over-year analysis.",
                   color: colorScheme.secondary,
                 ),
-                _FeatureItem(
+                const _FeatureItem(
                   icon: Symbols.cloud_upload,
                   title: "Automatic Backups",
                   description: "Daily encrypted backups. Never lose your data.",
                   color: AppTheme.expenseColor,
                 ),
-                _FeatureItem(
+                const _FeatureItem(
                   icon: Symbols.shield,
                   title: "Zero Knowledge",
                   description: "We literally cannot see your financial data.",
-                  color: const Color(0xFF6750A4),
+                  color: Color(0xFF6750A4),
                 ),
 
                 const SizedBox(height: 32),
@@ -249,7 +249,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   child: Text(
                     "Cancel anytime. No questions asked.",
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.4),
+                      color: colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                 ),
@@ -287,7 +287,7 @@ class _FeatureItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20, fill: 1),
@@ -307,7 +307,7 @@ class _FeatureItem extends StatelessWidget {
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                         height: 1.3,
                       ),
                 ),
@@ -348,7 +348,7 @@ class _PlanCard extends StatelessWidget {
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? colorScheme.primary.withOpacity(0.05)
+              ? colorScheme.primary.withValues(alpha: 0.05)
               : Colors.transparent,
         ),
         child: Column(
@@ -358,7 +358,7 @@ class _PlanCard extends StatelessWidget {
               title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurface.withOpacity(0.6),
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
             ),
             const SizedBox(height: 4),

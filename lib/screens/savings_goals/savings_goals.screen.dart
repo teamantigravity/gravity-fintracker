@@ -53,10 +53,10 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                     Center(
                       child: Column(
                         children: [
-                          Icon(Symbols.savings, size: 64, color: theme.colorScheme.onSurface.withOpacity(0.2)),
+                          Icon(Symbols.savings, size: 64, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
                           const SizedBox(height: 16),
                           Text('No savings goals yet', style: theme.textTheme.bodyLarge),
-                          Text('Tap + to create a goal and track progress.', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5))),
+                          Text('Tap + to create a goal and track progress.', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                         ],
                       ),
                     )
@@ -82,7 +82,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
         onSave: (g) async {
           await _dao.upsert(g);
           _load();
-          if (mounted) Navigator.pop(context);
+          if (context.mounted) Navigator.pop(context);
         },
       ),
     );
@@ -103,7 +103,7 @@ class _GoalCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -112,7 +112,7 @@ class _GoalCard extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: color.withOpacity(0.2),
+                backgroundColor: color.withValues(alpha: 0.2),
                 child: goal.icon != null
                     ? Text(String.fromCharCode(goal.icon!), style: TextStyle(fontFamily: 'MaterialIcons', fontSize: 24, color: color))
                     : Icon(Symbols.savings, color: color),
@@ -138,14 +138,14 @@ class _GoalCard extends StatelessWidget {
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(value: progress, minHeight: 8, backgroundColor: color.withOpacity(0.1), valueColor: AlwaysStoppedAnimation(color)),
+            child: LinearProgressIndicator(value: progress, minHeight: 8, backgroundColor: color.withValues(alpha: 0.1), valueColor: AlwaysStoppedAnimation(color)),
           ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               CurrencyText(goal.savedAmount, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-              CurrencyText(goal.targetAmount, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+              CurrencyText(goal.targetAmount, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
             ],
           ),
           if (goal.dailyRequired > 0)
@@ -153,7 +153,7 @@ class _GoalCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 'Save ${goal.dailyRequired.toStringAsFixed(0)}/day to reach goal by deadline',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
               ),
             ),
         ],
@@ -283,7 +283,7 @@ class _GoalFormState extends State<_GoalForm> {
                     width: 40,
                     height: 40,
                     margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(color: _selectedIcon == _icons[i] ? theme.colorScheme.primary.withOpacity(0.1) : null, borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(color: _selectedIcon == _icons[i] ? theme.colorScheme.primary.withValues(alpha: 0.1) : null, borderRadius: BorderRadius.circular(10)),
                     child: Text(String.fromCharCode(_icons[i]), style: TextStyle(fontFamily: 'MaterialIcons', fontSize: 22, color: theme.colorScheme.primary)),
                   ),
                 ),
@@ -355,7 +355,7 @@ class _WhatIfPlannerState extends State<_WhatIfPlanner> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.05),
+        color: theme.colorScheme.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(

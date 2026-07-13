@@ -102,7 +102,7 @@ class ReceiptScannerService {
   }
 
   static double? _extractAmount(String line) {
-    final matches = RegExp(r'(?:^|\s|\$|€|£|₹|Rs\.?)(\d+(?:[.,]\d{2}))\s*').allMatches(line);
+    final matches = RegExp(r'(?:^|\s|\$|€|£|₹|Rs\.?)(\d+(?:[.,]\d{2})?)\s*').allMatches(line);
     for (final m in matches) {
       final raw = m.group(1)!.replaceAll(',', '.');
       final value = double.tryParse(raw);

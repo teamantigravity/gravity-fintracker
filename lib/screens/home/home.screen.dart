@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       Text(
                         "Good ${greeting()}",
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.5),
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                       BlocConsumer<AppCubit, AppState>(
@@ -287,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             },
             icon: Icon(_isSearching ? Symbols.close : Symbols.search, fill: 1, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(width: 8),
@@ -295,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onPressed: () => setState(() => _showCharts = !_showCharts),
             icon: Icon(_showCharts ? Symbols.list : Symbols.bar_chart, fill: 1, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(width: 8),
@@ -303,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsScreen())),
             icon: const Icon(Symbols.insights, fill: 1, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -325,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Text(
               "${_filteredPayments.length}",
               style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.5),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           const SizedBox(width: 8),
@@ -366,14 +366,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Icon(
                 Symbols.receipt_long,
                 size: 48,
-                color: colorScheme.onSurface.withOpacity(0.15),
+                color: colorScheme.onSurface.withValues(alpha: 0.15),
                 fill: 1,
               ),
               const SizedBox(height: 12),
               Text(
                 _searchController.text.isEmpty ? "No transactions yet" : "No matches found",
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.3),
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
                 ),
               ),
               if (_searchController.text.isEmpty) ...[
@@ -381,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Text(
                   "Tap + to add your first transaction",
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.2),
+                    color: colorScheme.onSurface.withValues(alpha: 0.2),
                   ),
                 ),
               ],
@@ -516,9 +516,9 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         border: Border.all(
-          color: color.withOpacity(0.15),
+          color: color.withValues(alpha: 0.15),
           width: 0.5,
         ),
       ),
@@ -534,7 +534,7 @@ class _SummaryCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: color.withOpacity(0.8),
+                  color: color.withValues(alpha: 0.8),
                 ),
               ),
             ],

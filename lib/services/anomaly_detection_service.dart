@@ -42,7 +42,11 @@ class AnomalyDetectionService {
     for (final entry in thisMonth.entries) {
       final prev = lastMonth[entry.key] ?? 0;
       if (prev > 0 && entry.value > prev * 1.5) {
-        final catName = expenses.firstWhere((p) => p.category.id == entry.key).category.name;
+        final catPayment = expenses.firstWhere(
+          (p) => p.category.id == entry.key,
+          orElse: () => expenses.first,
+        );
+        final catName = catPayment.category.name;
         anomalies.add(Anomaly(
           type: AnomalyType.categorySpike,
           title: 'Spike in $catName',

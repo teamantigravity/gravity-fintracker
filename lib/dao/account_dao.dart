@@ -58,9 +58,9 @@ class AccountDao {
 
   Future<int> delete(int id) async {
     final db = await getDBInstance();
+    await db.delete("payments", where: "account = ?", whereArgs: [id]);
+    await db.delete("recurring_transactions", where: "account = ?", whereArgs: [id]);
     var result = await db.delete("accounts", where: 'id = ?', whereArgs: [id]);
-    await db.delete("payments", where: "account = ?", whereArgs:[id]);
-    await db.delete("recurring_transactions", where: "account = ?", whereArgs:[id]);
     return result;
   }
 }

@@ -60,7 +60,7 @@ class DailyDigestService {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, now.day);
     final payments = await PaymentDao().find(range: DateTimeRange(start: start, end: now));
-    final accounts = await AccountDao().find();
+    final accounts = await AccountDao().find(withSummery: true);
 
     double spent = 0;
     double earned = 0;

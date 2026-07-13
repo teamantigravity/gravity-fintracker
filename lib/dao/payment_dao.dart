@@ -124,12 +124,4 @@ class PaymentDao {
     var result = await db.delete("payments", where: 'id = ?', whereArgs: [id]);
     return result;
   }
-
-  Future deleteAllTransactions() async {
-    final db = await getDBInstance();
-    var result = await db.delete(
-      "payments",
-    );
-    return result;
-  }
 }

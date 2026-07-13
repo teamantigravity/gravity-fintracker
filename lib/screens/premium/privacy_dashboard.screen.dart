@@ -28,8 +28,8 @@ class PrivacyDashboardScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    colorScheme.primary.withOpacity(0.15),
-                    colorScheme.primary.withOpacity(0.05),
+                    colorScheme.primary.withValues(alpha: 0.15),
+                    colorScheme.primary.withValues(alpha: 0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -48,7 +48,7 @@ class PrivacyDashboardScreen extends StatelessWidget {
                   Text(
                     "Your Privacy Score",
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -64,7 +64,7 @@ class PrivacyDashboardScreen extends StatelessWidget {
                     AppConstants.privacyPromise,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.5),
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
                       height: 1.4,
                     ),
                   ),
@@ -82,19 +82,19 @@ class PrivacyDashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            _PrivacyItem(
+            const _PrivacyItem(
               icon: Symbols.storage,
               title: "Local-Only Storage",
               description: "All data stored on your device using SQLite. Nothing in the cloud unless you opt in.",
               status: _PrivacyStatus.verified,
             ),
-            _PrivacyItem(
+            const _PrivacyItem(
               icon: Symbols.analytics,
               title: "Zero Analytics",
               description: "No Firebase, no Crashlytics, no third-party tracking SDKs. Zero telemetry.",
               status: _PrivacyStatus.verified,
             ),
-            _PrivacyItem(
+            const _PrivacyItem(
               icon: Symbols.wifi_off,
               title: "No Network Requests",
               description: "The app makes zero network calls in Free mode. Check your firewall.",
@@ -109,19 +109,19 @@ class PrivacyDashboardScreen extends StatelessWidget {
                   : _PrivacyStatus.notApplicable,
               notApplicableReason: "Sync not enabled",
             ),
-            _PrivacyItem(
+            const _PrivacyItem(
               icon: Symbols.visibility_off,
               title: "Zero-Knowledge Architecture",
               description: "Even with sync, our servers store only ciphertext. We cannot read your data.",
               status: _PrivacyStatus.verified,
             ),
-            _PrivacyItem(
+            const _PrivacyItem(
               icon: Symbols.security,
               title: "Post-Quantum Key Stretching",
               description: "100K-round SHA-512 + HKDF-SHA512 key derivation resists both classical and quantum attacks.",
               status: _PrivacyStatus.verified,
             ),
-            _PrivacyItem(
+            const _PrivacyItem(
               icon: Symbols.code,
               title: "Open Source",
               description: "Our code is open for audit. Trust, but verify.",
@@ -142,30 +142,30 @@ class PrivacyDashboardScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 children: [
-                  _DataRow(
+                  const _DataRow(
                     label: "Data sent to servers",
                     value: "0 bytes",
                     icon: Symbols.cloud_off,
-                    color: const Color(0xFF2E7D32),
+                    color: Color(0xFF2E7D32),
                   ),
                   const Divider(height: 24),
-                  _DataRow(
+                  const _DataRow(
                     label: "Third-party trackers",
                     value: "None",
                     icon: Symbols.block,
-                    color: const Color(0xFF2E7D32),
+                    color: Color(0xFF2E7D32),
                   ),
                   const Divider(height: 24),
-                  _DataRow(
+                  const _DataRow(
                     label: "Ads & profiling",
                     value: "None",
                     icon: Symbols.do_not_disturb_on,
-                    color: const Color(0xFF2E7D32),
+                    color: Color(0xFF2E7D32),
                   ),
                   const Divider(height: 24),
                   _DataRow(
@@ -186,7 +186,7 @@ class PrivacyDashboardScreen extends StatelessWidget {
                 "Gravity Fintracker is built by people who believe\nfinancial data is deeply personal.",
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.4),
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
                   fontStyle: FontStyle.italic,
                   height: 1.5,
                 ),
@@ -231,7 +231,7 @@ class _PrivacyItem extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: (isVerified ? const Color(0xFF2E7D32) : Colors.grey)
-                  .withOpacity(0.1),
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -268,7 +268,7 @@ class _PrivacyItem extends StatelessWidget {
                 Text(
                   description,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.5),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     height: 1.3,
                   ),
                 ),

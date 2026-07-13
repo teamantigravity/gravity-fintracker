@@ -65,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return ListView(
               children: [
                 // PROFILE SECTION
-                _SectionHeader(title: "Profile"),
+                const _SectionHeader(title: "Profile"),
                 ListTile(
                   onTap: () {
                     showDialog(context: context, builder: (context) {
@@ -134,7 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
 
                 // APPEARANCE SECTION
-                _SectionHeader(title: "Appearance"),
+                const _SectionHeader(title: "Appearance"),
                 ListTile(
                   leading: const CircleAvatar(child: Icon(Symbols.palette)),
                   title: Text('Theme', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
@@ -165,11 +165,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
 
                 // SECURITY SECTION
-                _SectionHeader(title: "Security"),
+                const _SectionHeader(title: "Security"),
                 if (AppConstants.enableBiometricLock && (_biometricAvailable || _hasPin))
                   SwitchListTile(
                     secondary: CircleAvatar(
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                       child: Icon(Symbols.fingerprint, color: colorScheme.primary),
                     ),
                     title: Text('App Lock', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (AppConstants.enableBiometricLock)
                   ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                       child: Icon(Symbols.pin, color: colorScheme.primary),
                     ),
                     title: Text(_hasPin ? 'Change PIN' : 'Set PIN', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
@@ -215,10 +215,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
 
                 // PRIVACY SECTION
-                _SectionHeader(title: "Privacy"),
+                const _SectionHeader(title: "Privacy"),
                 ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF2E7D32).withOpacity(0.1),
+                    backgroundColor: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                     child: const Icon(Symbols.verified_user, color: Color(0xFF2E7D32)),
                   ),
                   title: Text('Privacy Dashboard', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
@@ -253,7 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
 
                 // DATA SECTION
-                _SectionHeader(title: "Data"),
+                const _SectionHeader(title: "Data"),
                 ListTile(
                   onTap: () async {
                     if (!context.mounted) return;
@@ -465,25 +465,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
 
                 // PREMIUM SECTION
-                _SectionHeader(title: "Premium"),
+                const _SectionHeader(title: "Premium"),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        colorScheme.primary.withOpacity(0.1),
-                        colorScheme.tertiary.withOpacity(0.05),
+                        colorScheme.primary.withValues(alpha: 0.1),
+                        colorScheme.tertiary.withValues(alpha: 0.05),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+                    border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.15),
+                        color: colorScheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(Symbols.workspace_premium, color: colorScheme.primary, fill: 1),
@@ -502,7 +502,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ? Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2E7D32).withOpacity(0.1),
+                              color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text("Active", style: TextStyle(color: Color(0xFF2E7D32), fontSize: 12, fontWeight: FontWeight.w600)),
@@ -517,7 +517,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
 
                 // ABOUT SECTION
-                _SectionHeader(title: "About"),
+                const _SectionHeader(title: "About"),
                 ListTile(
                   leading: const CircleAvatar(child: Icon(Symbols.info)),
                   title: Text('Version', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
@@ -694,7 +694,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -831,7 +831,7 @@ class _ColorDot extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

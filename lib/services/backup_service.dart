@@ -52,12 +52,14 @@ class BackupService {
     final categories = await db.database!.query('categories');
     final payments = await db.database!.query('payments');
     final recurring = await db.database!.query('recurring_transactions');
+    final savingsGoals = await db.database!.query('savings_goals');
 
     final data = {
       'accounts': accounts,
       'categories': categories,
       'payments': payments,
       'recurring_transactions': recurring,
+      'savings_goals': savingsGoals,
       'timestamp': DateTime.now().toIso8601String(),
     };
 

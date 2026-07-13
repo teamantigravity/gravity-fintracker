@@ -60,12 +60,4 @@ class CategoryDao {
     var result = await db.delete("categories", where: 'id = ?', whereArgs: [id]);
     return result;
   }
-
-  Future deleteAll() async {
-    final db = await getDBInstance();
-    var result = await db.delete(
-      "categories",
-    );
-    return result;
-  }
 }

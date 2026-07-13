@@ -6,12 +6,10 @@ import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-typedef Callback = void Function();
 class CategoryForm extends StatefulWidget {
   final Category? category;
-  final Callback? onSave;
 
-  const CategoryForm({super.key, this.category, this.onSave});
+  const CategoryForm({super.key, this.category});
 
   @override
   State<StatefulWidget> createState() => _CategoryForm();
@@ -38,16 +36,9 @@ class _CategoryForm extends State<CategoryForm>{
       return;
     }
     await _categoryDao.upsert(_category);
-    if(widget.onSave != null) {
-      widget.onSave!();
-    }
     if (!context.mounted) return;
     Navigator.pop(context);
     globalEvent.emit("category_update");
-  }
-
-  void pickIcon(context)async {
-
   }
   @override
   Widget build(BuildContext context) {
@@ -179,7 +170,7 @@ class _CategoryForm extends State<CategoryForm>{
                             height: 50,
                             width: 50,
                             decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(40),
                                 border: Border.all(
                                     color: _category.icon == AppIcons.icons[index] ? Theme.of(context).colorScheme.primary: Colors.transparent,

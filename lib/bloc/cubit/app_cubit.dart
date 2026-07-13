@@ -1,5 +1,5 @@
+import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,7 +30,7 @@ class AppState {
     appState.currency = currency;
     appState.themeMode = _parseThemeMode(themeModeStr);
     appState.appLockEnabled = appLock ?? false;
-    appState.isPro = isPro ?? false;
+    appState.isPro = (isPro ?? false) || SubscriptionService().isPro;
     appState.privacyMode = privacyMode ?? false;
     appState.dailyDigestEnabled = dailyDigest ?? false;
 

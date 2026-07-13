@@ -24,7 +24,7 @@ class PaymentListItem extends StatelessWidget{
         width: 48,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: payment.category.color.withOpacity(0.12),
+          color: payment.category.color.withValues(alpha: 0.12),
         ),
         child: Icon(payment.category.icon, size: 22, color: payment.category.color),
       ),
@@ -40,7 +40,7 @@ class PaymentListItem extends StatelessWidget{
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: payment.category.color.withOpacity(0.1),
+              color: payment.category.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -61,13 +61,13 @@ class PaymentListItem extends StatelessWidget{
             if (payment.account.name.isNotEmpty)
               TextSpan(text: " • ${payment.account.name}"),
           ],
-          style: theme.textTheme.bodySmall?.apply(color: colorScheme.onSurface.withOpacity(0.5), overflow: TextOverflow.ellipsis),
+          style: theme.textTheme.bodySmall?.apply(color: colorScheme.onSurface.withValues(alpha: 0.5), overflow: TextOverflow.ellipsis),
         ),
       ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isCredit ? ThemeColors.success.withOpacity(0.08) : ThemeColors.error.withOpacity(0.08),
+          color: isCredit ? ThemeColors.success.withValues(alpha: 0.08) : ThemeColors.error.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
         ),
         child: CurrencyText(

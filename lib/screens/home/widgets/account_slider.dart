@@ -66,7 +66,7 @@ class _AccountSlider extends State<AccountsSlider> {
                 width: _selected == index ? 20 : 6,
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
-                  color: _selected == index ? dotColor : dotColor.withOpacity(0.35),
+                  color: _selected == index ? dotColor : dotColor.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(60),
                 ),
               );
@@ -93,11 +93,11 @@ class _AccountCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [account.color.withOpacity(0.85), account.color],
+          colors: [account.color.withValues(alpha: 0.85), account.color],
         ),
         boxShadow: [
           BoxShadow(
-            color: account.color.withOpacity(0.35),
+            color: account.color.withValues(alpha: 0.35),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -116,7 +116,7 @@ class _AccountCard extends StatelessWidget {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
               ),
             ),
@@ -130,7 +130,7 @@ class _AccountCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
+                          color: Colors.white.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(account.icon, color: Colors.white, size: 18),
@@ -153,7 +153,7 @@ class _AccountCard extends StatelessWidget {
                               account.holderName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.65)),
+                              style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.65)),
                             ),
                           ],
                         ),
@@ -164,7 +164,7 @@ class _AccountCard extends StatelessWidget {
                   Text(
                     "BALANCE",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.0,
@@ -181,21 +181,21 @@ class _AccountCard extends StatelessWidget {
                   const Spacer(),
                   Row(
                     children: [
-                      Icon(Symbols.arrow_downward, size: 13, color: Colors.white.withOpacity(0.85)),
+                      Icon(Symbols.arrow_downward, size: 13, color: Colors.white.withValues(alpha: 0.85)),
                       const SizedBox(width: 3),
                       Flexible(
                         child: CurrencyText(
                           account.income ?? 0,
-                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w600),
                         ),
                       ),
                       const SizedBox(width: 14),
-                      Icon(Symbols.arrow_upward, size: 13, color: Colors.white.withOpacity(0.85)),
+                      Icon(Symbols.arrow_upward, size: 13, color: Colors.white.withValues(alpha: 0.85)),
                       const SizedBox(width: 3),
                       Flexible(
                         child: CurrencyText(
                           account.expense ?? 0,
-                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -220,7 +220,7 @@ class _AddAccountCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6),
       child: Material(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(22),
         child: InkWell(
           borderRadius: BorderRadius.circular(22),
@@ -229,7 +229,7 @@ class _AddAccountCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: colorScheme.outlineVariant.withOpacity(0.4),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.4),
                 width: 1.2,
               ),
             ),
@@ -240,7 +240,7 @@ class _AddAccountCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Symbols.add, color: colorScheme.primary),
@@ -248,7 +248,7 @@ class _AddAccountCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     "Add Account",
-                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.w600, fontSize: 13),
+                    style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                 ],
               ),

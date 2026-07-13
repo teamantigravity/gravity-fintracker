@@ -19,7 +19,7 @@ class CurrencyText extends StatelessWidget{
       Currency? currency = currencyService.findByCode(currencyCode);
       final bool privacy = state.privacyMode;
       return Text(
-        amount==null ? (currency?.symbol ?? '\$') : (privacy ? '•••' : CurrencyHelper.format(amount!, name: currency?.code, symbol: currency?.symbol)),
+        amount==null ? (currency?.symbol ?? '\$') : (privacy ? '•••' : CurrencyHelper.format(amount!, symbol: currency?.symbol ?? '\$')),
         style: style,
         overflow: overflow,
       );

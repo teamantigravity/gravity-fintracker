@@ -106,7 +106,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                               ),
                               Text(
                                 'Savings ${snapshot.data?.savingsRate.toStringAsFixed(0)}% · Budget ${snapshot.data?.budgetScore} · Liquidity ${snapshot.data?.liquidityScore}',
-                                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.6)),
+                                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
                               ),
                             ],
                           ),
@@ -143,7 +143,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
           child: anomalies.isEmpty
               ? Row(
                   children: [
-                    Icon(Symbols.check_circle, color: AppTheme.incomeColor),
+                    const Icon(Symbols.check_circle, color: AppTheme.incomeColor),
                     const SizedBox(width: 8),
                     Text('No anomalies detected', style: theme.textTheme.bodyMedium),
                   ],
@@ -237,9 +237,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +251,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: colorScheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: colorScheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                   child: Text('PRO', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: colorScheme.primary)),
                 ),
               ],
@@ -274,7 +274,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
           CircularProgressIndicator(
             value: score / 100,
             strokeWidth: 6,
-            backgroundColor: color.withOpacity(0.15),
+            backgroundColor: color.withValues(alpha: 0.15),
             valueColor: AlwaysStoppedAnimation(color),
           ),
           Center(child: Text('$score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color))),
@@ -297,7 +297,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(anomaly.title, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-                Text(anomaly.description, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7))),
+                Text(anomaly.description, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
               ],
             ),
           ),
@@ -310,7 +310,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 11, color: color.withOpacity(0.8))),
+        Text(label, style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8))),
         value,
       ],
     );
@@ -323,7 +323,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.05),
+          color: theme.colorScheme.primary.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

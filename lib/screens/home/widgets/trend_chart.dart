@@ -68,9 +68,9 @@ class TrendChart extends StatelessWidget {
                     ),
               ),
               const Spacer(),
-              _LegendDot(color: AppTheme.incomeColor, label: "Income"),
+              const _LegendDot(color: AppTheme.incomeColor, label: "Income"),
               const SizedBox(width: 12),
-              _LegendDot(color: AppTheme.expenseColor, label: "Expense"),
+              const _LegendDot(color: AppTheme.expenseColor, label: "Expense"),
             ],
           ),
           const SizedBox(height: 20),
@@ -154,7 +154,7 @@ class TrendChart extends StatelessWidget {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppTheme.incomeColor.withOpacity(0.1),
+                      color: AppTheme.incomeColor.withValues(alpha: 0.1),
                     ),
                   ),
                   LineChartBarData(

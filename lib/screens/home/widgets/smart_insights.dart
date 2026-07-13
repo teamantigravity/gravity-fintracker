@@ -40,7 +40,7 @@ class _SmartInsightsCardState extends State<SmartInsightsCard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -80,7 +80,7 @@ class _SmartInsightsCardState extends State<SmartInsightsCard> {
                   decoration: BoxDecoration(
                     color: _page == i
                         ? _insightColor(insights[i].type)
-                        : colorScheme.outlineVariant.withOpacity(0.5),
+                        : colorScheme.outlineVariant.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(60),
                   ),
                 );
@@ -107,15 +107,15 @@ class _InsightCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: color.withOpacity(0.08),
-        border: Border.all(color: color.withOpacity(0.18), width: 1),
+        color: color.withValues(alpha: 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.18), width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
             child: Icon(_insightIcon(insight.type), size: 18, color: color),
           ),
           const SizedBox(width: 12),
@@ -133,7 +133,7 @@ class _InsightCard extends StatelessWidget {
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     height: 1.35,
                   ),
                 ),

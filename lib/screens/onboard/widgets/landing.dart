@@ -22,7 +22,7 @@ class LandingPage extends StatelessWidget{
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(Symbols.account_balance_wallet, size: 36, color: colorScheme.primary, fill: 1),
@@ -39,15 +39,15 @@ class LandingPage extends StatelessWidget{
               Text(
                 AppConstants.appTagline,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.5),
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
                   fontWeight: FontWeight.w400,
                 ),
               ),
               const SizedBox(height: 40),
-              _FeatureRow(
+              const _FeatureRow(
                 icon: Symbols.shield,
                 text: "Your data stays on your device. Always.",
-                color: const Color(0xFF2E7D32),
+                color: Color(0xFF2E7D32),
               ),
               const SizedBox(height: 16),
               _FeatureRow(
@@ -62,10 +62,10 @@ class LandingPage extends StatelessWidget{
                 color: colorScheme.tertiary,
               ),
               const SizedBox(height: 16),
-              _FeatureRow(
+              const _FeatureRow(
                 icon: Symbols.visibility_off,
                 text: "Zero analytics. Zero tracking. Zero ads.",
-                color: const Color(0xFFC62828),
+                color: Color(0xFFC62828),
               ),
               const Spacer(flex: 2),
               SizedBox(
@@ -91,7 +91,7 @@ class LandingPage extends StatelessWidget{
                 child: Text(
                   "No account required. No data collected.",
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.3),
+                    color: colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -116,7 +116,7 @@ class _FeatureRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 18, fill: 1),

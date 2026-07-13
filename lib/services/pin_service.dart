@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -10,17 +12,27 @@ class PinService {
 
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   static const String _pinHashKey = 'fintracker_pin_hash';
+  static final Random _secureRandom = Random.secure();
 
   Future<void> setPin(String pin) async {
     if (pin.isEmpty) throw ArgumentError('PIN cannot be empty');
-    final hash = _hash(pin);
-    await _secureStorage.write(key: _pinHashKey, value: hash);
+    final salt = _randomBytes(16);
+    final hash = _hash(pin, salt);
+    await _secureStorage.write(key: _pinHashKey, value: '${base64Encode(salt)}:$hash');
   }
 
   Future<bool> verifyPin(String pin) async {
     final stored = await _secureStorage.read(key: _pinHashKey);
-    if (stored == null) return false;
-    return stored == _hash(pin);
+    if (stored == null || stored.isEmpty) return false;
+
+    final parts = stored.split(':');
+    if (parts.length == 2) {
+      final salt = base64Decode(parts[0]);
+      return _hash(pin, salt) == parts[1];
+    }
+
+    // Legacy unsalted SHA-256 fallback (setPin now always stores salt)
+    return stored == _legacyHash(pin);
   }
 
   Future<bool> hasPin() async {
@@ -32,9 +44,18 @@ class PinService {
     await _secureStorage.delete(key: _pinHashKey);
   }
 
-  String _hash(String pin) {
+  Uint8List _randomBytes(int length) {
+    return Uint8List.fromList(List<int>.generate(length, (_) => _secureRandom.nextInt(256)));
+  }
+
+  String _hash(String pin, Uint8List salt) {
     final bytes = utf8.encode(pin);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
+    final hmac = Hmac(sha256, salt);
+    return hmac.convert(bytes).toString();
+  }
+
+  String _legacyHash(String pin) {
+    final bytes = utf8.encode(pin);
+    return sha256.convert(bytes).toString();
   }
 }

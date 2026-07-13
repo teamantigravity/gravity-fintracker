@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
-double safeDouble(dynamic value) {
-  if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? 0.0;
-  return 0.0;
-}
 void v1(Database database) async {
   debugPrint("Running first migration....");
   await database.execute("CREATE TABLE payments ("

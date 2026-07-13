@@ -7,7 +7,7 @@ import 'package:fintracker/model/payment.model.dart';
 class CoachService {
   static Future<List<CoachMessage>> generateInsights() async {
     final payments = await PaymentDao().find();
-    final accounts = await AccountDao().find();
+    final accounts = await AccountDao().find(withSummery: true);
     final categories = await CategoryDao().find();
     final recurring = await RecurringDao().find();
 

@@ -65,12 +65,14 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
                     child: Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: List.generate(filter().length, (index){
-                        Currency currency = filter()[index];
-                        return SizedBox(
+                      children: (){
+                        final currencies = filter();
+                        return List.generate(currencies.length, (index){
+                          Currency currency = currencies[index];
+                          return SizedBox(
                             width: (MediaQuery.of(context).size.width /2) -  20,
                             child: MaterialButton(
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(18),
                                     side: BorderSide(
@@ -96,7 +98,7 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         CircleAvatar(
-                                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                                           child: Text(currency.symbol),
                                         ),
                                         const SizedBox(height: 10,),
@@ -106,8 +108,9 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
                                     )
                                 )
                             )
-                        );
-                      }),
+                          );
+                        });
+                      }(),
                     ),
                   )
               )
