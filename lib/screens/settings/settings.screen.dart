@@ -7,6 +7,7 @@ import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/screens/premium/paywall.screen.dart';
 import 'package:fintracker/screens/premium/privacy_dashboard.screen.dart';
 import 'package:fintracker/services/backup_service.dart';
+import 'package:fintracker/services/daily_digest_service.dart';
 import 'package:fintracker/services/pin_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
@@ -227,6 +228,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const PrivacyDashboardScreen()),
                     );
+                  },
+                ),
+                SwitchListTile(
+                  value: state.privacyMode,
+                  title: Text('Privacy Mode', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text('Hide all amounts with •••', style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  secondary: const CircleAvatar(child: Icon(Symbols.visibility_off)),
+                  onChanged: (value) => context.read<AppCubit>().updatePrivacyMode(value),
+                ),
+                SwitchListTile(
+                  value: state.dailyDigestEnabled,
+                  title: Text('Daily Digest', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text('Morning notification with your spending snapshot', style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  secondary: const CircleAvatar(child: Icon(Symbols.notifications_active)),
+                  onChanged: (value) async {
+                    context.read<AppCubit>().updateDailyDigest(value);
+                    if (value) {
+                      await DailyDigestService.schedule();
+                    } else {
+                      await DailyDigestService.cancel();
+                    }
                   },
                 ),
 

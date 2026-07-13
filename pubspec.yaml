@@ -70,10 +70,20 @@ dependencies:
   crypto: ^3.0.3
 
   # Utilities
-  uuid: ^4.3.0
+  uuid: ^3.0.7
 
   # Notifications
   flutter_local_notifications: ^17.1.0
+  timezone: ^0.9.4
+
+  # AI / Input
+  google_mlkit_text_recognition: ^0.13.0
+  image_picker: ^1.1.2
+  speech_to_text: ^6.6.0
+
+  # Desktop
+  system_tray: ^2.0.0
+  window_manager: ^0.3.9
 dev_dependencies:
   flutter_test:
     sdk: flutter

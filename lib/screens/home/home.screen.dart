@@ -10,6 +10,7 @@ import 'package:fintracker/screens/home/widgets/account_slider.dart';
 import 'package:fintracker/screens/home/widgets/income_expense_chart.dart';
 import 'package:fintracker/screens/home/widgets/payment_list_item.dart';
 import 'package:fintracker/screens/home/widgets/smart_insights.dart';
+import 'package:fintracker/screens/insights/insights.screen.dart';
 import 'package:fintracker/screens/home/widgets/spending_chart.dart';
 import 'package:fintracker/screens/home/widgets/trend_chart.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
@@ -293,6 +294,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           IconButton(
             onPressed: () => setState(() => _showCharts = !_showCharts),
             icon: Icon(_showCharts ? Symbols.list : Symbols.bar_chart, fill: 1, size: 22),
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsScreen())),
+            icon: const Icon(Symbols.insights, fill: 1, size: 22),
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
             ),

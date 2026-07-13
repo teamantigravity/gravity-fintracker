@@ -13,6 +13,8 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
+  FlutterLocalNotificationsPlugin get plugin => _notifications;
+
   Future<void> init() async {
     if (_initialized) return;
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -76,6 +78,33 @@ class NotificationService {
       );
     } catch (_) {
       // Notifications are best-effort; never break transaction processing
+    }
+  }
+
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    try {
+      if (!_initialized) await init();
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'general_channel',
+        'General',
+        channelDescription: 'General app notifications',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+      );
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+        linux: LinuxNotificationDetails(),
+      );
+      await _notifications.show(id, title, body, details, payload: payload);
+    } catch (_) {
+      // Notifications are best-effort
     }
   }
 }

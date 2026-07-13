@@ -17,8 +17,9 @@ class CurrencyText extends StatelessWidget{
     return BlocBuilder<AppCubit, AppState>(builder: (context, state){
       final String currencyCode = state.currency ?? 'USD';
       Currency? currency = currencyService.findByCode(currencyCode);
+      final bool privacy = state.privacyMode;
       return Text(
-        amount==null ? (currency?.symbol ?? '\$') : CurrencyHelper.format(amount!, name: currency?.code, symbol: currency?.symbol),
+        amount==null ? (currency?.symbol ?? '\$') : (privacy ? '•••' : CurrencyHelper.format(amount!, name: currency?.code, symbol: currency?.symbol)),
         style: style,
         overflow: overflow,
       );

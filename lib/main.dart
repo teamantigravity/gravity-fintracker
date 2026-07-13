@@ -3,6 +3,8 @@ import 'package:fintracker/bloc/cubit/app_cubit.dart';
 import 'package:fintracker/dao/recurring_dao.dart';
 import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/helpers/platform_database.dart';
+import 'package:fintracker/services/daily_digest_service.dart';
+import 'package:fintracker/services/desktop_service.dart';
 import 'package:fintracker/services/notification_service.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +33,22 @@ void main() async {
     debugPrint('Recurring processing failed: $e');
   }
 
+  try {
+    await DesktopService.initialize();
+  } catch (e) {
+    debugPrint('Desktop service init failed: $e');
+  }
+
   AppState appState = await AppState.getState();
   appState.isPro = SubscriptionService().isPro || appState.isPro;
+
+  if (appState.dailyDigestEnabled) {
+    try {
+      await DailyDigestService.schedule();
+    } catch (e) {
+      debugPrint('Daily digest schedule failed: $e');
+    }
+  }
 
   runApp(
       MultiBlocProvider(

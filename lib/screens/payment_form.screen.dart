@@ -10,6 +10,8 @@ import 'package:fintracker/theme/colors.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:fintracker/widgets/dialog/account_form.dialog.dart';
 import 'package:fintracker/widgets/dialog/category_form.dialog.dart';
+import 'package:fintracker/widgets/ai/receipt_scanner_button.dart';
+import 'package:fintracker/widgets/ai/voice_input_button.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/dialog/confirm.modal.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +24,11 @@ class PaymentForm extends StatefulWidget{
   final PaymentType  type;
   final Payment?  payment;
   final OnCloseCallback? onClose;
+  final String? prefillTitle;
+  final double? prefillAmount;
+  final DateTime? prefillDate;
 
-  const PaymentForm({super.key, required this.type, this.payment, this.onClose});
+  const PaymentForm({super.key, required this.type, this.payment, this.onClose, this.prefillTitle, this.prefillAmount, this.prefillDate});
 
   @override
   State<PaymentForm> createState() => _PaymentForm();
@@ -97,6 +102,9 @@ class _PaymentForm extends State<PaymentForm>{
     } else {
       setState(() {
         _type = widget.type;
+        _title = widget.prefillTitle ?? '';
+        _amount = widget.prefillAmount ?? 0;
+        _datetime = widget.prefillDate ?? DateTime.now();
         _initialised = true;
       });
     }
@@ -216,6 +224,8 @@ class _PaymentForm extends State<PaymentForm>{
           appBar: AppBar(
             title: Text("${widget.payment ==null? "New": "Edit"} Transaction", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
             actions: [
+              if (widget.payment == null) const ReceiptScannerButton(),
+              if (widget.payment == null) const VoiceInputButton(),
               _id!=null ? IconButton(
                   onPressed: (){
                     ConfirmModal.showConfirmDialog(context, title: "Are you sure?", content: const Text("After deleting payment can't be recovered."),

@@ -1,3 +1,4 @@
+import 'package:fintracker/helpers/icon.helper.dart';
 import 'package:flutter/material.dart';
 
 class Account {
@@ -32,7 +33,7 @@ class Account {
     name: data["name"] ?? 'Unknown',
     holderName: data["holderName"] ?? "",
     accountNumber: data["accountNumber"] ?? "",
-    icon: data["icon"] is int ? IconData(data["icon"], fontFamily: 'MaterialIcons') : Icons.account_balance,
+    icon: data["icon"] is int ? IconHelper.lookup(data["icon"], fallback: Icons.account_balance) : Icons.account_balance,
     color: data["color"] is int ? Color(data["color"]) : Colors.grey,
     isDefault: data["isDefault"] == true || data["isDefault"] == 1,
     income: (data["income"] as num?)?.toDouble(),
