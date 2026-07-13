@@ -23,25 +23,32 @@ class PaymentDao {
     Account? account
 }) async {
     final db = await getDBInstance();
-    String where = "";
+    List<String> whereClauses = [];
+    List<Object> whereArgs = [];
+    final dateFormatter = DateFormat('yyyy-MM-dd HH:mm:ss');
 
     if(range!=null){
-      where += "AND datetime BETWEEN DATE('${DateFormat('yyyy-MM-dd HH:mm:ss').format(range.start)}') AND DATE('${DateFormat('yyyy-MM-dd HH:mm:ss').format(range.end.add(const Duration(days: 1)))}')";
+      whereClauses.add("datetime BETWEEN DATE(?) AND DATE(?)");
+      whereArgs.add(dateFormatter.format(range.start));
+      whereArgs.add(dateFormatter.format(range.end.add(const Duration(days: 1))));
     }
 
     //type check
     if(type != null){
-      where += "AND type='${type == PaymentType.credit?"CR":"DR"}' ";
+      whereClauses.add("type = ?");
+      whereArgs.add(type == PaymentType.credit?"CR":"DR");
     }
 
     //account check
     if(account != null && account.id != null){
-      where += "AND account='${account.id}' ";
+      whereClauses.add("account = ?");
+      whereArgs.add(account.id!);
     }
 
     //category check
     if(category != null && category.id != null){
-      where += "AND category='${category.id}' ";
+      whereClauses.add("category = ?");
+      whereArgs.add(category.id!);
     }
 
     //categories
@@ -53,7 +60,8 @@ class PaymentDao {
     List<Map<String, Object?>> rows =  await db.query(
         "payments",
         orderBy: "datetime DESC, id DESC",
-        where: "1=1 $where"
+        where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
+        whereArgs: whereArgs.isNotEmpty ? whereArgs : null
     );
     for (var row in rows) {
       Map<String, dynamic> payment = Map<String, dynamic>.from(row);
