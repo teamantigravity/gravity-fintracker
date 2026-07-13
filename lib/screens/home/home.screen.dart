@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:events_emitter/events_emitter.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
 import 'package:fintracker/dao/account_dao.dart';
 import 'package:fintracker/dao/payment_dao.dart';
@@ -207,19 +209,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 60),
-                  _buildHeader(colorScheme, theme),
+                  _buildHeader(colorScheme, theme).animate().fade(duration: 400.ms).slideY(begin: -0.1),
                   const SizedBox(height: 16),
-                  AccountsSlider(accounts: _accounts),
+                  AccountsSlider(accounts: _accounts).animate().fade(duration: 500.ms, delay: 100.ms).slideY(begin: 0.1),
                   const SizedBox(height: 16),
-                  _SummaryCards(income: _income, expense: _expense),
+                  _SummaryCards(income: _income, expense: _expense).animate().fade(duration: 500.ms, delay: 200.ms).slideY(begin: 0.1),
                   if (_showCharts && _payments.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    TrendChart(payments: _payments),
-                    SpendingChart(payments: _payments),
-                    IncomeExpenseChart(payments: _payments),
+                    TrendChart(payments: _payments).animate().fade(duration: 400.ms),
+                    SpendingChart(payments: _payments).animate().fade(duration: 400.ms),
+                    IncomeExpenseChart(payments: _payments).animate().fade(duration: 400.ms),
                   ],
                   if (_payments.isNotEmpty)
-                    SmartInsightsCard(payments: _payments),
+                    SmartInsightsCard(payments: _payments).animate().fade(duration: 600.ms, delay: 300.ms).slideY(begin: 0.1),
                   _buildTransactionsHeader(theme, colorScheme),
                   const SizedBox(height: 4),
                 ],
@@ -512,16 +514,34 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: color.withValues(alpha: 0.08),
-        border: Border.all(
-          color: color.withValues(alpha: 0.15),
-          width: 0.5,
-        ),
-      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.15),
+                color.withValues(alpha: 0.05),
+              ],
+            ),
+            border: Border.all(
+              color: color.withValues(alpha: 0.25),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -550,6 +570,7 @@ class _SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  ));
   }
 }

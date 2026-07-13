@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:crypto/crypto.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Quantum-Resistant E2E Encrypted Sync Service
 ///
@@ -41,8 +42,7 @@ class SyncService {
   static const int _ivLength = 16; // 128-bit IV for AES
 
   bool get isEnabled => AppConstants.enableSync;
-  bool _isAuthenticated = false;
-  bool get isAuthenticated => _isAuthenticated;
+  bool get isAuthenticated => Supabase.instance.client.auth.currentSession != null;
 
   // CSPRNG
   final Random _secureRandom = Random.secure();
@@ -252,13 +252,13 @@ class SyncService {
     globalEvent.emit("category_update");
   }
 
-  // Supabase sync stubs
+  // Supabase sync real implementation
   Future<void> signIn({required String email, required String password}) async {
     if (!isEnabled) {
       debugPrint('Sync not enabled. Configure Supabase in constants.dart');
       return;
     }
-    _isAuthenticated = true;
+    await Supabase.instance.client.auth.signInWithPassword(email: email, password: password);
   }
 
   Future<void> signUp({required String email, required String password}) async {
@@ -266,27 +266,51 @@ class SyncService {
       debugPrint('Sync not enabled. Configure Supabase in constants.dart');
       return;
     }
-    _isAuthenticated = true;
+    await Supabase.instance.client.auth.signUp(email: email, password: password);
   }
 
   Future<void> signOut() async {
-    _isAuthenticated = false;
+    await Supabase.instance.client.auth.signOut();
   }
 
   Future<void> pushToCloud() async {
-    if (!isEnabled || !_isAuthenticated) return;
+    if (!isEnabled || !isAuthenticated) return;
     final snapshot = await exportEncryptedSnapshot();
-    debugPrint('Push to cloud: ${snapshot["timestamp"]}');
+    
+    final userId = Supabase.instance.client.auth.currentUser!.id;
+    
+    // Upsert into Supabase (assumes a 'sync_snapshots' table exists with user_id, encrypted_data, timestamp)
+    await Supabase.instance.client.from('sync_snapshots').upsert({
+      'user_id': userId,
+      'encrypted_data': snapshot['encrypted_data'],
+      'updated_at': snapshot['timestamp'],
+    });
+    
+    debugPrint('Push to cloud complete: ${snapshot["timestamp"]}');
   }
 
   Future<void> pullFromCloud() async {
-    if (!isEnabled || !_isAuthenticated) return;
-    debugPrint('Pull from cloud');
+    if (!isEnabled || !isAuthenticated) return;
+    
+    final userId = Supabase.instance.client.auth.currentUser!.id;
+    
+    final response = await Supabase.instance.client
+        .from('sync_snapshots')
+        .select('encrypted_data, updated_at')
+        .eq('user_id', userId)
+        .maybeSingle();
+        
+    if (response != null && response['encrypted_data'] != null) {
+      await importEncryptedSnapshot(response['encrypted_data'] as String);
+      debugPrint('Pull from cloud complete: ${response["updated_at"]}');
+    } else {
+      debugPrint('No cloud snapshot found.');
+    }
   }
 
   Future<SyncStatus> getSyncStatus() async {
     if (!isEnabled) return SyncStatus.disabled;
-    if (!_isAuthenticated) return SyncStatus.notAuthenticated;
+    if (!isAuthenticated) return SyncStatus.notAuthenticated;
     return SyncStatus.synced;
   }
 }

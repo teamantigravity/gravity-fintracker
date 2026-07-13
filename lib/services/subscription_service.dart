@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:fintracker/config/constants.dart';
 import 'package:flutter/foundation.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 /// Subscription management service
 ///
@@ -27,10 +29,19 @@ class SubscriptionService {
       return;
     }
 
-    // TODO: Initialize RevenueCat
-    // await Purchases.configure(PurchasesConfiguration(
-    //   Platform.isIOS ? AppConstants.revenueCatAppleKey : AppConstants.revenueCatGoogleKey,
-    // ));
+    if (kIsWeb || Platform.isWindows || Platform.isLinux) {
+      _isPro = true; // Web/Desktop use mock pro for now
+      return;
+    }
+
+    await Purchases.setLogLevel(LogLevel.debug);
+    PurchasesConfiguration configuration;
+    if (Platform.isIOS || Platform.isMacOS) {
+      configuration = PurchasesConfiguration(AppConstants.revenueCatAppleKey);
+    } else {
+      configuration = PurchasesConfiguration(AppConstants.revenueCatGoogleKey);
+    }
+    await Purchases.configure(configuration);
 
     await _checkEntitlements();
   }
@@ -42,10 +53,9 @@ class SubscriptionService {
     }
 
     try {
-      // TODO: Check RevenueCat entitlements
-      // final customerInfo = await Purchases.getCustomerInfo();
-      // _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
-      _isPro = false;
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return;
+      final customerInfo = await Purchases.getCustomerInfo();
+      _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
     } catch (e) {
       debugPrint('Error checking entitlements: $e');
       _isPro = false;
@@ -56,14 +66,14 @@ class SubscriptionService {
     if (!AppConstants.enableSubscriptions) return true;
 
     try {
-      // TODO: Implement RevenueCat purchase
-      // final offerings = await Purchases.getOfferings();
-      // final monthly = offerings.current?.monthly;
-      // if (monthly != null) {
-      //   await Purchases.purchasePackage(monthly);
-      //   await _checkEntitlements();
-      //   return _isPro;
-      // }
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return true;
+      final offerings = await Purchases.getOfferings();
+      final monthly = offerings.current?.monthly;
+      if (monthly != null) {
+        final result = await Purchases.purchasePackage(monthly);
+        _isPro = result.entitlements.all['pro']?.isActive ?? false;
+        return _isPro;
+      }
       return false;
     } catch (e) {
       debugPrint('Purchase error: $e');
@@ -75,7 +85,14 @@ class SubscriptionService {
     if (!AppConstants.enableSubscriptions) return true;
 
     try {
-      // TODO: Implement RevenueCat purchase
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return true;
+      final offerings = await Purchases.getOfferings();
+      final annual = offerings.current?.annual;
+      if (annual != null) {
+        final result = await Purchases.purchasePackage(annual);
+        _isPro = result.entitlements.all['pro']?.isActive ?? false;
+        return _isPro;
+      }
       return false;
     } catch (e) {
       debugPrint('Purchase error: $e');
@@ -87,8 +104,8 @@ class SubscriptionService {
     if (!AppConstants.enableSubscriptions) return;
 
     try {
-      // TODO: Implement RevenueCat restore
-      // await Purchases.restorePurchases();
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return;
+      await Purchases.restorePurchases();
       await _checkEntitlements();
     } catch (e) {
       debugPrint('Restore error: $e');

@@ -3,12 +3,15 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  app_links
   file_selector_windows
   flutter_secure_storage_windows
   local_auth_windows
   permission_handler_windows
   screen_retriever
+  speech_to_text_windows
   system_tray
+  url_launcher_windows
   window_manager
 )
 

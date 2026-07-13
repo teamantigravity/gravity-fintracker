@@ -14,7 +14,7 @@ class AppTheme {
   static const Color expenseColor = Color(0xFFC62828);
 
   static TextTheme _buildTextTheme(TextTheme base) {
-    return GoogleFonts.interTextTheme(base);
+    return GoogleFonts.outfitTextTheme(base);
   }
 
   static Color _seedColor(int? themeColor) {
@@ -39,10 +39,11 @@ class AppTheme {
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 1,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurface,
+          letterSpacing: -0.5,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -75,10 +76,11 @@ class AppTheme {
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 1,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurface,
+          letterSpacing: -0.5,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -122,10 +124,11 @@ class AppTheme {
         elevation: 0,
         backgroundColor: Colors.black,
         scrolledUnderElevation: 0,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: Colors.white,
+          letterSpacing: -0.5,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -171,12 +174,12 @@ class AppTheme {
   static NavigationBarThemeData _navigationBarTheme() {
     return NavigationBarThemeData(
       labelTextStyle: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-        TextStyle style = GoogleFonts.inter(
+        TextStyle style = GoogleFonts.outfit(
           fontWeight: FontWeight.w500,
-          fontSize: 11,
+          fontSize: 12,
         );
         if (states.contains(WidgetState.selected)) {
-          style = style.merge(const TextStyle(fontWeight: FontWeight.w600));
+          style = style.merge(const TextStyle(fontWeight: FontWeight.w700));
         }
         return style;
       }),
