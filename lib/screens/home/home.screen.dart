@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       firstDate: DateTime(2019),
       lastDate: DateTime.now(),
     );
-    if(selected != null) {
+    if(selected != null && mounted) {
       setState(() {
         _range = selected;
         _fetchTransactions();
@@ -136,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     List<Account> accounts = await _accountDao.find(withSummery: true);
 
+    if (!mounted) return;
     setState(() {
       _payments = trans;
       _filteredPayments = trans;

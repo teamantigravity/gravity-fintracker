@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 class CategoryDao {
   Future<int> create(Category category) async {
     final db = await getDBInstance();
-    var result = db.insert("categories", category.toJson());
+    var result = await db.insert("categories", category.toJson());
     return result;
   }
 
@@ -55,6 +55,7 @@ class CategoryDao {
 
   Future<int> delete(int id) async {
     final db = await getDBInstance();
+    await db.delete("payments", where: 'category = ?', whereArgs: [id]);
     var result = await db.delete("categories", where: 'id = ?', whereArgs: [id]);
     return result;
   }

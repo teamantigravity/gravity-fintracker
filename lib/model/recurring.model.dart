@@ -69,9 +69,13 @@ class RecurringTransaction {
       case RecurringInterval.weekly:
         return from.add(const Duration(days: 7));
       case RecurringInterval.monthly:
-        return DateTime(from.year, from.month + 1, from.day);
+        final lastDay = DateTime(from.year, from.month + 2, 0).day;
+        final day = from.day <= lastDay ? from.day : lastDay;
+        return DateTime(from.year, from.month + 1, day);
       case RecurringInterval.yearly:
-        return DateTime(from.year + 1, from.month, from.day);
+        final lastDay = DateTime(from.year + 1, from.month + 1, 0).day;
+        final day = from.day <= lastDay ? from.day : lastDay;
+        return DateTime(from.year + 1, from.month, day);
     }
   }
 

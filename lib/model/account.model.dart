@@ -35,9 +35,9 @@ class Account {
     icon: IconData(data["icon"], fontFamily: 'MaterialIcons'),
     color: Color(data["color"]),
     isDefault: data["isDefault"]==1?true:false,
-    income: data["income"],
-    expense: data["expense"],
-    balance: data["balance"],
+    income: (data["income"] as num?)?.toDouble(),
+    expense: (data["expense"] as num?)?.toDouble(),
+    balance: (data["balance"] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {

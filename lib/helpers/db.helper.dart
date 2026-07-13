@@ -58,6 +58,7 @@ void onUpgrade(Database database, int oldVersion, int version) async {
 Future<void> resetDatabase() async {
   Database database = await getDBInstance();
   await database.delete("payments", where: "id>0");
+  await database.delete("recurring_transactions", where: "id>0");
   await database.delete("accounts", where: "id>0");
   await database.delete("categories", where: "id>0");
 

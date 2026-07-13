@@ -33,9 +33,9 @@ class Payment {
       id: data["id"],
       title: data["title"] ??"",
       description: data["description"]??"",
-      account: Account.fromJson(data["account"]),
-      category: Category.fromJson(data["category"]),
-      amount: data["amount"],
+      account: Account.fromJson(data["account"] is Map ? data["account"] : {"id": data["account"]}),
+      category: Category.fromJson(data["category"] is Map ? data["category"] : {"id": data["category"]}),
+      amount: (data["amount"] as num).toDouble(),
       type: data["type"] == "CR" ? PaymentType.credit : PaymentType
           .debit,
       datetime: DateTime.parse(data["datetime"]),

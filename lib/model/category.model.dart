@@ -22,8 +22,8 @@ class Category {
     name: data["name"],
     icon: IconData(data["icon"], fontFamily: 'MaterialIcons'),
     color: Color(data["color"]),
-    budget: data["budget"] ?? 0,
-    expense: data["expense"] ?? 0,
+    budget: (data["budget"] as num?)?.toDouble() ?? 0.0,
+    expense: (data["expense"] as num?)?.toDouble() ?? 0.0,
   );
 
   Map<String, dynamic> toJson() => {

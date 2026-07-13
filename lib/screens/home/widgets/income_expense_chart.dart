@@ -11,9 +11,9 @@ class IncomeExpenseChart extends StatelessWidget {
   Map<String, _DayData> _getDailyBreakdown() {
     Map<String, _DayData> daily = {};
     for (var payment in payments) {
-      String key = DateFormat('MM/dd').format(payment.datetime);
+      String key = DateFormat('yyyy-MM-dd').format(payment.datetime);
       if (!daily.containsKey(key)) {
-        daily[key] = _DayData(date: key);
+        daily[key] = _DayData(date: payment.datetime);
       }
       if (payment.type == PaymentType.credit) {
         daily[key]!.income += payment.amount;
@@ -98,7 +98,7 @@ class IncomeExpenseChart extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              displayKeys[index],
+                              DateFormat('dd MMM').format(daily[displayKeys[index]]!.date),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 9,
                                     color: isDark ? Colors.white54 : Colors.black45,
@@ -189,7 +189,7 @@ class _LegendDot extends StatelessWidget {
 }
 
 class _DayData {
-  final String date;
+  final DateTime date;
   double income = 0;
   double expense = 0;
 

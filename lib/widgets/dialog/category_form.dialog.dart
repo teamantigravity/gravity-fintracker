@@ -35,6 +35,7 @@ class _CategoryForm extends State<CategoryForm>{
     if(widget.onSave != null) {
       widget.onSave!();
     }
+    if (!context.mounted) return;
     Navigator.pop(context);
     globalEvent.emit("category_update");
   }

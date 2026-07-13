@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 class PaymentDao {
   Future<int> create(Payment payment) async {
     final db = await getDBInstance();
-    var result = db.insert("payments", payment.toJson());
+    var result = await db.insert("payments", payment.toJson());
     return result;
   }
 
@@ -57,11 +57,15 @@ class PaymentDao {
     );
     for (var row in rows) {
       Map<String, dynamic> payment = Map<String, dynamic>.from(row);
-      Account account = accounts.firstWhere((a) => a.id == payment["account"]);
-      Category category = categories.firstWhere((c) => c.id == payment["category"]);
-      payment["category"] = category.toJson();
-      payment["account"] = account.toJson();
-      payments.add(Payment.fromJson(payment));
+      try {
+        Account account = accounts.firstWhere((a) => a.id == payment["account"]);
+        Category category = categories.firstWhere((c) => c.id == payment["category"]);
+        payment["category"] = category.toJson();
+        payment["account"] = account.toJson();
+        payments.add(Payment.fromJson(payment));
+      } catch (_) {
+        // Skip orphaned payments whose account/category no longer exists
+      }
     }
 
     return payments;
@@ -81,11 +85,15 @@ class PaymentDao {
     );
     if (rows.isEmpty) return null;
     Map<String, dynamic> payment = Map<String, dynamic>.from(rows.first);
-    Account account = accounts.firstWhere((a) => a.id == payment["account"]);
-    Category category = categories.firstWhere((c) => c.id == payment["category"]);
-    payment["category"] = category.toJson();
-    payment["account"] = account.toJson();
-    return Payment.fromJson(payment);
+    try {
+      Account account = accounts.firstWhere((a) => a.id == payment["account"]);
+      Category category = categories.firstWhere((c) => c.id == payment["category"]);
+      payment["category"] = category.toJson();
+      payment["account"] = account.toJson();
+      return Payment.fromJson(payment);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<int> update(Payment payment) async {

@@ -21,8 +21,9 @@ class _RecurringScreenState extends State<RecurringScreen> {
   final RecurringDao _recurringDao = RecurringDao();
   List<RecurringTransaction> _recurring = [];
 
-  void _loadData() async {
+  Future<void> _loadData() async {
     List<RecurringTransaction> recurring = await _recurringDao.find();
+    if (!mounted) return;
     setState(() {
       _recurring = recurring;
     });
@@ -228,8 +229,8 @@ class _RecurringFormState extends State<_RecurringForm> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.categories.first;
-    _selectedAccount = widget.accounts.first;
+    if (widget.categories.isNotEmpty) _selectedCategory = widget.categories.first;
+    if (widget.accounts.isNotEmpty) _selectedAccount = widget.accounts.first;
   }
 
   @override
@@ -351,7 +352,7 @@ class _RecurringFormState extends State<_RecurringForm> {
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2030),
                 );
-                if (picked != null) setState(() => _startDate = picked);
+                if (picked != null && mounted) setState(() => _startDate = picked);
               },
             ),
             const SizedBox(height: 12),

@@ -51,20 +51,22 @@ class _PaymentForm extends State<PaymentForm>{
   PaymentType _type= PaymentType.credit;
   DateTime _datetime = DateTime.now();
 
-  loadAccounts(){
-    _accountDao.find().then((value){
+  Future<void> loadAccounts() async {
+    List<Account> value = await _accountDao.find();
+    if (mounted) {
       setState(() {
         _accounts = value;
       });
-    });
+    }
   }
 
-  loadCategories(){
-    _categoryDao.find().then((value){
+  Future<void> loadCategories() async {
+    List<Category> value = await _categoryDao.find();
+    if (mounted) {
       setState(() {
         _categories = value;
       });
-    });
+    }
   }
 
   void populateState() async{
@@ -119,6 +121,7 @@ class _PaymentForm extends State<PaymentForm>{
         lastDate: DateTime.now()
     );
     if(picked!=null  && initialDate != picked) {
+      if (!mounted) return;
       setState(() {
         _datetime = DateTime(
             picked.year,
@@ -140,6 +143,7 @@ class _PaymentForm extends State<PaymentForm>{
         initialEntryMode: TimePickerEntryMode.input
     );
     if (time != null && initialTime !=time) {
+      if (!mounted) return;
       setState(() {
         _datetime = DateTime(
             initialDate.year,
@@ -166,6 +170,7 @@ class _PaymentForm extends State<PaymentForm>{
     if (widget.onClose != null) {
       widget.onClose!(payment);
     }
+    if (!context.mounted) return;
     Navigator.of(context).pop();
     globalEvent.emit("payment_update");
   }

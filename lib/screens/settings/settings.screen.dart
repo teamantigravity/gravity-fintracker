@@ -75,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("What should we call you?", style: theme.textTheme.bodyLarge!.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge!.color!), fontWeightDelta: 1)),
+                            Text("What should we call you?", style: theme.textTheme.bodyLarge!.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge!.color ?? theme.colorScheme.onSurface), fontWeightDelta: 1)),
                             const SizedBox(height: 15),
                             TextFormField(
                               controller: controller,
@@ -396,6 +396,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         }
                         return;
                       }
+                      if (!context.mounted) return;
                       final password = await _showPasswordDialog(context, title: 'Import Encrypted Backup', confirm: false);
                       if (password == null || password.isEmpty) return;
                       if (!context.mounted) return;

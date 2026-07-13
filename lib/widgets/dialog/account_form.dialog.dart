@@ -46,6 +46,7 @@ class _AccountForm extends State<AccountForm>{
     if(widget.onSave != null) {
       widget.onSave!();
     }
+    if (!context.mounted) return;
     Navigator.pop(context);
     globalEvent.emit("account_update");
   }
