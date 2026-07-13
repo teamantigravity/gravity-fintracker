@@ -6,7 +6,7 @@ import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 import "package:path/path.dart";
 import "package:fintracker/helpers/migrations/migrations.dart";
-import "package:sqflite_common_ffi/sqflite_ffi.dart";
+import "package:sqflite/sqflite.dart";
 
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,20 +14,9 @@ import 'package:permission_handler/permission_handler.dart';
 Database? database;
 Future<Database> getDBInstance() async {
   if(database == null) {
-    Database db;
-    if(Platform.isWindows){
-      sqfliteFfiInit();
-      var databaseFactory = databaseFactoryFfi;
-      db = await databaseFactory.openDatabase("database.db", options: OpenDatabaseOptions(
-          version: 2,
-          onCreate: onCreate,
-          onUpgrade: onUpgrade
-      ));
-    } else {
-      String databasesPath = await getDatabasesPath();
-      String dbPath = join(databasesPath, 'database.db');
-      db = await openDatabase(dbPath, version: 2, onCreate: onCreate, onUpgrade: onUpgrade);
-    }
+    String databasesPath = await getDatabasesPath();
+    String dbPath = join(databasesPath, 'database.db');
+    Database db = await openDatabase(dbPath, version: 2, onCreate: onCreate, onUpgrade: onUpgrade);
 
     database = db;
     return db;
@@ -117,7 +106,7 @@ Future<String> getExternalDocumentPath({String? fallbackPath}) async {
   await Directory(exPath).create(recursive: true);
   return exPath;
 }
-Future<dynamic> export({String? directory}) async {
+Future<String> export({String? directory, String? filePath}) async {
   await getDBInstance();
   List<dynamic> accounts = await database!.query("accounts",);
   List<dynamic> categories = await database!.query("categories",);
@@ -129,6 +118,12 @@ Future<dynamic> export({String? directory}) async {
   data["payments"] = payments;
   data["recurring_transactions"] = recurring;
 
+  if (filePath != null && filePath.isNotEmpty) {
+    File file = File(filePath);
+    await file.writeAsString(jsonEncode(data));
+    return file.path;
+  }
+
   final path = await getExternalDocumentPath(fallbackPath: directory);
   String name = "fintracker-backup-${DateTime.now().millisecondsSinceEpoch}.json";
   File file= File('$path/$name');
@@ -137,7 +132,7 @@ Future<dynamic> export({String? directory}) async {
 }
 
 
-Future<String> exportCsv({String? directory}) async {
+Future<String> exportCsv({String? directory, String? filePath}) async {
   await getDBInstance();
   List<dynamic> payments = await database!.rawQuery(
     "SELECT p.id, p.title, p.description, p.amount, p.type, p.datetime, "
@@ -166,6 +161,13 @@ Future<String> exportCsv({String? directory}) async {
   }
 
   String csvData = const ListToCsvConverter().convert(rows);
+
+  if (filePath != null && filePath.isNotEmpty) {
+    File file = File(filePath);
+    await file.writeAsString(csvData);
+    return file.path;
+  }
+
   final path = await getExternalDocumentPath(fallbackPath: directory);
   String name = "gravity-fintracker-${DateFormat('yyyyMMdd-HHmmss').format(DateTime.now())}.csv";
   File file = File('$path/$name');

@@ -46,7 +46,7 @@ class BackupService {
     return encrypter.decrypt64(parts[3], iv: iv);
   }
 
-  static Future<String> exportEncrypted(String password, {String? directory}) async {
+  static Future<String> exportEncrypted(String password, {String? directory, String? filePath}) async {
     await db.getDBInstance();
     final accounts = await db.database!.query('accounts');
     final categories = await db.database!.query('categories');
@@ -62,6 +62,13 @@ class BackupService {
     };
 
     final encrypted = await encryptWithPassword(jsonEncode(data), password);
+
+    if (filePath != null && filePath.isNotEmpty) {
+      final file = File(filePath);
+      await file.writeAsString(encrypted);
+      return file.path;
+    }
+
     final path = await db.getExternalDocumentPath(fallbackPath: directory);
     final name = 'fintracker-encrypted-backup-${DateTime.now().millisecondsSinceEpoch}.json';
     final file = File('$path/$name');

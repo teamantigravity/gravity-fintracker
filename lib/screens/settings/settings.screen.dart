@@ -240,9 +240,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         content: const Text("Export all data to a JSON backup file"),
                         onConfirm: () async {
                           Navigator.of(context).pop();
+                          final path = await FilePicker.platform.saveFile(
+                            dialogTitle: "Save JSON backup",
+                            fileName: "fintracker-backup.json",
+                            type: FileType.custom,
+                            allowedExtensions: ["json"],
+                          );
+                          if (path == null || path.isEmpty || !context.mounted) return;
+
                           LoadingModal.showLoadingDialog(context, content: const Text("Exporting..."));
                           try {
-                            final value = await export();
+                            final value = await export(filePath: path);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
                             }
@@ -271,9 +279,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         content: const Text("Export all transactions to a CSV spreadsheet"),
                         onConfirm: () async {
                           Navigator.of(context).pop();
+                          final path = await FilePicker.platform.saveFile(
+                            dialogTitle: "Save CSV export",
+                            fileName: "gravity-fintracker.csv",
+                            type: FileType.custom,
+                            allowedExtensions: ["csv"],
+                          );
+                          if (path == null || path.isEmpty || !context.mounted) return;
+
                           LoadingModal.showLoadingDialog(context, content: const Text("Exporting CSV..."));
                           try {
-                            final value = await exportCsv();
+                            final value = await exportCsv(filePath: path);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
                             }
@@ -355,11 +371,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     final password = await _showPasswordDialog(context, title: 'Export Encrypted Backup', confirm: true);
                     if (password == null || password.isEmpty) return;
                     if (!context.mounted) return;
+                    final path = await FilePicker.platform.saveFile(
+                      dialogTitle: "Save encrypted backup",
+                      fileName: "fintracker-encrypted-backup.json",
+                      type: FileType.custom,
+                      allowedExtensions: ["json"],
+                    );
+                    if (path == null || path.isEmpty || !context.mounted) return;
+
                     LoadingModal.showLoadingDialog(context, content: const Text("Encrypting..."));
                     try {
-                      final path = await BackupService.exportEncrypted(password);
+                      final value = await BackupService.exportEncrypted(password, filePath: path);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $path")));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
                         Navigator.of(context).pop();
                       }
                     } catch (err) {

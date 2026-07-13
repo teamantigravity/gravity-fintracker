@@ -1,6 +1,8 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
 import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/screens/main.screen.dart';
+import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/pin_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +11,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:local_auth/local_auth.dart';
 
+class NewPaymentIntent extends Intent { const NewPaymentIntent(); }
+class NavigateToTabIntent extends Intent {
+  final int index;
+  const NavigateToTabIntent(this.index);
+}
+
 class App extends StatelessWidget {
   const App({super.key});
+
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<MainScreenState> mainScreenKey = GlobalKey<MainScreenState>();
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(
@@ -30,11 +42,53 @@ class App extends StatelessWidget {
             title: AppConstants.appName,
             debugShowCheckedModeBanner: false,
             theme: theme,
-            home: AppLockWrapper(child: const MainScreen()),
+            navigatorKey: navigatorKey,
+            home: AppLockWrapper(child: MainScreen(key: mainScreenKey)),
             localizationsDelegates: const [
               GlobalWidgetsLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
             ],
+            builder: (context, child) {
+              return Shortcuts(
+                shortcuts: {
+                  const SingleActivator(LogicalKeyboardKey.keyN, control: true): const NewPaymentIntent(),
+                  const SingleActivator(LogicalKeyboardKey.keyN, meta: true): const NewPaymentIntent(),
+                  const SingleActivator(LogicalKeyboardKey.digit1, control: true): const NavigateToTabIntent(0),
+                  const SingleActivator(LogicalKeyboardKey.digit1, meta: true): const NavigateToTabIntent(0),
+                  const SingleActivator(LogicalKeyboardKey.digit2, control: true): const NavigateToTabIntent(1),
+                  const SingleActivator(LogicalKeyboardKey.digit2, meta: true): const NavigateToTabIntent(1),
+                  const SingleActivator(LogicalKeyboardKey.digit3, control: true): const NavigateToTabIntent(2),
+                  const SingleActivator(LogicalKeyboardKey.digit3, meta: true): const NavigateToTabIntent(2),
+                  const SingleActivator(LogicalKeyboardKey.digit4, control: true): const NavigateToTabIntent(3),
+                  const SingleActivator(LogicalKeyboardKey.digit4, meta: true): const NavigateToTabIntent(3),
+                  const SingleActivator(LogicalKeyboardKey.digit5, control: true): const NavigateToTabIntent(4),
+                  const SingleActivator(LogicalKeyboardKey.digit5, meta: true): const NavigateToTabIntent(4),
+                },
+                child: Actions(
+                  actions: {
+                    NewPaymentIntent: CallbackAction<NewPaymentIntent>(
+                      onInvoke: (_) {
+                        App.navigatorKey.currentState?.push(
+                          MaterialPageRoute(builder: (_) => const PaymentForm(type: PaymentType.debit)),
+                        );
+                        return null;
+                      },
+                    ),
+                    NavigateToTabIntent: CallbackAction<NavigateToTabIntent>(
+                      onInvoke: (intent) {
+                        App.mainScreenKey.currentState?.navigateTo(intent.index);
+                        return null;
+                      },
+                    ),
+                  },
+                  child: Focus(
+                    autofocus: true,
+                    canRequestFocus: true,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
+              );
+            },
           );
         });
   }
