@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/events.dart';
 import 'package:fintracker/helpers/db.helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -116,7 +117,7 @@ class SyncService {
     final sessionKey = _hkdfDerive(masterKey, salt);
     final key = encrypt.Key(sessionKey);
 
-    final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+    final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.gcm));
     final encrypted = encrypter.encrypt(plainText, iv: iv);
 
     // Versioned format: v2:<salt>:<iv>:<ciphertext>
@@ -135,7 +136,7 @@ class SyncService {
       final iv = encrypt.IV.fromBase64(parts[2]);
       final sessionKey = _hkdfDerive(masterKey, Uint8List.fromList(salt));
       final key = encrypt.Key(sessionKey);
-      final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+      final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.gcm));
       return encrypter.decrypt64(parts[3], iv: iv);
     } else if (parts.length == 2) {
       // v1 legacy format (backward compat)
@@ -187,42 +188,55 @@ class SyncService {
     await db.transaction((txn) async {
       await txn.delete("payments");
       await txn.delete("recurring_transactions");
-      await txn.delete("categories", where: "id!=0");
-      await txn.delete("accounts", where: "id!=0");
+      await txn.delete("categories");
+      await txn.delete("accounts");
 
       Map<int, int> accountsMap = {};
       Map<int, int> categoriesMap = {};
 
-      for (Map<String, dynamic> category in snapshot["categories"]) {
-        int oldId = category["id"];
+      List<dynamic> categories = (snapshot["categories"] ?? []);
+      List<dynamic> accounts = (snapshot["accounts"] ?? []);
+      List<dynamic> payments = (snapshot["payments"] ?? []);
+      List<dynamic> recurring = (snapshot["recurring_transactions"] ?? []);
+
+      for (Map<String, dynamic> category in categories.cast<Map<String, dynamic>>()) {
+        int oldId = category["id"] ?? 0;
         category.remove("id");
         int newId = await txn.insert("categories", category);
         categoriesMap[oldId] = newId;
       }
 
-      for (Map<String, dynamic> account in snapshot["accounts"]) {
-        int oldId = account["id"];
+      for (Map<String, dynamic> account in accounts.cast<Map<String, dynamic>>()) {
+        int oldId = account["id"] ?? 0;
         account.remove("id");
         int newId = await txn.insert("accounts", account);
         accountsMap[oldId] = newId;
       }
 
-      for (Map<String, dynamic> payment in snapshot["payments"]) {
+      for (Map<String, dynamic> payment in payments.cast<Map<String, dynamic>>()) {
         payment.remove("id");
-        payment["account"] = accountsMap[payment["account"]];
-        payment["category"] = categoriesMap[payment["category"]];
+        int? accountId = accountsMap[payment["account"]];
+        int? categoryId = categoriesMap[payment["category"]];
+        if (accountId == null || categoryId == null) continue;
+        payment["account"] = accountId;
+        payment["category"] = categoryId;
         await txn.insert("payments", payment);
       }
 
-      if (snapshot["recurring_transactions"] != null) {
-        for (Map<String, dynamic> rec in snapshot["recurring_transactions"]) {
-          rec.remove("id");
-          rec["account"] = accountsMap[rec["account"]];
-          rec["category"] = categoriesMap[rec["category"]];
-          await txn.insert("recurring_transactions", rec);
-        }
+      for (Map<String, dynamic> rec in recurring.cast<Map<String, dynamic>>()) {
+        rec.remove("id");
+        int? accountId = accountsMap[rec["account"]];
+        int? categoryId = categoriesMap[rec["category"]];
+        if (accountId == null || categoryId == null) continue;
+        rec["account"] = accountId;
+        rec["category"] = categoryId;
+        await txn.insert("recurring_transactions", rec);
       }
     });
+
+    globalEvent.emit("payment_update");
+    globalEvent.emit("account_update");
+    globalEvent.emit("category_update");
   }
 
   // Supabase sync stubs

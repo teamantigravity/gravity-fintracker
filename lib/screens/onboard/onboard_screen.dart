@@ -3,9 +3,21 @@ import 'package:fintracker/screens/onboard/widgets/landing.dart';
 import 'package:fintracker/screens/onboard/widgets/profile.dart';
 import 'package:flutter/material.dart';
 
-class OnboardScreen extends StatelessWidget {
-  OnboardScreen({super.key});
+class OnboardScreen extends StatefulWidget {
+  const OnboardScreen({super.key});
+
+  @override
+  State<OnboardScreen> createState() => _OnboardScreenState();
+}
+
+class _OnboardScreenState extends State<OnboardScreen> {
   final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

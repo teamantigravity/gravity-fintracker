@@ -19,6 +19,12 @@ class _AccountSlider extends State<AccountsSlider> {
   int get _pageCount => widget.accounts.length + 1;
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -42,7 +48,7 @@ class _AccountSlider extends State<AccountsSlider> {
               }
               return _AccountCard(account: widget.accounts[index]);
             },
-          ),
+          )
         ),
         const SizedBox(height: 12),
         SizedBox(

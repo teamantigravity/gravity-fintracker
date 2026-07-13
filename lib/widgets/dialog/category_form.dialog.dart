@@ -31,10 +31,17 @@ class _CategoryForm extends State<CategoryForm>{
   }
 
   void onSave (context) async{
+    if (_category.name.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Category name is required")),
+      );
+      return;
+    }
     await _categoryDao.upsert(_category);
     if(widget.onSave != null) {
       widget.onSave!();
     }
+    if (!context.mounted) return;
     Navigator.pop(context);
     globalEvent.emit("category_update");
   }
@@ -110,7 +117,7 @@ class _CategoryForm extends State<CategoryForm>{
                 ),
                 onChanged: (String text){
                   setState(() {
-                    _category.budget = double.parse(text.isEmpty? "0":text);
+                    _category.budget = double.tryParse(text) ?? 0.0;
                   });
                 },
               ),
@@ -140,7 +147,7 @@ class _CategoryForm extends State<CategoryForm>{
                                   borderRadius: BorderRadius.circular(40),
                                   border: Border.all(
                                     width: 2,
-                                    color: _category.color.value == Colors.primaries[index].value ? Colors.white: Colors.transparent,
+                                    color: _category.color.toARGB32() == Colors.primaries[index].toARGB32() ? Colors.white: Colors.transparent,
                                   )
                               ),
                             )

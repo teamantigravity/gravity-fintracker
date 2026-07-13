@@ -41,7 +41,7 @@ class AppConstants {
   static const bool enableSmartInsights = true;
 
   // Database
-  static const int dbVersion = 2;
+  static const int dbVersion = 3;
 
   // Recurring transaction intervals
   static const String intervalDaily = 'daily';

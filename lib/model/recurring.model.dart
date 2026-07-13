@@ -38,12 +38,12 @@ class RecurringTransaction {
       description: data["description"] ?? "",
       account: Account.fromJson(data["account"] is Map ? data["account"] : {"id": data["account"]}),
       category: Category.fromJson(data["category"] is Map ? data["category"] : {"id": data["category"]}),
-      amount: (data["amount"] as num).toDouble(),
+      amount: (data["amount"] as num?)?.toDouble() ?? 0.0,
       type: data["type"] ?? "DR",
       interval: _parseInterval(data["interval"]),
-      startDate: DateTime.parse(data["startDate"]),
-      nextDueDate: data["nextDueDate"] != null ? DateTime.parse(data["nextDueDate"]) : null,
-      isActive: data["isActive"] == 1,
+      startDate: DateTime.tryParse(data["startDate"] ?? '') ?? DateTime.now(),
+      nextDueDate: data["nextDueDate"] != null ? (DateTime.tryParse(data["nextDueDate"].toString()) ?? DateTime.now()) : null,
+      isActive: data["isActive"] == true || data["isActive"] == 1,
     );
   }
 
@@ -69,9 +69,13 @@ class RecurringTransaction {
       case RecurringInterval.weekly:
         return from.add(const Duration(days: 7));
       case RecurringInterval.monthly:
-        return DateTime(from.year, from.month + 1, from.day);
+        final lastDay = DateTime(from.year, from.month + 2, 0).day;
+        final day = from.day <= lastDay ? from.day : lastDay;
+        return DateTime(from.year, from.month + 1, day);
       case RecurringInterval.yearly:
-        return DateTime(from.year + 1, from.month, from.day);
+        final lastDay = DateTime(from.year + 1, from.month + 1, 0).day;
+        final day = from.day <= lastDay ? from.day : lastDay;
+        return DateTime(from.year + 1, from.month, day);
     }
   }
 

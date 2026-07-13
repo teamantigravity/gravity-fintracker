@@ -31,8 +31,8 @@ class AccountDao {
         Map<String, dynamic> nItem = Map.from(item);
         if(withSummery) {
           nItem["income"] = nItem["income"] ?? 0.0;
-          nItem["expense"] = nItem["expense"]??0.0;
-          nItem["balance"] = double.parse((nItem["income"] - nItem["expense"]).toString());
+          nItem["expense"] = nItem["expense"] ?? 0.0;
+          nItem["balance"] = (nItem["income"] as num? ?? 0.0).toDouble() - (nItem["expense"] as num? ?? 0.0).toDouble();
         }
         return Account.fromJson(nItem);
       }).toList();
@@ -60,6 +60,7 @@ class AccountDao {
     final db = await getDBInstance();
     var result = await db.delete("accounts", where: 'id = ?', whereArgs: [id]);
     await db.delete("payments", where: "account = ?", whereArgs:[id]);
+    await db.delete("recurring_transactions", where: "account = ?", whereArgs:[id]);
     return result;
   }
 }

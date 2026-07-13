@@ -21,8 +21,9 @@ class _RecurringScreenState extends State<RecurringScreen> {
   final RecurringDao _recurringDao = RecurringDao();
   List<RecurringTransaction> _recurring = [];
 
-  void _loadData() async {
+  Future<void> _loadData() async {
     List<RecurringTransaction> recurring = await _recurringDao.find();
+    if (!mounted) return;
     setState(() {
       _recurring = recurring;
     });
@@ -58,7 +59,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
         onSave: (recurring) async {
           await _recurringDao.create(recurring);
           _loadData();
-          if (mounted) Navigator.of(context).pop();
+          if (context.mounted) Navigator.of(context).pop();
         },
       ),
     );
@@ -228,8 +229,8 @@ class _RecurringFormState extends State<_RecurringForm> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.categories.first;
-    _selectedAccount = widget.accounts.first;
+    if (widget.categories.isNotEmpty) _selectedCategory = widget.categories.first;
+    if (widget.accounts.isNotEmpty) _selectedAccount = widget.accounts.first;
   }
 
   @override
@@ -351,7 +352,7 @@ class _RecurringFormState extends State<_RecurringForm> {
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2030),
                 );
-                if (picked != null) setState(() => _startDate = picked);
+                if (picked != null && mounted) setState(() => _startDate = picked);
               },
             ),
             const SizedBox(height: 12),
@@ -367,7 +368,7 @@ class _RecurringFormState extends State<_RecurringForm> {
               width: double.infinity,
               height: 50,
               child: FilledButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_amountController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Please enter an amount")),
@@ -379,6 +380,13 @@ class _RecurringFormState extends State<_RecurringForm> {
                   if (amount == null || amount <= 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Please enter a valid amount")),
+                    );
+                    return;
+                  }
+
+                  if (_selectedAccount == null || _selectedCategory == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please select an account and category")),
                     );
                     return;
                   }
@@ -396,7 +404,7 @@ class _RecurringFormState extends State<_RecurringForm> {
                     isActive: true,
                   );
 
-                  widget.onSave(recurring);
+                  await widget.onSave(recurring);
                 },
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

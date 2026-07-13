@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 class PaymentDao {
   Future<int> create(Payment payment) async {
     final db = await getDBInstance();
-    var result = db.insert("payments", payment.toJson());
+    var result = await db.insert("payments", payment.toJson());
     return result;
   }
 
@@ -26,7 +26,7 @@ class PaymentDao {
     String where = "";
 
     if(range!=null){
-      where += "AND datetime BETWEEN DATE('${DateFormat('yyyy-MM-dd kk:mm:ss').format(range.start)}') AND DATE('${DateFormat('yyyy-MM-dd kk:mm:ss').format(range.end.add(const Duration(days: 1)))}')";
+      where += "AND datetime BETWEEN DATE('${DateFormat('yyyy-MM-dd HH:mm:ss').format(range.start)}') AND DATE('${DateFormat('yyyy-MM-dd HH:mm:ss').format(range.end.add(const Duration(days: 1)))}')";
     }
 
     //type check
@@ -34,13 +34,13 @@ class PaymentDao {
       where += "AND type='${type == PaymentType.credit?"CR":"DR"}' ";
     }
 
-    //icon check
-    if(account != null){
+    //account check
+    if(account != null && account.id != null){
       where += "AND account='${account.id}' ";
     }
 
-    //icon check
-    if(category != null){
+    //category check
+    if(category != null && category.id != null){
       where += "AND category='${category.id}' ";
     }
 
@@ -57,20 +57,43 @@ class PaymentDao {
     );
     for (var row in rows) {
       Map<String, dynamic> payment = Map<String, dynamic>.from(row);
-      Account account = accounts.firstWhere(
-        (a) => a.id == payment["account"],
-        orElse: () => Account(name: "Unknown account", holderName: "", accountNumber: "", icon: Icons.help_outline, color: Colors.grey),
-      );
-      Category category = categories.firstWhere(
-        (c) => c.id == payment["category"],
-        orElse: () => Category(name: "Uncategorized", icon: Icons.help_outline, color: Colors.grey),
-      );
-      payment["category"] = category.toJson();
-      payment["account"] = account.toJson();
-      payments.add(Payment.fromJson(payment));
+      try {
+        Account account = accounts.firstWhere((a) => a.id == payment["account"]);
+        Category category = categories.firstWhere((c) => c.id == payment["category"]);
+        payment["category"] = category.toJson();
+        payment["account"] = account.toJson();
+        payments.add(Payment.fromJson(payment));
+      } catch (_) {
+        // Skip orphaned payments whose account/category no longer exists
+      }
     }
 
     return payments;
+  }
+
+  Future<Payment?> findByTitle(String title, PaymentType type) async {
+    final db = await getDBInstance();
+    List<Category> categories = await CategoryDao().find();
+    List<Account> accounts = await AccountDao().find();
+
+    List<Map<String, Object?>> rows = await db.query(
+      "payments",
+      where: "LOWER(title) = LOWER(?) AND type = ?",
+      whereArgs: [title, type == PaymentType.credit ? "CR" : "DR"],
+      orderBy: "datetime DESC, id DESC",
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    Map<String, dynamic> payment = Map<String, dynamic>.from(rows.first);
+    try {
+      Account account = accounts.firstWhere((a) => a.id == payment["account"]);
+      Category category = categories.firstWhere((c) => c.id == payment["category"]);
+      payment["category"] = category.toJson();
+      payment["account"] = account.toJson();
+      return Payment.fromJson(payment);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<int> update(Payment payment) async {

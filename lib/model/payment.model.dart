@@ -31,14 +31,13 @@ class Payment {
   factory Payment.fromJson(Map<String, dynamic> data) {
     return Payment(
       id: data["id"],
-      title: data["title"] ??"",
-      description: data["description"]??"",
-      account: Account.fromJson(data["account"]),
-      category: Category.fromJson(data["category"]),
-      amount: data["amount"],
-      type: data["type"] == "CR" ? PaymentType.credit : PaymentType
-          .debit,
-      datetime: DateTime.parse(data["datetime"]),
+      title: data["title"] ?? "",
+      description: data["description"] ?? "",
+      account: Account.fromJson(data["account"] is Map ? data["account"] : {"id": data["account"]}),
+      category: Category.fromJson(data["category"] is Map ? data["category"] : {"id": data["category"]}),
+      amount: (data["amount"] as num?)?.toDouble() ?? 0.0,
+      type: data["type"] == "CR" ? PaymentType.credit : PaymentType.debit,
+      datetime: DateTime.tryParse(data["datetime"] ?? '') ?? DateTime.now(),
     );
   }
 
@@ -49,7 +48,7 @@ class Payment {
     "account": account.id,
     "category": category.id,
     "amount": amount,
-    "datetime": DateFormat('yyyy-MM-dd kk:mm:ss').format(datetime),
+    "datetime": DateFormat('yyyy-MM-dd HH:mm:ss').format(datetime),
     "type": type == PaymentType.credit ? "CR": "DR",
   };
 }

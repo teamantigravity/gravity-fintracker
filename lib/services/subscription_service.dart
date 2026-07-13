@@ -98,10 +98,16 @@ class SubscriptionService {
   // Feature gates
   bool get canSync => isPro;
   bool get canExportPdf => isPro;
-  bool get canUseRecurring => isPro || !AppConstants.enableSubscriptions;
+  bool get canUseRecurring => isPro;
   bool get canUseAdvancedCharts => isPro;
   bool get canUseMultiDevice => isPro;
   bool get hasAutoBackup => isPro;
+  bool get canUseCashFlowForecast => isPro;
+  bool get canUseFinancialCoach => isPro;
+  bool get canUseReceiptScanner => isPro;
+  bool get canUseVoiceInput => isPro;
+  bool get canUseSavingsGoals => isPro;
+  bool get canUseWhatIfPlanner => isPro;
 
   // Offering details for paywall
   SubscriptionOffering get offering => SubscriptionOffering(

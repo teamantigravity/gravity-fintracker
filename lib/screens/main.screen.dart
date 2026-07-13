@@ -12,17 +12,73 @@ import 'package:material_symbols_icons/symbols.dart';
 class MainScreen extends StatefulWidget{
   const MainScreen({super.key});
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainScreen> createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen>{
+class MainScreenState extends State<MainScreen>{
   final PageController _controller = PageController(keepPage: true);
   int _selected = 0;
+
+  final List<NavigationDestination> _navDestinations = const [
+    NavigationDestination(icon: Icon(Symbols.home, fill: 1,), label: "Home"),
+    NavigationDestination(icon: Icon(Symbols.wallet, fill: 1,), label: "Accounts"),
+    NavigationDestination(icon: Icon(Symbols.category, fill: 1,), label: "Categories"),
+    NavigationDestination(icon: Icon(Symbols.repeat, fill: 1,), label: "Recurring"),
+    NavigationDestination(icon: Icon(Symbols.settings, fill: 1,), label: "Settings"),
+  ];
+
+  final List<NavigationRailDestination> _railDestinations = const [
+    NavigationRailDestination(icon: Icon(Symbols.home, fill: 1,), label: Text("Home")),
+    NavigationRailDestination(icon: Icon(Symbols.wallet, fill: 1,), label: Text("Accounts")),
+    NavigationRailDestination(icon: Icon(Symbols.category, fill: 1,), label: Text("Categories")),
+    NavigationRailDestination(icon: Icon(Symbols.repeat, fill: 1,), label: Text("Recurring")),
+    NavigationRailDestination(icon: Icon(Symbols.settings, fill: 1,), label: Text("Settings")),
+  ];
 
   @override
   void initState() {
     super.initState();
   }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    if (!mounted) return;
+    setState(() {
+      _selected = index;
+    });
+  }
+
+  void _onDestinationSelected(int selected) {
+    if (!mounted || selected < 0 || selected >= _navDestinations.length) return;
+    _controller.jumpToPage(selected);
+  }
+
+  void navigateTo(int index) {
+    if (!mounted || index < 0 || index >= _navDestinations.length) return;
+    _controller.jumpToPage(index);
+    _onPageChanged(index);
+  }
+
+  Widget _buildPageView() {
+    return PageView(
+      controller: _controller,
+      physics: const NeverScrollableScrollPhysics(),
+      children: const [
+        HomeScreen(),
+        AccountsScreen(),
+        CategoriesScreen(),
+        RecurringScreen(),
+        SettingsScreen()
+      ],
+      onPageChanged: _onPageChanged,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(
@@ -31,35 +87,34 @@ class _MainScreenState extends State<MainScreen>{
         if(cubit.state.currency == null || cubit.state.username == null){
           return OnboardScreen();
         }
+
+        final screenWidth = MediaQuery.of(context).size.width;
+        final useRail = screenWidth >= 600;
+
+        if (useRail) {
+          return Scaffold(
+            body: Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _selected,
+                  destinations: _railDestinations,
+                  onDestinationSelected: _onDestinationSelected,
+                  extended: screenWidth >= 900,
+                  minExtendedWidth: 180,
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(child: _buildPageView()),
+              ],
+            ),
+          );
+        }
+
         return  Scaffold(
-          body: PageView(
-            controller: _controller,
-            physics: const NeverScrollableScrollPhysics(),
-            children: const [
-              HomeScreen(),
-              AccountsScreen(),
-              CategoriesScreen(),
-              RecurringScreen(),
-              SettingsScreen()
-            ],
-            onPageChanged: (int index){
-              setState(() {
-                _selected = index;
-              });
-            },
-          ),
+          body: _buildPageView(),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _selected,
-            destinations: const [
-              NavigationDestination(icon: Icon(Symbols.home, fill: 1,), label: "Home"),
-              NavigationDestination(icon: Icon(Symbols.wallet, fill: 1,), label: "Accounts"),
-              NavigationDestination(icon: Icon(Symbols.category, fill: 1,), label: "Categories"),
-              NavigationDestination(icon: Icon(Symbols.repeat, fill: 1,), label: "Recurring"),
-              NavigationDestination(icon: Icon(Symbols.settings, fill: 1,), label: "Settings"),
-            ],
-            onDestinationSelected: (int selected){
-                _controller.jumpToPage(selected);
-            },
+            destinations: _navDestinations,
+            onDestinationSelected: _onDestinationSelected,
           ),
         );
       },

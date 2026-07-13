@@ -5,7 +5,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-blue.svg)](https://flutter.dev)
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-green.svg)](#privacy)
 [![Encryption](https://img.shields.io/badge/Encryption-Quantum%20Resistant-purple.svg)](#quantum-resistant-encryption)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Web-lightgrey.svg)](#)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#)
 
 **Gravity Fintracker** is a quantum-encrypted, privacy-first expense tracker by **Team Antigravity**. Your financial data stays on your device. No analytics, no tracking, no ads — just clean finance management with optional quantum-resistant encrypted sync.
 
@@ -22,7 +22,7 @@
 | Smart spending insights (local) | ✅ | Cloud-based |
 | Open source | ✅ | ❌ |
 | No account required | ✅ | ❌ |
-| 6 platforms | ✅ | 1-2 |
+| 5 platforms (Android, iOS, Windows, macOS, Linux) | ✅ | 1-2 |
 | No ads, ever | ✅ | ❌ |
 
 ---
@@ -35,9 +35,12 @@
 - **Interactive Charts** — Pie chart breakdown + daily bar charts (fl_chart)
 - **Category Budgets** — Monthly budgets with progress tracking
 - **Multiple Accounts** — Cash, bank, credit card — track them all
-- **JSON & CSV Export** — Full data portability
+- **JSON & CSV Export** — Full data portability with cross-platform file pickers
 - **Theme System** — Light, Dark, AMOLED Dark, System
-- **Biometric Lock** — Fingerprint / Face ID app protection
+- **Biometric Lock** — Fingerprint / Face ID app protection with PIN fallback
+- **Adaptive UI** — Bottom navigation on mobile, navigation rail on desktop/tablet
+- **Keyboard Shortcuts** — Global shortcuts for new transactions, search, lock, and navigation
+- **Desktop Database** — sqflite_common_ffi powers Windows, macOS, and Linux
 - **Privacy Dashboard** — Real-time 100% privacy score
 - **Recurring Transactions** — Automate bills, subscriptions, income
 
@@ -89,7 +92,7 @@ lib/
 ```
 
 ### CI/CD
-- **GitHub Actions** — Automated builds for Android (APK + AAB), iOS, Web, Linux, Windows, macOS
+- **GitHub Actions** — Automated builds for Android (APK + AAB), iOS, Linux, Windows, macOS
 - **Aggressive caching** — Flutter SDK, pub cache, Gradle, CocoaPods all cached
 - **Concurrency control** — Cancels superseded builds
 
@@ -109,7 +112,6 @@ flutter run
 ```bash
 flutter build apk --release --split-per-abi   # Android APK
 flutter build appbundle --release              # Android AAB
-flutter build web --release                    # Web
 flutter build linux --release                  # Linux
 flutter build windows --release                # Windows
 flutter build macos --release                  # macOS
@@ -145,7 +147,7 @@ Gravity Fintracker's guarantees:
 |---|---|
 | Framework | Flutter 3.x (Dart) |
 | State | flutter_bloc (Cubit) |
-| Database | sqflite + migrations |
+| Database | sqflite + sqflite_common_ffi + migrations |
 | Charts | fl_chart |
 | Biometric | local_auth |
 | Encryption | encrypt (AES-256) + crypto (HKDF-SHA512) |
@@ -154,7 +156,7 @@ Gravity Fintracker's guarantees:
 | Icons | Material Symbols |
 | Backend (Pro) | Supabase (managed, zero maintenance) |
 | Payments (Pro) | RevenueCat |
-| CI/CD | GitHub Actions (6 platforms) |
+| CI/CD | GitHub Actions (5 platforms) |
 
 ---
 
@@ -208,6 +210,6 @@ output and `--obfuscate` isn't applicable to that compilation target.
 
 ## License
 
-GNU Affero General Public License v3.0 (AGPL-3.0) — see [LICENSE](LICENSE) for details.
+AGPL v3 License — see [LICENSE](LICENSE) for details.
 
 Built with ❤️ by **Team Antigravity**.

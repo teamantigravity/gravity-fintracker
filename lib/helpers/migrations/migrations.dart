@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
-double safeDouble(dynamic value){
-  try{
-    return double.parse(value);
-  }catch(err){
-    return 0;
-  }
+double safeDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
 }
 void v1(Database database) async {
   debugPrint("Running first migration....");
@@ -55,5 +53,20 @@ void v2(Database database) async {
       "startDate TEXT,"
       "nextDueDate TEXT,"
       "isActive INTEGER DEFAULT 1"
+      ")");
+}
+
+void v3(Database database) async {
+  debugPrint("Running third migration — savings goals....");
+  await database.execute("CREATE TABLE IF NOT EXISTS savings_goals ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "name TEXT,"
+      "targetAmount REAL,"
+      "savedAmount REAL DEFAULT 0,"
+      "deadline TEXT,"
+      "account INTEGER,"
+      "icon INTEGER,"
+      "color INTEGER,"
+      "isArchived INTEGER DEFAULT 0"
       ")");
 }

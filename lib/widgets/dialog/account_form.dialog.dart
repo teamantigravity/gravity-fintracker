@@ -28,7 +28,8 @@ class _AccountForm extends State<AccountForm>{
           holderName: widget.account!.holderName,
           accountNumber: widget.account!.accountNumber,
           icon: widget.account!.icon,
-          color: widget.account!.color
+          color: widget.account!.color,
+          isDefault: widget.account!.isDefault,
       );
     } else {
       _account = Account(
@@ -42,10 +43,17 @@ class _AccountForm extends State<AccountForm>{
   }
 
   void onSave (context) async{
+    if (_account!.name.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Account name is required")),
+      );
+      return;
+    }
     await _accountDao.upsert(_account!);
     if(widget.onSave != null) {
       widget.onSave!();
     }
+    if (!context.mounted) return;
     Navigator.pop(context);
     globalEvent.emit("account_update");
   }
@@ -162,7 +170,7 @@ class _AccountForm extends State<AccountForm>{
                                     borderRadius: BorderRadius.circular(40),
                                     border: Border.all(
                                       width: 2,
-                                      color: _account!.color.value == Colors.primaries[index].value ? Colors.white: Colors.transparent,
+                                      color: _account!.color.toARGB32() == Colors.primaries[index].toARGB32() ? Colors.white: Colors.transparent,
                                     )
                                 ),
                               )

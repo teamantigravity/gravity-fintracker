@@ -10,6 +10,8 @@ class AppState {
   late AppThemeMode themeMode;
   late bool appLockEnabled;
   late bool isPro;
+  late bool privacyMode;
+  late bool dailyDigestEnabled;
 
   static Future<AppState> getState() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -19,6 +21,8 @@ class AppState {
     String? themeModeStr = prefs.getString("themeMode");
     bool? appLock = prefs.getBool("appLockEnabled");
     bool? isPro = prefs.getBool("isPro");
+    bool? privacyMode = prefs.getBool("privacyMode");
+    bool? dailyDigest = prefs.getBool("dailyDigestEnabled");
 
     AppState appState = AppState();
     appState.themeColor = themeColor ?? 0xFF4285F4; // Google Blue
@@ -27,6 +31,8 @@ class AppState {
     appState.themeMode = _parseThemeMode(themeModeStr);
     appState.appLockEnabled = appLock ?? false;
     appState.isPro = isPro ?? false;
+    appState.privacyMode = privacyMode ?? false;
+    appState.dailyDigestEnabled = dailyDigest ?? false;
 
     return appState;
   }
@@ -84,6 +90,18 @@ class AppCubit extends Cubit<AppState> {
     emit(await AppState.getState());
   }
 
+  Future<void> updatePrivacyMode(bool enabled) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("privacyMode", enabled);
+    emit(await AppState.getState());
+  }
+
+  Future<void> updateDailyDigest(bool enabled) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("dailyDigestEnabled", enabled);
+    emit(await AppState.getState());
+  }
+
   Future<void> reset() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove("currency");
@@ -92,6 +110,8 @@ class AppCubit extends Cubit<AppState> {
     await prefs.remove("themeMode");
     await prefs.remove("appLockEnabled");
     await prefs.remove("isPro");
+    await prefs.remove("privacyMode");
+    await prefs.remove("dailyDigestEnabled");
     emit(await AppState.getState());
   }
 }

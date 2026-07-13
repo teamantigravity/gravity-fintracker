@@ -25,12 +25,11 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
 
   @override
   void initState() {
-    AppCubit cubit = context.read<AppCubit>();
-    setState(() {
-      _currency = cubit.state.currency;
-    });
     super.initState();
+    final cubit = context.read<AppCubit>();
+    _currency = cubit.state.currency;
   }
+
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
@@ -117,12 +116,12 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: (){
+        onPressed: () async {
           if(_currency == null) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select currency")));
           } else {
-            cubit.updateCurrency(_currency);
-            resetDatabase();
+            await resetDatabase();
+            await cubit.updateCurrency(_currency);
           }
         },
         label: const Row(

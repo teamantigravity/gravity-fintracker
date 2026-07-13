@@ -7,7 +7,8 @@ class CurrencyHelper {
         String? name = "INR",
         String? locale = "en_IN",
       }) {
-    return NumberFormat('$symbol##,##,##,###.####', locale).format(amount);
+    final String safeSymbol = symbol ?? "₹";
+    return NumberFormat('$safeSymbol##,##,##,###.####', locale).format(amount);
   }
 }
 
