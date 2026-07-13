@@ -29,4 +29,5 @@
 
 # General Android rules
 -dontwarn org.jetbrains.annotations.**
+-dontwarn com.google.mlkit.**
 -keepattributes SourceFile,LineNumberTable
