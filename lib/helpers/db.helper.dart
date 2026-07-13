@@ -2,6 +2,7 @@
 import "dart:convert";
 import "dart:io";
 import "package:csv/csv.dart";
+import "package:fintracker/events.dart";
 import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 import "package:path/path.dart";
@@ -46,10 +47,10 @@ void onUpgrade(Database database, int oldVersion, int version) async {
 
 Future<void> resetDatabase() async {
   Database database = await getDBInstance();
-  await database.delete("payments", where: "id>0");
-  await database.delete("recurring_transactions", where: "id>0");
-  await database.delete("accounts", where: "id>0");
-  await database.delete("categories", where: "id>0");
+  await database.delete("payments");
+  await database.delete("recurring_transactions");
+  await database.delete("accounts");
+  await database.delete("categories");
 
   await database.insert("accounts", {
     "name": "Cash",
@@ -120,6 +121,7 @@ Future<String> export({String? directory, String? filePath}) async {
 
   if (filePath != null && filePath.isNotEmpty) {
     File file = File(filePath);
+    await file.parent.create(recursive: true);
     await file.writeAsString(jsonEncode(data));
     return file.path;
   }
@@ -127,6 +129,7 @@ Future<String> export({String? directory, String? filePath}) async {
   final path = await getExternalDocumentPath(fallbackPath: directory);
   String name = "fintracker-backup-${DateTime.now().millisecondsSinceEpoch}.json";
   File file= File('$path/$name');
+  await file.parent.create(recursive: true);
   await file.writeAsString(jsonEncode(data));
   return file.path;
 }
@@ -164,6 +167,7 @@ Future<String> exportCsv({String? directory, String? filePath}) async {
 
   if (filePath != null && filePath.isNotEmpty) {
     File file = File(filePath);
+    await file.parent.create(recursive: true);
     await file.writeAsString(csvData);
     return file.path;
   }
@@ -171,6 +175,7 @@ Future<String> exportCsv({String? directory, String? filePath}) async {
   final path = await getExternalDocumentPath(fallbackPath: directory);
   String name = "gravity-fintracker-${DateFormat('yyyyMMdd-HHmmss').format(DateTime.now())}.csv";
   File file = File('$path/$name');
+  await file.parent.create(recursive: true);
   await file.writeAsString(csvData);
   return file.path;
 }
@@ -211,20 +216,30 @@ Future<void> import(String path) async {
 
       for(Map<String, dynamic> payment in payments.cast<Map<String, dynamic>>()){
         payment.remove("id");
-        payment["account"] = accountsMap[payment["account"]];
-        payment["category"] = categoriesMap[payment["category"]];
+        int? accountId = accountsMap[payment["account"]];
+        int? categoryId = categoriesMap[payment["category"]];
+        if (accountId == null || categoryId == null) continue;
+        payment["account"] = accountId;
+        payment["category"] = categoryId;
         await transaction.insert("payments", payment);
       }
 
       for(Map<String, dynamic> item in recurring.cast<Map<String, dynamic>>()){
         item.remove("id");
-        item["account"] = accountsMap[item["account"]];
-        item["category"] = categoriesMap[item["category"]];
+        int? accountId = accountsMap[item["account"]];
+        int? categoryId = categoriesMap[item["category"]];
+        if (accountId == null || categoryId == null) continue;
+        item["account"] = accountId;
+        item["category"] = categoryId;
         await transaction.insert("recurring_transactions", item);
       }
 
       return transaction;
     });
+
+    globalEvent.emit("payment_update");
+    globalEvent.emit("account_update");
+    globalEvent.emit("category_update");
   } catch(err){
     rethrow;
   }

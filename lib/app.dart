@@ -156,6 +156,12 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
 
     if (await PinService().hasPin() && mounted) {
       setState(() => _showPinInput = true);
+      return;
+    }
+
+    // No biometric and no PIN: lock is not enforceable, so unlock
+    if (mounted) {
+      setState(() => _isLocked = false);
     }
   }
 

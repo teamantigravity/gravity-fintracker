@@ -21,6 +21,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   void loadData() async {
     List<Category> categories = await _categoryDao.find();
+    if (!mounted) return;
     setState(() {
       _categories = categories;
     });

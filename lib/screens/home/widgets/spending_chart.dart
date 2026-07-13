@@ -85,7 +85,7 @@ class _SpendingChartState extends State<SpendingChart> {
                         final isTouched = i == _touchedIndex;
                         final fontSize = isTouched ? 14.0 : 11.0;
                         final radius = isTouched ? 50.0 : 42.0;
-                        final percentage = (entries[i].amount / total * 100);
+                        final percentage = total > 0 ? (entries[i].amount / total * 100) : 0.0;
 
                         return PieChartSectionData(
                           color: entries[i].color.withOpacity(isTouched ? 1 : 0.85),

@@ -12,6 +12,13 @@ class AccountsSlider extends StatefulWidget{
 class _AccountSlider extends State<AccountsSlider>{
   final PageController _pageController = PageController();
   int _selected = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return  Column(

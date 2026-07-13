@@ -47,7 +47,7 @@ class InsightsService {
       var sorted = categorySpend.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
 
-      if (sorted.isNotEmpty) {
+      if (sorted.isNotEmpty && totalExpense > 0) {
         double pct = (sorted.first.value / totalExpense * 100);
         insights.add(SpendingInsight(
           type: pct > 50 ? InsightType.warning : InsightType.neutral,
@@ -57,7 +57,7 @@ class InsightsService {
       }
 
       // Insight: Spending diversity
-      if (sorted.length >= 3 && sorted.first.value / totalExpense > 0.6) {
+      if (sorted.length >= 3 && totalExpense > 0 && sorted.first.value / totalExpense > 0.6) {
         insights.add(SpendingInsight(
           type: InsightType.tip,
           title: "Concentrated spending",

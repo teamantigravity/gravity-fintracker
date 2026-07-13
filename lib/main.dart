@@ -12,9 +12,25 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ensureDatabaseInitialized();
   await getDBInstance();
-  await NotificationService().init();
-  await SubscriptionService().initialize();
-  await RecurringDao().processDueTransactions();
+
+  try {
+    await NotificationService().init();
+  } catch (e) {
+    debugPrint('Notification init failed: $e');
+  }
+
+  try {
+    await SubscriptionService().initialize();
+  } catch (e) {
+    debugPrint('Subscription init failed: $e');
+  }
+
+  try {
+    await RecurringDao().processDueTransactions();
+  } catch (e) {
+    debugPrint('Recurring processing failed: $e');
+  }
+
   AppState appState = await AppState.getState();
   appState.isPro = SubscriptionService().isPro || appState.isPro;
 

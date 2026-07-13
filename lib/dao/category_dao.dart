@@ -56,6 +56,7 @@ class CategoryDao {
   Future<int> delete(int id) async {
     final db = await getDBInstance();
     await db.delete("payments", where: 'category = ?', whereArgs: [id]);
+    await db.delete("recurring_transactions", where: "category = ?", whereArgs:[id]);
     var result = await db.delete("categories", where: 'id = ?', whereArgs: [id]);
     return result;
   }

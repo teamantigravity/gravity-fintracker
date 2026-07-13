@@ -35,12 +35,12 @@ class PaymentDao {
     }
 
     //account check
-    if(account != null){
+    if(account != null && account.id != null){
       where += "AND account='${account.id}' ";
     }
 
     //category check
-    if(category != null){
+    if(category != null && category.id != null){
       where += "AND category='${category.id}' ";
     }
 

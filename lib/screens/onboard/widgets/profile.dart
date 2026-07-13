@@ -4,16 +4,34 @@ import 'package:fintracker/helpers/color.helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ProfileWidget extends StatelessWidget{
+class ProfileWidget extends StatefulWidget {
   final VoidCallback onGetStarted;
   const ProfileWidget({super.key, required this.onGetStarted});
 
+  @override
+  State<ProfileWidget> createState() => _ProfileWidgetState();
+}
+
+class _ProfileWidgetState extends State<ProfileWidget> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<AppCubit>();
+    _controller = TextEditingController(text: cubit.state.username);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
     AppCubit cubit = context.read<AppCubit>();
-    TextEditingController controller = TextEditingController(text: cubit.state.username);
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -28,7 +46,7 @@ class ProfileWidget extends StatelessWidget{
               Text("What should we call you?", style: theme.textTheme.bodyLarge!.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge!.color ?? theme.colorScheme.onSurface), fontWeightDelta: 1),),
               const SizedBox(height: 25,),
               TextFormField(
-                controller: controller,
+                controller: _controller,
                 decoration: InputDecoration(
                   filled: true,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
@@ -42,13 +60,12 @@ class ProfileWidget extends StatelessWidget{
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: (){
-          if(controller.text.isEmpty){
+        onPressed: () async {
+          if(_controller.text.isEmpty){
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter your name")));
           } else {
-            cubit.updateUsername(controller.text).then((value){
-              onGetStarted();
-            });
+            await cubit.updateUsername(_controller.text);
+            if (mounted) widget.onGetStarted();
           }
         },
         label: const Row(
@@ -57,5 +74,4 @@ class ProfileWidget extends StatelessWidget{
       ),
     );
   }
-
 }

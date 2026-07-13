@@ -386,16 +386,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       delegate: SliverChildBuilderDelegate(
         (context, index) {
           final payment = _filteredPayments[index];
+          final begin = (index * 0.05).clamp(0.0, 1.0).toDouble();
           final animation = Tween<Offset>(
             begin: const Offset(0, 0.1),
             end: Offset.zero,
           ).animate(CurvedAnimation(
             parent: _listAnimationController,
-            curve: Interval(index * 0.05, 1.0, curve: Curves.easeOut),
+            curve: Interval(begin, 1.0, curve: Curves.easeOut),
           ));
           final opacity = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
             parent: _listAnimationController,
-            curve: Interval(index * 0.05, 1.0, curve: Curves.easeOut),
+            curve: Interval(begin, 1.0, curve: Curves.easeOut),
           ));
 
           return FadeTransition(

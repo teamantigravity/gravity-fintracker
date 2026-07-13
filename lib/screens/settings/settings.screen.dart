@@ -617,11 +617,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PINs do not match')));
                         return;
                       }
-                      await PinService().setPin(pinController.text);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN set')));
-                        _checkPin();
+                      try {
+                        await PinService().setPin(pinController.text);
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN set')));
+                          _checkPin();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('PIN set failed: $e')));
+                        }
                       }
                     },
                     height: 45,

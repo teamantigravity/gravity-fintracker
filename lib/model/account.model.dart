@@ -29,12 +29,12 @@ class Account {
 
   factory Account.fromJson(Map<String, dynamic> data) => Account(
     id: data["id"],
-    name: data["name"],
-    holderName: data["holderName"] ??"",
-    accountNumber: data["accountNumber"]??"",
-    icon: IconData(data["icon"], fontFamily: 'MaterialIcons'),
-    color: Color(data["color"]),
-    isDefault: data["isDefault"]==1?true:false,
+    name: data["name"] ?? 'Unknown',
+    holderName: data["holderName"] ?? "",
+    accountNumber: data["accountNumber"] ?? "",
+    icon: data["icon"] is int ? IconData(data["icon"], fontFamily: 'MaterialIcons') : Icons.account_balance,
+    color: data["color"] is int ? Color(data["color"]) : Colors.grey,
+    isDefault: data["isDefault"] == true || data["isDefault"] == 1,
     income: (data["income"] as num?)?.toDouble(),
     expense: (data["expense"] as num?)?.toDouble(),
     balance: (data["balance"] as num?)?.toDouble(),

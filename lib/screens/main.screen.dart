@@ -40,18 +40,26 @@ class MainScreenState extends State<MainScreen>{
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   void _onPageChanged(int index) {
+    if (!mounted) return;
     setState(() {
       _selected = index;
     });
   }
 
   void _onDestinationSelected(int selected) {
+    if (!mounted || selected < 0 || selected >= _navDestinations.length) return;
     _controller.jumpToPage(selected);
   }
 
   void navigateTo(int index) {
-    if (index < 0 || index >= _navDestinations.length) return;
+    if (!mounted || index < 0 || index >= _navDestinations.length) return;
     _controller.jumpToPage(index);
     _onPageChanged(index);
   }

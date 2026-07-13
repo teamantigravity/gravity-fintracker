@@ -69,30 +69,37 @@ class _PaymentForm extends State<PaymentForm>{
     }
   }
 
-  void populateState() async{
+  void populateState() async {
     await loadAccounts();
     await loadCategories();
-    if(widget.payment != null) {
+    if (!mounted) return;
+
+    if (widget.payment != null) {
+      final paymentAccount = widget.payment!.account;
+      final paymentCategory = widget.payment!.category;
       setState(() {
         _id = widget.payment!.id;
         _title = widget.payment!.title;
         _description = widget.payment!.description;
-        _account = widget.payment!.account;
-        _category = widget.payment!.category;
+        _account = _accounts.cast<Account?>().firstWhere(
+          (a) => a?.id == paymentAccount.id,
+          orElse: () => paymentAccount,
+        );
+        _category = _categories.cast<Category?>().firstWhere(
+          (c) => c?.id == paymentCategory.id,
+          orElse: () => paymentCategory,
+        );
         _amount = widget.payment!.amount;
         _type = widget.payment!.type;
         _datetime = widget.payment!.datetime;
         _initialised = true;
       });
-    }
-    else
-    {
+    } else {
       setState(() {
-        _type =  widget.type;
+        _type = widget.type;
         _initialised = true;
       });
     }
-
   }
 
   Future<void> _suggestFromTitle(String title) async {
@@ -323,7 +330,7 @@ class _PaymentForm extends State<PaymentForm>{
                                   initialValue: _amount == 0 ? "" : _amount.toString(),
                                   onChanged: (String text){
                                     setState(() {
-                                      _amount = double.parse(text==""? "0":text);
+                                      _amount = double.tryParse(text) ?? 0.0;
                                     });
                                   },
                                 )

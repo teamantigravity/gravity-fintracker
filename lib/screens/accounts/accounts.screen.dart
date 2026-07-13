@@ -33,6 +33,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
 
   void loadData() async {
     List<Account> accounts = await _accountDao.find(withSummery: true);
+    if (!mounted) return;
     setState(() {
       _accounts = accounts;
     });
@@ -157,8 +158,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     child:  IconButton(
                         key: accKey,
                         onPressed: (){
-                          final RenderBox renderBox =
-                          accKey.currentContext?.findRenderObject() as RenderBox;
+                          final renderObject = accKey.currentContext?.findRenderObject();
+                          if (renderObject is! RenderBox) return;
+                          final RenderBox renderBox = renderObject;
                           final Size size = renderBox.size;
                           final Offset offset = renderBox.localToGlobal(Offset.zero);
 

@@ -28,7 +28,8 @@ class _AccountForm extends State<AccountForm>{
           holderName: widget.account!.holderName,
           accountNumber: widget.account!.accountNumber,
           icon: widget.account!.icon,
-          color: widget.account!.color
+          color: widget.account!.color,
+          isDefault: widget.account!.isDefault,
       );
     } else {
       _account = Account(
@@ -42,6 +43,12 @@ class _AccountForm extends State<AccountForm>{
   }
 
   void onSave (context) async{
+    if (_account!.name.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Account name is required")),
+      );
+      return;
+    }
     await _accountDao.upsert(_account!);
     if(widget.onSave != null) {
       widget.onSave!();

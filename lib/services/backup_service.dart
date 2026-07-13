@@ -65,6 +65,7 @@ class BackupService {
 
     if (filePath != null && filePath.isNotEmpty) {
       final file = File(filePath);
+      await file.parent.create(recursive: true);
       await file.writeAsString(encrypted);
       return file.path;
     }
