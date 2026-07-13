@@ -1,10 +1,13 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
+import 'package:fintracker/config/constants.dart';
 import 'package:fintracker/screens/main.screen.dart';
+import 'package:fintracker/services/pin_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:local_auth/local_auth.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -13,7 +16,7 @@ class App extends StatelessWidget {
     return BlocBuilder<AppCubit, AppState>(
         builder: (context, state) {
           final platformBrightness = MediaQuery.of(context).platformBrightness;
-          final theme = AppTheme.getTheme(state.themeMode, platformBrightness);
+          final theme = AppTheme.getTheme(state.themeMode, platformBrightness, themeColor: state.themeColor);
           final isDark = theme.brightness == Brightness.dark;
 
           SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -24,15 +27,148 @@ class App extends StatelessWidget {
           ));
 
           return MaterialApp(
-            title: 'Gravity Fintracker',
+            title: AppConstants.appName,
             debugShowCheckedModeBanner: false,
             theme: theme,
-            home: const MainScreen(),
+            home: AppLockWrapper(child: const MainScreen()),
             localizationsDelegates: const [
               GlobalWidgetsLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
             ],
           );
         });
+  }
+}
+
+class AppLockWrapper extends StatefulWidget {
+  final Widget child;
+  const AppLockWrapper({super.key, required this.child});
+
+  @override
+  State<AppLockWrapper> createState() => _AppLockWrapperState();
+}
+
+class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObserver {
+  bool _isLocked = false;
+  bool _showPinInput = false;
+  final TextEditingController _pinController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _isLocked = context.read<AppCubit>().state.appLockEnabled;
+    if (_isLocked) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkLock());
+    }
+  }
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkLock();
+    }
+  }
+
+  Future<void> _checkLock() async {
+    final appState = context.read<AppCubit>().state;
+    if (!appState.appLockEnabled) {
+      if (mounted) setState(() => _isLocked = false);
+      return;
+    }
+
+    if (mounted) setState(() => _isLocked = true);
+
+    final LocalAuthentication localAuth = LocalAuthentication();
+    try {
+      bool authenticated = await localAuth.authenticate(
+        localizedReason: 'Unlock ${AppConstants.appName}',
+        options: const AuthenticationOptions(biometricOnly: false),
+      );
+      if (authenticated && mounted) {
+        setState(() => _isLocked = false);
+        return;
+      }
+    } catch (e) {
+      // Fall through to PIN fallback
+    }
+
+    if (await PinService().hasPin() && mounted) {
+      setState(() => _showPinInput = true);
+    }
+  }
+
+  Future<void> _verifyPin() async {
+    final pin = _pinController.text;
+    if (pin.isEmpty) return;
+    final valid = await PinService().verifyPin(pin);
+    if (valid && mounted) {
+      setState(() => _isLocked = false);
+      _pinController.clear();
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Incorrect PIN')),
+        );
+        _pinController.clear();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLocked) return widget.child;
+
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock, size: 64, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(height: 16),
+              Text('Locked', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 24),
+              if (!_showPinInput)
+                FilledButton(
+                  onPressed: _checkLock,
+                  child: const Text('Unlock'),
+                ),
+              if (_showPinInput) ...[
+                TextField(
+                  controller: _pinController,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  maxLength: 6,
+                  decoration: InputDecoration(
+                    labelText: 'Enter PIN',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    counterText: '',
+                  ),
+                  onSubmitted: (_) => _verifyPin(),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: _verifyPin,
+                  child: const Text('Verify PIN'),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _showPinInput = false),
+                  child: const Text('Use biometric'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

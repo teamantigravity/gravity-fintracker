@@ -6,6 +6,8 @@ import 'package:fintracker/helpers/color.helper.dart';
 import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/screens/premium/paywall.screen.dart';
 import 'package:fintracker/screens/premium/privacy_dashboard.screen.dart';
+import 'package:fintracker/services/backup_service.dart';
+import 'package:fintracker/services/pin_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/dialog/confirm.modal.dart';
@@ -25,17 +27,26 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final LocalAuthentication _localAuth = LocalAuthentication();
   bool _biometricAvailable = false;
+  bool _hasPin = false;
 
   @override
   void initState() {
     super.initState();
     _checkBiometrics();
+    _checkPin();
   }
 
   Future<void> _checkBiometrics() async {
     try {
       bool available = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
       if (mounted) setState(() => _biometricAvailable = available);
+    } catch (_) {}
+  }
+
+  Future<void> _checkPin() async {
+    try {
+      bool hasPin = await PinService().hasPin();
+      if (mounted) setState(() => _hasPin = hasPin);
     } catch (_) {}
   }
 
@@ -132,10 +143,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   onTap: () => _showThemeSelector(context, state.themeMode),
                 ),
+                ListTile(
+                  leading: const CircleAvatar(child: Icon(Symbols.format_paint)),
+                  title: Text('Accent Color', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ColorDot(color: Color(state.themeColor), selected: true),
+                      const SizedBox(width: 8),
+                      ..._accentColors.where((c) => c.toARGB32() != state.themeColor).take(4).map((c) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: _ColorDot(
+                              color: c,
+                              selected: false,
+                              onTap: () => context.read<AppCubit>().updateThemeColor(c.toARGB32()),
+                            ),
+                          )),
+                    ],
+                  ),
+                ),
 
                 // SECURITY SECTION
                 _SectionHeader(title: "Security"),
-                if (_biometricAvailable && AppConstants.enableBiometricLock)
+                if (AppConstants.enableBiometricLock && (_biometricAvailable || _hasPin))
                   SwitchListTile(
                     secondary: CircleAvatar(
                       backgroundColor: colorScheme.primary.withOpacity(0.1),
@@ -143,30 +173,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     title: Text('App Lock', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                     subtitle: Text(
-                      "Require biometric to open app",
+                      "Require biometric or PIN to open app",
                       style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                     ),
                     value: state.appLockEnabled,
                     onChanged: (value) async {
                       if (value) {
-                        try {
-                          bool authenticated = await _localAuth.authenticate(
-                            localizedReason: 'Verify your identity to enable app lock',
-                          );
-                          if (authenticated && mounted) {
-                            context.read<AppCubit>().updateAppLock(true);
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Biometric error: $e")),
+                        if (_biometricAvailable) {
+                          try {
+                            bool authenticated = await _localAuth.authenticate(
+                              localizedReason: 'Verify your identity to enable app lock',
                             );
+                            if (authenticated && context.mounted) {
+                              context.read<AppCubit>().updateAppLock(true);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Biometric error: $e")),
+                              );
+                            }
                           }
+                        } else if (_hasPin) {
+                          context.read<AppCubit>().updateAppLock(true);
                         }
                       } else {
                         context.read<AppCubit>().updateAppLock(false);
                       }
                     },
+                  ),
+                if (AppConstants.enableBiometricLock)
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: colorScheme.primary.withOpacity(0.1),
+                      child: Icon(Symbols.pin, color: colorScheme.primary),
+                    ),
+                    title: Text(_hasPin ? 'Change PIN' : 'Set PIN', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                    subtitle: Text(_hasPin ? 'Update your fallback PIN' : 'Set a PIN fallback for app lock', style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                    onTap: () => _showPinDialog(context),
                   ),
 
                 // PRIVACY SECTION
@@ -190,19 +234,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _SectionHeader(title: "Data"),
                 ListTile(
                   onTap: () async {
+                    if (!context.mounted) return;
                     ConfirmModal.showConfirmDialog(
                         context, title: "Export JSON Backup?",
                         content: const Text("Export all data to a JSON backup file"),
                         onConfirm: () async {
                           Navigator.of(context).pop();
                           LoadingModal.showLoadingDialog(context, content: const Text("Exporting..."));
-                          await export().then((value) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
-                          }).catchError((err) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export failed")));
-                          }).whenComplete(() {
-                            Navigator.of(context).pop();
-                          });
+                          try {
+                            final value = await export();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
+                            }
+                          } catch (err) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export failed")));
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          }
                         },
                         onCancel: () => Navigator.of(context).pop()
                     );
@@ -213,19 +265,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 ListTile(
                   onTap: () async {
+                    if (!context.mounted) return;
                     ConfirmModal.showConfirmDialog(
                         context, title: "Export CSV?",
                         content: const Text("Export all transactions to a CSV spreadsheet"),
                         onConfirm: () async {
                           Navigator.of(context).pop();
                           LoadingModal.showLoadingDialog(context, content: const Text("Exporting CSV..."));
-                          await exportCsv().then((value) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
-                          }).catchError((err) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("CSV export failed")));
-                          }).whenComplete(() {
-                            Navigator.of(context).pop();
-                          });
+                          try {
+                            final value = await exportCsv();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
+                            }
+                          } catch (err) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("CSV export failed")));
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          }
                         },
                         onCancel: () => Navigator.of(context).pop()
                     );
@@ -236,39 +296,125 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 ListTile(
                   onTap: () async {
-                    await FilePicker.platform.pickFiles(
-                        dialogTitle: "Pick backup file",
-                        allowMultiple: false,
-                        allowCompression: false,
-                        type: FileType.custom,
-                        allowedExtensions: ["json"]
-                    ).then((pick) {
+                    try {
+                      FilePickerResult? pick = await FilePicker.platform.pickFiles(
+                          dialogTitle: "Pick backup file",
+                          allowMultiple: false,
+                          allowCompression: false,
+                          type: FileType.custom,
+                          allowedExtensions: ["json"]
+                      );
                       if (pick == null || pick.files.isEmpty) {
-                        return ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select file")));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select file")));
+                        }
+                        return;
                       }
                       PlatformFile file = pick.files.first;
-                      ConfirmModal.showConfirmDialog(
-                          context, title: "Import Backup?",
-                          content: const Text("All existing data will be replaced with the backup."),
-                          onConfirm: () async {
-                            Navigator.of(context).pop();
-                            LoadingModal.showLoadingDialog(context, content: const Text("Importing..."));
-                            await import(file.path!).then((value) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Successfully imported")));
+                      if (file.path == null || file.path!.isEmpty) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selected file has no path")));
+                        }
+                        return;
+                      }
+                      if (context.mounted) {
+                        ConfirmModal.showConfirmDialog(
+                            context, title: "Import Backup?",
+                            content: const Text("All existing data will be replaced with the backup."),
+                            onConfirm: () async {
                               Navigator.of(context).pop();
-                            }).catchError((err) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
-                            });
-                          },
-                          onCancel: () => Navigator.of(context).pop()
-                      );
-                    }).catchError((err) {
-                      return ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
-                    });
+                              LoadingModal.showLoadingDialog(context, content: const Text("Importing..."));
+                              try {
+                                await import(file.path!);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Successfully imported")));
+                                  Navigator.of(context).pop();
+                                }
+                              } catch (err) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
+                                  Navigator.of(context).pop();
+                                }
+                              }
+                            },
+                            onCancel: () => Navigator.of(context).pop()
+                        );
+                      }
+                    } catch (err) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
+                      }
+                    }
                   },
                   leading: const CircleAvatar(child: Icon(Symbols.upload)),
                   title: Text('Import', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text("Restore from JSON backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                ),
+                ListTile(
+                  onTap: () async {
+                    final password = await _showPasswordDialog(context, title: 'Export Encrypted Backup', confirm: true);
+                    if (password == null || password.isEmpty) return;
+                    if (!context.mounted) return;
+                    LoadingModal.showLoadingDialog(context, content: const Text("Encrypting..."));
+                    try {
+                      final path = await BackupService.exportEncrypted(password);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $path")));
+                        Navigator.of(context).pop();
+                      }
+                    } catch (err) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export failed")));
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                  leading: const CircleAvatar(child: Icon(Symbols.lock)),
+                  title: Text('Export Encrypted', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text("Password-protected backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                ),
+                ListTile(
+                  onTap: () async {
+                    try {
+                      FilePickerResult? pick = await FilePicker.platform.pickFiles(
+                        dialogTitle: "Pick encrypted backup",
+                        allowMultiple: false,
+                        allowCompression: false,
+                        type: FileType.custom,
+                        allowedExtensions: ["json"],
+                      );
+                      if (pick == null || pick.files.isEmpty) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select file")));
+                        }
+                        return;
+                      }
+                      PlatformFile file = pick.files.first;
+                      if (file.path == null || file.path!.isEmpty) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selected file has no path")));
+                        }
+                        return;
+                      }
+                      final password = await _showPasswordDialog(context, title: 'Import Encrypted Backup', confirm: false);
+                      if (password == null || password.isEmpty) return;
+                      if (!context.mounted) return;
+                      LoadingModal.showLoadingDialog(context, content: const Text("Decrypting..."));
+                      await BackupService.importEncrypted(file.path!, password);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Successfully imported")));
+                        Navigator.of(context).pop();
+                      }
+                    } catch (err) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                  leading: const CircleAvatar(child: Icon(Symbols.lock_open)),
+                  title: Text('Import Encrypted', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text("Restore password-protected backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
 
                 // PREMIUM SECTION
@@ -335,6 +481,133 @@ class _SettingsScreenState extends State<SettingsScreen> {
             );
           },
         )
+    );
+  }
+
+  Future<String?> _showPasswordDialog(BuildContext context, {required String title, required bool confirm}) {
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    return showDialog<String?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+              ),
+              if (confirm) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: confirmController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    onPressed: () {
+                      if (passwordController.text.isEmpty) return;
+                      if (confirm && passwordController.text != confirmController.text) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+                        return;
+                      }
+                      Navigator.of(context).pop(passwordController.text);
+                    },
+                    height: 45,
+                    label: 'Confirm',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showPinDialog(BuildContext context) {
+    final pinController = TextEditingController();
+    final confirmController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(_hasPin ? 'Change PIN' : 'Set PIN', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: pinController,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 6,
+                decoration: InputDecoration(
+                  labelText: 'PIN',
+                  hintText: '4-6 digits',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                  counterText: '',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmController,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 6,
+                decoration: InputDecoration(
+                  labelText: 'Confirm PIN',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                  counterText: '',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    onPressed: () async {
+                      if (pinController.text.length < 4) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN must be at least 4 digits')));
+                        return;
+                      }
+                      if (pinController.text != confirmController.text) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PINs do not match')));
+                        return;
+                      }
+                      await PinService().setPin(pinController.text);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN set')));
+                        _checkPin();
+                      }
+                    },
+                    height: 45,
+                    label: 'Save',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -469,6 +742,50 @@ class _ThemeOption extends StatelessWidget {
       subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey)),
       trailing: isSelected ? Icon(Symbols.check_circle, color: colorScheme.primary, fill: 1) : null,
       onTap: onTap,
+    );
+  }
+}
+
+const List<Color> _accentColors = [
+  Color(0xFF6750A4),
+  Color(0xFF006A60),
+  Color(0xFF006D37),
+  Color(0xFF005AC1),
+  Color(0xFF984061),
+  Color(0xFF934B00),
+];
+
+class _ColorDot extends StatelessWidget {
+  final Color color;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const _ColorDot({required this.color, this.selected = false, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: selected ? Theme.of(context).colorScheme.onSurface : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: selected ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+      ),
     );
   }
 }

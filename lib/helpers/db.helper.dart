@@ -64,7 +64,7 @@ Future<void> resetDatabase() async {
   await database.insert("accounts", {
     "name": "Cash",
     "icon": Icons.wallet.codePoint,
-    "color": Colors.teal.value,
+    "color": Colors.teal.toARGB32(),
     "isDefault": 1
   });
 
@@ -87,42 +87,48 @@ Future<void> resetDatabase() async {
     await database.insert("categories", {
       "name": category["name"],
       "icon": category["icon"],
-      "color": Colors.primaries[index].value,
+      "color": Colors.primaries[index].toARGB32(),
     });
     index++;
   }
 }
 
 
-Future<String> getExternalDocumentPath() async {
+Future<String> getExternalDocumentPath({String? fallbackPath}) async {
   // To check whether permission is given for this app or not.
-  var status = await Permission.storage.status;
-  if (!status.isGranted) {
-    // If not we will ask for permission first
-    await Permission.storage.request();
-  }
-  Directory directory = Directory("");
+  Directory? directory;
   if (Platform.isAndroid) {
-    // Redirects it to download folder in android
-    directory = Directory("/storage/emulated/0/Download");
-  } else {
-    directory = await getApplicationDocumentsDirectory();
+    var status = await Permission.storage.status;
+    if (status.isGranted) {
+      directory = Directory("/storage/emulated/0/Download");
+    }
+  }
+
+  if (directory == null) {
+    if (fallbackPath != null && fallbackPath.isNotEmpty) {
+      directory = Directory(fallbackPath);
+    } else {
+      directory = await getApplicationDocumentsDirectory();
+    }
   }
 
   final exPath = directory.path;
   await Directory(exPath).create(recursive: true);
   return exPath;
 }
-Future<dynamic> export() async {
+Future<dynamic> export({String? directory}) async {
+  await getDBInstance();
   List<dynamic> accounts = await database!.query("accounts",);
   List<dynamic> categories = await database!.query("categories",);
   List<dynamic> payments = await database!.query("payments",);
+  List<dynamic> recurring = await database!.query("recurring_transactions",);
   Map<String, dynamic> data = {};
   data["accounts"] = accounts;
   data["categories"] = categories;
   data["payments"] = payments;
+  data["recurring_transactions"] = recurring;
 
-  final path = await getExternalDocumentPath();
+  final path = await getExternalDocumentPath(fallbackPath: directory);
   String name = "fintracker-backup-${DateTime.now().millisecondsSinceEpoch}.json";
   File file= File('$path/$name');
   await file.writeAsString(jsonEncode(data));
@@ -130,7 +136,8 @@ Future<dynamic> export() async {
 }
 
 
-Future<String> exportCsv() async {
+Future<String> exportCsv({String? directory}) async {
+  await getDBInstance();
   List<dynamic> payments = await database!.rawQuery(
     "SELECT p.id, p.title, p.description, p.amount, p.type, p.datetime, "
     "c.name as categoryName, a.name as accountName "
@@ -158,7 +165,7 @@ Future<String> exportCsv() async {
   }
 
   String csvData = const ListToCsvConverter().convert(rows);
-  final path = await getExternalDocumentPath();
+  final path = await getExternalDocumentPath(fallbackPath: directory);
   String name = "gravity-fintracker-${DateFormat('yyyyMMdd-HHmmss').format(DateTime.now())}.csv";
   File file = File('$path/$name');
   await file.writeAsString(csvData);
@@ -171,39 +178,48 @@ Future<void> import(String path) async {
   Map<int, int> categoriesMap = {};
 
   try{
-    Map<String, dynamic> data = await jsonDecode(file.readAsStringSync());
+    final String content = await file.readAsString();
+    Map<String, dynamic> data = jsonDecode(content);
+    await getDBInstance();
     await database!.transaction((transaction) async{
-      await transaction.delete("categories", where: "id!=0");
-      await transaction.delete("accounts", where: "id!=0");
-      await transaction.delete("payments", where: "id!=0");
+      await transaction.delete("recurring_transactions");
+      await transaction.delete("payments");
+      await transaction.delete("categories");
+      await transaction.delete("accounts");
 
+      List<dynamic> categories = (data["categories"] ?? []);
+      List<dynamic> accounts = (data["accounts"] ?? []);
+      List<dynamic> payments = (data["payments"] ?? []);
+      List<dynamic> recurring = (data["recurring_transactions"] ?? []);
 
-      List<dynamic> categories = data["categories"];
-      List<dynamic> accounts = data["accounts"];
-      List<dynamic> payments = data["payments"];
-
-
-      for(Map<String, dynamic> category in categories){
-        int id0 = category["id"];
+      for(Map<String, dynamic> category in categories.cast<Map<String, dynamic>>()){
+        int id0 = category["id"] ?? 0;
         category.remove("id");
         int id = await transaction.insert("categories", category);
         categoriesMap[id0] = id;
       }
 
-
-      for(Map<String, dynamic> account in accounts){
-        int id0 = account["id"];
+      for(Map<String, dynamic> account in accounts.cast<Map<String, dynamic>>()){
+        int id0 = account["id"] ?? 0;
         account.remove("id");
         int id = await transaction.insert("accounts", account);
         accountsMap[id0] = id;
       }
 
-      for(Map<String, dynamic> payment in payments){
+      for(Map<String, dynamic> payment in payments.cast<Map<String, dynamic>>()){
         payment.remove("id");
         payment["account"] = accountsMap[payment["account"]];
         payment["category"] = categoriesMap[payment["category"]];
         await transaction.insert("payments", payment);
       }
+
+      for(Map<String, dynamic> item in recurring.cast<Map<String, dynamic>>()){
+        item.remove("id");
+        item["account"] = accountsMap[item["account"]];
+        item["category"] = categoriesMap[item["category"]];
+        await transaction.insert("recurring_transactions", item);
+      }
+
       return transaction;
     });
   } catch(err){

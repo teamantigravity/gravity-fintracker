@@ -1,4 +1,5 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
+import 'package:fintracker/config/constants.dart';
 import 'package:fintracker/helpers/color.helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,7 +23,7 @@ class ProfileWidget extends StatelessWidget{
             children: [
               const Icon(Icons.account_balance_wallet, size: 70,),
               const SizedBox(height: 25,),
-              Text("Hi! welcome to Fintracker", style: theme.textTheme.headlineMedium!.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
+              Text("Hi! welcome to ${AppConstants.appName}", style: theme.textTheme.headlineMedium!.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
               const SizedBox(height: 15,),
               Text("What should we call you?", style: theme.textTheme.bodyLarge!.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge!.color!), fontWeightDelta: 1),),
               const SizedBox(height: 25,),

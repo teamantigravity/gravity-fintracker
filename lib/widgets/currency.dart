@@ -15,8 +15,13 @@ class CurrencyText extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(builder: (context, state){
-      Currency? currency = currencyService.findByCode(state.currency!);
-      return Text(amount==null? "${currency!.symbol} " : CurrencyHelper.format(amount!, name: currency?.code, symbol: currency?.symbol), style: style, overflow: overflow,);
+      final String currencyCode = state.currency ?? 'USD';
+      Currency? currency = currencyService.findByCode(currencyCode);
+      return Text(
+        amount==null ? (currency?.symbol ?? '\$') : CurrencyHelper.format(amount!, name: currency?.code, symbol: currency?.symbol),
+        style: style,
+        overflow: overflow,
+      );
     });
   }
 }

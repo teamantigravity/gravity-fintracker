@@ -162,7 +162,7 @@ class _AccountForm extends State<AccountForm>{
                                     borderRadius: BorderRadius.circular(40),
                                     border: Border.all(
                                       width: 2,
-                                      color: _account!.color.value == Colors.primaries[index].value ? Colors.white: Colors.transparent,
+                                      color: _account!.color.toARGB32() == Colors.primaries[index].toARGB32() ? Colors.white: Colors.transparent,
                                     )
                                 ),
                               )

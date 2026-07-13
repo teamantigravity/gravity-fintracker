@@ -93,6 +93,23 @@ class _PaymentForm extends State<PaymentForm>{
 
   }
 
+  Future<void> _suggestFromTitle(String title) async {
+    if (title.trim().length < 3) return;
+    final suggestion = await _paymentDao.findByTitle(title, _type);
+    if (suggestion != null && mounted) {
+      setState(() {
+        _account = _accounts.cast<Account?>().firstWhere(
+          (a) => a?.id == suggestion.account.id,
+          orElse: () => _account,
+        );
+        _category = _categories.cast<Category?>().firstWhere(
+          (c) => c?.id == suggestion.category.id,
+          orElse: () => _category,
+        );
+      });
+    }
+  }
+
   Future<void> chooseDate(BuildContext context) async {
     DateTime initialDate = _datetime;
     final DateTime? picked = await showDatePicker(
@@ -190,12 +207,12 @@ class _PaymentForm extends State<PaymentForm>{
               _id!=null ? IconButton(
                   onPressed: (){
                     ConfirmModal.showConfirmDialog(context, title: "Are you sure?", content: const Text("After deleting payment can't be recovered."),
-                        onConfirm: (){
-                          _paymentDao.deleteTransaction(_id!).then((value) {
-                            globalEvent.emit("payment_update");
-                            Navigator.pop(context);
-                            Navigator.pop(context);
-                          });
+                        onConfirm: () async {
+                          await _paymentDao.deleteTransaction(_id!);
+                          globalEvent.emit("payment_update");
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                          Navigator.pop(context);
                         },
                         onCancel: (){
                           Navigator.pop(context);
@@ -259,9 +276,8 @@ class _PaymentForm extends State<PaymentForm>{
                                 ),
                                 initialValue: _title,
                                 onChanged: (text){
-                                  setState(() {
-                                    _title = text;
-                                  });
+                                  _title = text;
+                                  _suggestFromTitle(text);
                                 },
                               ),
                             ),

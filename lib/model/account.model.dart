@@ -46,7 +46,7 @@ class Account {
     "holderName": holderName,
     "accountNumber": accountNumber,
     "icon": icon.codePoint,
-    "color": color.value,
+    "color": color.toARGB32(),
     "isDefault": (isDefault??false) ? 1:0
   };
 }

@@ -11,11 +11,14 @@ import 'package:fintracker/screens/home/widgets/income_expense_chart.dart';
 import 'package:fintracker/screens/home/widgets/payment_list_item.dart';
 import 'package:fintracker/screens/home/widgets/smart_insights.dart';
 import 'package:fintracker/screens/home/widgets/spending_chart.dart';
+import 'package:fintracker/screens/home/widgets/trend_chart.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
+import 'package:fintracker/services/haptic_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -39,17 +42,21 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final PaymentDao _paymentDao = PaymentDao();
   final AccountDao _accountDao = AccountDao();
   EventListener? _accountEventListener;
   EventListener? _categoryEventListener;
   EventListener? _paymentEventListener;
   List<Payment> _payments = [];
+  List<Payment> _filteredPayments = [];
   List<Account> _accounts = [];
   double _income = 0;
   double _expense = 0;
   bool _showCharts = false;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  late final AnimationController _listAnimationController;
   DateTimeRange _range = DateTimeRange(
       start: DateTime.now().subtract(Duration(days: DateTime.now().day -1)),
       end: DateTime.now()
@@ -57,11 +64,53 @@ class _HomeScreenState extends State<HomeScreen> {
   Account? _account;
   Category? _category;
 
+  @override
+  void initState() {
+    super.initState();
+    _listAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fetchTransactions();
+
+    _accountEventListener = globalEvent.on("account_update", (data){
+      _fetchTransactions();
+    });
+
+    _categoryEventListener = globalEvent.on("category_update", (data){
+      _fetchTransactions();
+    });
+
+    _paymentEventListener = globalEvent.on("payment_update", (data){
+      _fetchTransactions();
+    });
+
+    _searchController.addListener(_filterPayments);
+  }
+
+  void _filterPayments() {
+    final query = _searchController.text.toLowerCase();
+    if (query.isEmpty) {
+      setState(() => _filteredPayments = _payments);
+      return;
+    }
+    setState(() {
+      _filteredPayments = _payments.where((p) {
+        return p.title.toLowerCase().contains(query) ||
+            p.category.name.toLowerCase().contains(query) ||
+            p.account.name.toLowerCase().contains(query) ||
+            p.description.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
   void openAddPaymentPage(PaymentType type) async {
+    HapticService.light();
     Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>PaymentForm(type: type)));
   }
 
   void handleChooseDateRange() async{
+    HapticService.light();
     final selected = await showDateRangePicker(
       context: context,
       initialDateRange: _range,
@@ -76,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _fetchTransactions() async {
+  Future<void> _fetchTransactions() async {
     List<Payment> trans = await _paymentDao.find(range: _range, category: _category, account:_account);
     double income = 0;
     double expense = 0;
@@ -89,32 +138,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       _payments = trans;
+      _filteredPayments = trans;
       _income = income;
       _expense = expense;
       _accounts = accounts;
     });
+    _listAnimationController.forward(from: 0.0);
   }
 
+  Future<void> _handleRefresh() async {
+    HapticService.light();
+    await _fetchTransactions();
+  }
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchTransactions();
+  Future<void> _deletePayment(Payment payment) async {
+    HapticService.heavy();
+    await _paymentDao.deleteTransaction(payment.id!);
+    globalEvent.emit("payment_update");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Transaction deleted"),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          action: SnackBarAction(
+            label: "Undo",
+            onPressed: () async {
+              payment.id = null;
+              await _paymentDao.upsert(payment);
+              globalEvent.emit("payment_update");
+            },
+          ),
+        ),
+      );
+    }
+  }
 
-    _accountEventListener = globalEvent.on("account_update", (data){
-      debugPrint("accounts are changed");
-      _fetchTransactions();
-    });
-
-    _categoryEventListener = globalEvent.on("category_update", (data){
-      debugPrint("categories are changed");
-      _fetchTransactions();
-    });
-
-    _paymentEventListener = globalEvent.on("payment_update", (data){
-      debugPrint("payments are changed");
-      _fetchTransactions();
-    });
+  void _editPayment(Payment payment) {
+    HapticService.light();
+    Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>PaymentForm(type: payment.type, payment: payment,)));
   }
 
   @override
@@ -122,195 +184,303 @@ class _HomeScreenState extends State<HomeScreen> {
     _accountEventListener?.cancel();
     _categoryEventListener?.cancel();
     _paymentEventListener?.cancel();
+    _searchController.dispose();
+    _listAnimationController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Greeting header
-              Container(
-                margin: const EdgeInsets.only(left: 20, right: 20, bottom: 16, top: 60),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Good ${greeting()}",
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.5),
-                            ),
-                          ),
-                          BlocConsumer<AppCubit, AppState>(
-                              listener: (context, state){},
-                              builder: (context, state) => Text(
-                                state.username ?? "Guest",
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              )
-                          )
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        onPressed: () => setState(() => _showCharts = !_showCharts),
-                        icon: Icon(
-                          _showCharts ? Symbols.list : Symbols.bar_chart,
-                          fill: 1,
-                          size: 22,
-                        ),
-                        tooltip: _showCharts ? "Show list" : "Show charts",
-                      ),
-                    ),
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        edgeOffset: 60,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 60),
+                  _buildHeader(colorScheme, theme),
+                  const SizedBox(height: 16),
+                  AccountsSlider(accounts: _accounts),
+                  const SizedBox(height: 16),
+                  _SummaryCards(income: _income, expense: _expense),
+                  if (_showCharts && _payments.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    TrendChart(payments: _payments),
+                    SpendingChart(payments: _payments),
+                    IncomeExpenseChart(payments: _payments),
                   ],
-                ),
+                  if (_payments.isNotEmpty)
+                    SmartInsightsCard(payments: _payments),
+                  _buildTransactionsHeader(theme, colorScheme),
+                  const SizedBox(height: 4),
+                ],
               ),
-
-              // Account cards
-              AccountsSlider(accounts: _accounts),
-              const SizedBox(height: 16),
-
-              // Income/Expense summary cards
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _SummaryCard(
-                        label: "Income",
-                        amount: _income,
-                        color: AppTheme.incomeColor,
-                        icon: Symbols.arrow_downward,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _SummaryCard(
-                        label: "Expense",
-                        amount: _expense,
-                        color: AppTheme.expenseColor,
-                        icon: Symbols.arrow_upward,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Charts section
-              if (_showCharts && _payments.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                SpendingChart(payments: _payments),
-                IncomeExpenseChart(payments: _payments),
-              ],
-
-              // Smart Insights
-              if (_payments.isNotEmpty)
-                SmartInsightsCard(payments: _payments),
-
-              // Payments header
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                    children: [
-                      Text("Transactions",
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const Expanded(child: SizedBox()),
-                      InkWell(
-                        onTap: handleChooseDateRange,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                "${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}",
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 2),
-                              Icon(Icons.arrow_drop_down_outlined, size: 18, color: colorScheme.primary),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ]
-                ),
-              ),
-              const SizedBox(height: 4),
-
-              // Payments list
-              _payments.isNotEmpty ? ListView.separated(
-                padding: EdgeInsets.zero,
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemBuilder: (BuildContext context, index){
-                  return PaymentListItem(payment: _payments[index], onTap: (){
-                    Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>PaymentForm(type: _payments[index].type, payment: _payments[index],)));
-                  });
-                },
-                separatorBuilder: (BuildContext context, int index){
-                  return Container(
-                    width: double.infinity,
-                    color: colorScheme.outlineVariant.withOpacity(0.2),
-                    height: 0.5,
-                    margin: const EdgeInsets.only(left: 75, right: 20),
-                  );
-                },
-                itemCount: _payments.length,
-              ) : Container(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                alignment: Alignment.center,
-                child: Column(
-                  children: [
-                    Icon(
-                      Symbols.receipt_long,
-                      size: 48,
-                      color: colorScheme.onSurface.withOpacity(0.15),
-                      fill: 1,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "No transactions yet",
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.3),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Tap + to add your first transaction",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.2),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 80),
-            ],
-          )
+            ),
+            _buildTransactionsList(theme, colorScheme),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: ()=> openAddPaymentPage(PaymentType.credit),
-        child: const Icon(Icons.add),
+      floatingActionButton: _buildSpeedDial(),
+    );
+  }
+
+  Widget _buildHeader(ColorScheme colorScheme, ThemeData theme) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: _isSearching
+                ? TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: "Search transactions...",
+                      filled: true,
+                      prefixIcon: const Icon(Symbols.search, size: 20),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Symbols.close, size: 20),
+                        onPressed: () {
+                          HapticService.light();
+                          _searchController.clear();
+                          setState(() => _isSearching = false);
+                        },
+                      ),
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Good ${greeting()}",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                      ),
+                      BlocConsumer<AppCubit, AppState>(
+                        listener: (context, state){},
+                        builder: (context, state) => Text(
+                          state.username ?? "Guest",
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          IconButton(
+            onPressed: () {
+              HapticService.light();
+              setState(() => _isSearching = !_isSearching);
+            },
+            icon: Icon(_isSearching ? Symbols.close : Symbols.search, fill: 1, size: 22),
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => setState(() => _showCharts = !_showCharts),
+            icon: Icon(_showCharts ? Symbols.list : Symbols.bar_chart, fill: 1, size: 22),
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionsHeader(ThemeData theme, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Text(
+            "Transactions",
+            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const Expanded(child: SizedBox()),
+          if (_filteredPayments.isNotEmpty)
+            Text(
+              "${_filteredPayments.length}",
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: handleChooseDateRange,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(Icons.arrow_drop_down_outlined, size: 18, color: colorScheme.primary),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionsList(ThemeData theme, ColorScheme colorScheme) {
+    if (_filteredPayments.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          alignment: Alignment.center,
+          child: Column(
+            children: [
+              Icon(
+                Symbols.receipt_long,
+                size: 48,
+                color: colorScheme.onSurface.withOpacity(0.15),
+                fill: 1,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _searchController.text.isEmpty ? "No transactions yet" : "No matches found",
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.3),
+                ),
+              ),
+              if (_searchController.text.isEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  "Tap + to add your first transaction",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.2),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final payment = _filteredPayments[index];
+          final animation = Tween<Offset>(
+            begin: const Offset(0, 0.1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: _listAnimationController,
+            curve: Interval(index * 0.05, 1.0, curve: Curves.easeOut),
+          ));
+          final opacity = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
+            parent: _listAnimationController,
+            curve: Interval(index * 0.05, 1.0, curve: Curves.easeOut),
+          ));
+
+          return FadeTransition(
+            opacity: opacity,
+            child: SlideTransition(
+              position: animation,
+              child: Dismissible(
+                key: ValueKey(payment.id ?? index),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 24),
+                  color: colorScheme.error,
+                  child: const Icon(Symbols.delete, color: Colors.white),
+                ),
+                onDismissed: (_) => _deletePayment(payment),
+                child: PaymentListItem(
+                  payment: payment,
+                  onTap: () => _editPayment(payment),
+                ),
+              ),
+            ),
+          );
+        },
+        childCount: _filteredPayments.length,
+      ),
+    );
+  }
+
+  Widget _buildSpeedDial() {
+    return SpeedDial(
+      icon: Symbols.add,
+      activeIcon: Symbols.close,
+      spacing: 12,
+      childPadding: const EdgeInsets.all(5),
+      spaceBetweenChildren: 8,
+      overlayColor: Colors.black,
+      overlayOpacity: 0.3,
+      children: [
+        SpeedDialChild(
+          child: const Icon(Symbols.arrow_downward, color: Colors.white),
+          label: "Income",
+          backgroundColor: AppTheme.incomeColor,
+          onTap: () => openAddPaymentPage(PaymentType.credit),
+        ),
+        SpeedDialChild(
+          child: const Icon(Symbols.arrow_upward, color: Colors.white),
+          label: "Expense",
+          backgroundColor: AppTheme.expenseColor,
+          onTap: () => openAddPaymentPage(PaymentType.debit),
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryCards extends StatelessWidget {
+  final double income;
+  final double expense;
+
+  const _SummaryCards({required this.income, required this.expense});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SummaryCard(
+              label: "Income",
+              amount: income,
+              color: AppTheme.incomeColor,
+              icon: Symbols.arrow_downward,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _SummaryCard(
+              label: "Expense",
+              amount: expense,
+              color: AppTheme.expenseColor,
+              icon: Symbols.arrow_upward,
+            ),
+          ),
+        ],
       ),
     );
   }

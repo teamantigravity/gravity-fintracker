@@ -58,7 +58,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
         onSave: (recurring) async {
           await _recurringDao.create(recurring);
           _loadData();
-          if (mounted) Navigator.of(context).pop();
+          if (context.mounted) Navigator.of(context).pop();
         },
       ),
     );

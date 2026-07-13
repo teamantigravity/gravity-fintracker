@@ -140,7 +140,7 @@ class _CategoryForm extends State<CategoryForm>{
                                   borderRadius: BorderRadius.circular(40),
                                   border: Border.all(
                                     width: 2,
-                                    color: _category.color.value == Colors.primaries[index].value ? Colors.white: Colors.transparent,
+                                    color: _category.color.toARGB32() == Colors.primaries[index].toARGB32() ? Colors.white: Colors.transparent,
                                   )
                               ),
                             )

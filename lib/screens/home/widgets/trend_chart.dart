@@ -4,22 +4,28 @@ import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class IncomeExpenseChart extends StatelessWidget {
+class TrendChart extends StatelessWidget {
   final List<Payment> payments;
-  const IncomeExpenseChart({super.key, required this.payments});
+  const TrendChart({super.key, required this.payments});
 
   Map<String, _DayData> _getDailyBreakdown() {
     Map<String, _DayData> daily = {};
-    for (var payment in payments) {
-      String key = DateFormat('MM/dd').format(payment.datetime);
+    List<Payment> sorted = [...payments]..sort((a, b) => a.datetime.compareTo(b.datetime));
+    double runningBalance = 0;
+
+    for (var payment in sorted) {
+      String key = DateFormat('yyyy-MM-dd').format(payment.datetime);
       if (!daily.containsKey(key)) {
-        daily[key] = _DayData(date: key);
+        daily[key] = _DayData(date: payment.datetime);
       }
       if (payment.type == PaymentType.credit) {
         daily[key]!.income += payment.amount;
+        runningBalance += payment.amount;
       } else {
         daily[key]!.expense += payment.amount;
+        runningBalance -= payment.amount;
       }
+      daily[key]!.balance = runningBalance;
     }
     return daily;
   }
@@ -30,19 +36,21 @@ class IncomeExpenseChart extends StatelessWidget {
     if (daily.isEmpty) return const SizedBox.shrink();
 
     final sortedKeys = daily.keys.toList()..sort();
-    final displayKeys = sortedKeys.length > 7
-        ? sortedKeys.sublist(sortedKeys.length - 7)
+    final displayKeys = sortedKeys.length > 14
+        ? sortedKeys.sublist(sortedKeys.length - 14)
         : sortedKeys;
 
     double maxY = 0;
+    double minY = 0;
     for (var key in displayKeys) {
-      double income = daily[key]!.income;
-      double expense = daily[key]!.expense;
-      if (income > maxY) maxY = income;
-      if (expense > maxY) maxY = expense;
+      double balance = daily[key]!.balance;
+      if (balance > maxY) maxY = balance;
+      if (balance < minY) minY = balance;
     }
-    maxY = maxY * 1.2;
-    if (maxY == 0) maxY = 100;
+    double range = maxY - minY;
+    if (range == 0) range = 100;
+    maxY += range * 0.1;
+    minY -= range * 0.1;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -54,7 +62,7 @@ class IncomeExpenseChart extends StatelessWidget {
           Row(
             children: [
               Text(
-                "Daily Overview",
+                "Balance Trend",
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -68,23 +76,17 @@ class IncomeExpenseChart extends StatelessWidget {
           const SizedBox(height: 20),
           SizedBox(
             height: 180,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
+            child: LineChart(
+              LineChartData(
+                minY: minY,
                 maxY: maxY,
-                barTouchData: BarTouchData(
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      String label = rodIndex == 0 ? 'Income' : 'Expense';
-                      return BarTooltipItem(
-                        '$label\n${rod.toY.toStringAsFixed(0)}',
-                        TextStyle(
-                          color: rod.color,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      );
-                    },
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: (maxY - minY) / 4,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: isDark ? Colors.white10 : Colors.black12,
+                    strokeWidth: 0.8,
                   ),
                 ),
                 titlesData: FlTitlesData(
@@ -95,10 +97,11 @@ class IncomeExpenseChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         int index = value.toInt();
                         if (index >= 0 && index < displayKeys.length) {
+                          final day = daily[displayKeys[index]]!.date;
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              displayKeys[index],
+                              DateFormat('dd MMM').format(day),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 9,
                                     color: isDark ? Colors.white54 : Colors.black45,
@@ -109,6 +112,7 @@ class IncomeExpenseChart extends StatelessWidget {
                         return const SizedBox.shrink();
                       },
                       reservedSize: 24,
+                      interval: 1,
                     ),
                   ),
                   leftTitles: const AxisTitles(
@@ -121,36 +125,49 @@ class IncomeExpenseChart extends StatelessWidget {
                     sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: maxY / 4,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: isDark ? Colors.white10 : Colors.black12,
-                    strokeWidth: 0.8,
+                borderData: FlBorderData(show: false),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        return LineTooltipItem(
+                          spot.y.toStringAsFixed(0),
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        );
+                      }).toList();
+                    },
                   ),
                 ),
-                borderData: FlBorderData(show: false),
-                barGroups: List.generate(displayKeys.length, (i) {
-                  final data = daily[displayKeys[i]]!;
-                  return BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: data.income,
-                        color: AppTheme.incomeColor.withOpacity(0.8),
-                        width: 8,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                      ),
-                      BarChartRodData(
-                        toY: data.expense,
-                        color: AppTheme.expenseColor.withOpacity(0.8),
-                        width: 8,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                      ),
-                    ],
-                  );
-                }),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: List.generate(displayKeys.length, (i) {
+                      return FlSpot(i.toDouble(), daily[displayKeys[i]]!.balance);
+                    }),
+                    isCurved: true,
+                    color: AppTheme.incomeColor,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppTheme.incomeColor.withOpacity(0.1),
+                    ),
+                  ),
+                  LineChartBarData(
+                    spots: List.generate(displayKeys.length, (i) {
+                      return FlSpot(i.toDouble(), daily[displayKeys[i]]!.expense);
+                    }),
+                    isCurved: true,
+                    color: AppTheme.expenseColor,
+                    barWidth: 2,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                  ),
+                ],
               ),
             ),
           ),
@@ -189,9 +206,10 @@ class _LegendDot extends StatelessWidget {
 }
 
 class _DayData {
-  final String date;
+  final DateTime date;
   double income = 0;
   double expense = 0;
+  double balance = 0;
 
   _DayData({required this.date});
 }

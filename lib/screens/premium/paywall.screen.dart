@@ -1,6 +1,8 @@
+import 'package:fintracker/bloc/cubit/app_cubit.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class PaywallScreen extends StatefulWidget {
@@ -25,6 +27,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         success = await _subscriptionService.purchaseMonthly();
       }
       if (success && mounted) {
+        context.read<AppCubit>().updatePro(true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Welcome to Pro!")),
         );
@@ -227,11 +230,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   child: TextButton(
                     onPressed: () async {
                       await _subscriptionService.restorePurchases();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Purchases restored")),
-                        );
+                      if (!context.mounted) return;
+                      if (_subscriptionService.isPro) {
+                        context.read<AppCubit>().updatePro(true);
                       }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Purchases restored")),
+                      );
                     },
                     child: const Text("Restore Purchases"),
                   ),

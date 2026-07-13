@@ -19,7 +19,7 @@ class _AccountSlider extends State<AccountsSlider>{
       children: [
         SizedBox(
           width: double.infinity,
-          height: 170,
+          height: 180,
           child: PageView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: widget.accounts.length,
@@ -35,53 +35,83 @@ class _AccountSlider extends State<AccountsSlider>{
                 widthFactor: 1 / _pageController.viewportFraction,
                 child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(22),
                       gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          stops: const [
-                            0.1,
-                            0.9
-                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                           colors: [
-                            account.color.withOpacity(0.7),
-                            account.color.withOpacity(1)
+                            account.color.withOpacity(0.85),
+                            account.color.withOpacity(0.45),
                           ]
                       ),
-                    ),
-                    margin: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Stack(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CurrencyText(account.balance ?? 0, style: Theme.of(context).textTheme.headlineMedium?.merge(
-                                const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700
-                                ),
-                              )),
-                              Text("Balance", style: Theme.of(context).textTheme.bodyMedium?.apply(color: Colors.white.withOpacity(0.9)),),
-                              const Expanded(child: SizedBox()),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(account.holderName, style: Theme.of(context).textTheme.bodyLarge?.apply(color: Colors.white.withOpacity(1), fontWeightDelta: 2),),
-                                      Text(account.name, style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.white.withOpacity(0.5)), textAlign: TextAlign.center,),
-                                    ],
-                                  ),
-                                  const Expanded(child:SizedBox()),
-                                  Icon(account.icon, color: Colors.white)
-                                ],
-                              )
-                            ],
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: account.color.withOpacity(0.25),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
                         ),
                       ],
+                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 15),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            right: -40,
+                            top: -40,
+                            child: CircleAvatar(
+                              radius: 90,
+                              backgroundColor: Colors.white.withOpacity(0.08),
+                            ),
+                          ),
+                          Positioned(
+                            left: -30,
+                            bottom: -60,
+                            child: CircleAvatar(
+                              radius: 70,
+                              backgroundColor: Colors.white.withOpacity(0.06),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CurrencyText(account.balance ?? 0, style: Theme.of(context).textTheme.headlineSmall?.merge(
+                                  const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700
+                                  ),
+                                )),
+                                Text("Balance", style: Theme.of(context).textTheme.bodyMedium?.apply(color: Colors.white.withOpacity(0.85)),),
+                                const Expanded(child: SizedBox()),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(account.holderName, style: Theme.of(context).textTheme.bodyLarge?.apply(color: Colors.white.withOpacity(1), fontWeightDelta: 2),),
+                                        Text(account.name, style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.white.withOpacity(0.7)), textAlign: TextAlign.center,),
+                                      ],
+                                    ),
+                                    const Expanded(child:SizedBox()),
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(account.icon, color: Colors.white, size: 22),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     )
                 ),
               );

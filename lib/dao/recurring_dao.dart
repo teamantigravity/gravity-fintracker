@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'package:fintracker/dao/account_dao.dart';
 import 'package:fintracker/dao/category_dao.dart';
+import 'package:fintracker/dao/payment_dao.dart';
 import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
+import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/model/recurring.model.dart';
+import 'package:fintracker/services/notification_service.dart';
 
 class RecurringDao {
   Future<int> create(RecurringTransaction recurring) async {
@@ -112,5 +115,36 @@ class RecurringDao {
       where: "id = ?",
       whereArgs: [id],
     );
+  }
+
+  Future<int> processDueTransactions() async {
+    List<RecurringTransaction> due = await findDue();
+    if (due.isEmpty) return 0;
+
+    PaymentDao paymentDao = PaymentDao();
+    int processed = 0;
+    for (RecurringTransaction recurring in due) {
+      Payment payment = Payment(
+        account: recurring.account,
+        category: recurring.category,
+        amount: recurring.amount,
+        type: recurring.type == "CR" ? PaymentType.credit : PaymentType.debit,
+        datetime: DateTime.now(),
+        title: recurring.title,
+        description: recurring.description,
+      );
+      await paymentDao.create(payment);
+
+      await NotificationService().showDueBill(
+        title: recurring.title,
+        body: '${recurring.type == 'CR' ? 'Income' : 'Expense'} of ${recurring.amount} processed',
+      );
+
+      DateTime next = recurring.calculateNextDueDate();
+      recurring.nextDueDate = next;
+      await update(recurring);
+      processed++;
+    }
+    return processed;
   }
 }

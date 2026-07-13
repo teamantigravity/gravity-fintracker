@@ -38,7 +38,7 @@ android {
 
     defaultConfig {
         applicationId "me.nafish.fintracker"
-        minSdk 21        // Android 5.0 Lollipop — lowest compatible
+        minSdkVersion flutter.minSdkVersion        // Android 5.0 Lollipop — lowest compatible
         targetSdk 36     // Android 16+ compatible
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

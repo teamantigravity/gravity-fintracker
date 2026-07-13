@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 enum AppThemeMode { light, dark, amoled, system }
 
 class AppTheme {
-  static const Color _seedColor = Color(0xFF6750A4);
+  static const Color _defaultSeedColor = Color(0xFF6750A4);
 
   static const Color successLight = Color(0xFF0AA553);
   static const Color successDark = Color(0xFF4CAF50);
@@ -17,9 +17,13 @@ class AppTheme {
     return GoogleFonts.interTextTheme(base);
   }
 
-  static ThemeData light() {
+  static Color _seedColor(int? themeColor) {
+    return themeColor != null ? Color(themeColor) : _defaultSeedColor;
+  }
+
+  static ThemeData light({int? themeColor}) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: _seedColor(themeColor),
       brightness: Brightness.light,
     );
     final base = ThemeData(
@@ -53,9 +57,9 @@ class AppTheme {
     );
   }
 
-  static ThemeData dark() {
+  static ThemeData dark({int? themeColor}) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: _seedColor(themeColor),
       brightness: Brightness.dark,
     );
     final base = ThemeData(
@@ -89,9 +93,9 @@ class AppTheme {
     );
   }
 
-  static ThemeData amoled() {
+  static ThemeData amoled({int? themeColor}) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: _seedColor(themeColor),
       brightness: Brightness.dark,
     ).copyWith(
       surface: Colors.black,
@@ -142,16 +146,16 @@ class AppTheme {
     );
   }
 
-  static ThemeData getTheme(AppThemeMode mode, Brightness platformBrightness) {
+  static ThemeData getTheme(AppThemeMode mode, Brightness platformBrightness, {int? themeColor}) {
     switch (mode) {
       case AppThemeMode.light:
-        return light();
+        return light(themeColor: themeColor);
       case AppThemeMode.dark:
-        return dark();
+        return dark(themeColor: themeColor);
       case AppThemeMode.amoled:
-        return amoled();
+        return amoled(themeColor: themeColor);
       case AppThemeMode.system:
-        return platformBrightness == Brightness.dark ? dark() : light();
+        return platformBrightness == Brightness.dark ? dark(themeColor: themeColor) : light(themeColor: themeColor);
     }
   }
 

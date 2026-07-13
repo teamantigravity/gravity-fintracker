@@ -26,20 +26,20 @@ class PaymentDao {
     String where = "";
 
     if(range!=null){
-      where += "AND datetime BETWEEN DATE('${DateFormat('yyyy-MM-dd kk:mm:ss').format(range.start)}') AND DATE('${DateFormat('yyyy-MM-dd kk:mm:ss').format(range.end.add(const Duration(days: 1)))}')";
+      where += "AND datetime BETWEEN DATE('${DateFormat('yyyy-MM-dd HH:mm:ss').format(range.start)}') AND DATE('${DateFormat('yyyy-MM-dd HH:mm:ss').format(range.end.add(const Duration(days: 1)))}')";
     }
 
     //type check
     if(type != null){
-      where += "AND type='${type == PaymentType.credit?"DR":"CR"}' ";
+      where += "AND type='${type == PaymentType.credit?"CR":"DR"}' ";
     }
 
-    //icon check
+    //account check
     if(account != null){
       where += "AND account='${account.id}' ";
     }
 
-    //icon check
+    //category check
     if(category != null){
       where += "AND category='${category.id}' ";
     }
@@ -65,6 +65,27 @@ class PaymentDao {
     }
 
     return payments;
+  }
+
+  Future<Payment?> findByTitle(String title, PaymentType type) async {
+    final db = await getDBInstance();
+    List<Category> categories = await CategoryDao().find();
+    List<Account> accounts = await AccountDao().find();
+
+    List<Map<String, Object?>> rows = await db.query(
+      "payments",
+      where: "LOWER(title) = LOWER(?) AND type = ?",
+      whereArgs: [title, type == PaymentType.credit ? "CR" : "DR"],
+      orderBy: "datetime DESC, id DESC",
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    Map<String, dynamic> payment = Map<String, dynamic>.from(rows.first);
+    Account account = accounts.firstWhere((a) => a.id == payment["account"]);
+    Category category = categories.firstWhere((c) => c.id == payment["category"]);
+    payment["category"] = category.toJson();
+    payment["account"] = account.toJson();
+    return Payment.fromJson(payment);
   }
 
   Future<int> update(Payment payment) async {

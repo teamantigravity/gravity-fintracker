@@ -49,7 +49,7 @@ class Payment {
     "account": account.id,
     "category": category.id,
     "amount": amount,
-    "datetime": DateFormat('yyyy-MM-dd kk:mm:ss').format(datetime),
+    "datetime": DateFormat('yyyy-MM-dd HH:mm:ss').format(datetime),
     "type": type == PaymentType.credit ? "CR": "DR",
   };
 }

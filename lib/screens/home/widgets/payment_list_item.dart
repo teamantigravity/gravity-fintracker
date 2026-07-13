@@ -12,32 +12,72 @@ class PaymentListItem extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     bool isCredit = payment.type == PaymentType.credit ;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return ListTile(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       onTap: onTap,
       leading: Container(
-          height: 45,
-          width: 45,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-            color: payment.category.color.withOpacity(0.1),
-          ),
-          child:  Icon( payment.category.icon, size: 22, color: payment.category.color,)
+        height: 48,
+        width: 48,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: payment.category.color.withOpacity(0.12),
+        ),
+        child: Icon(payment.category.icon, size: 22, color: payment.category.color),
       ),
-      title: Text(payment.category.name, style: Theme.of(context).textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500)),),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              payment.title.isNotEmpty ? payment.title : payment.category.name,
+              style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w600)),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: payment.category.color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              payment.category.name,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: payment.category.color,
+              ),
+            ),
+          ),
+        ],
+      ),
       subtitle: Text.rich(
         TextSpan(
-            children: [
-              TextSpan(text: (DateFormat("dd MMM yyyy, HH:mm").format(payment.datetime))),
-            ],
-            style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis)
+          children: [
+            TextSpan(text: DateFormat("dd MMM • HH:mm").format(payment.datetime)),
+            if (payment.account.name.isNotEmpty)
+              TextSpan(text: " • ${payment.account.name}"),
+          ],
+          style: theme.textTheme.bodySmall?.apply(color: colorScheme.onSurface.withOpacity(0.5), overflow: TextOverflow.ellipsis),
         ),
       ),
-      trailing: CurrencyText(
-          isCredit? payment.amount : -payment.amount,
-          style: Theme.of(context).textTheme.bodyMedium?.apply(color: isCredit? ThemeColors.success:ThemeColors.error)
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isCredit ? ThemeColors.success.withOpacity(0.08) : ThemeColors.error.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: CurrencyText(
+          isCredit ? payment.amount : -payment.amount,
+          style: theme.textTheme.bodyMedium?.apply(
+            color: isCredit ? ThemeColors.success : ThemeColors.error,
+            fontWeightDelta: 1,
+          ),
+        ),
       ),
-    ) ;
+    );
   }
-
 }
