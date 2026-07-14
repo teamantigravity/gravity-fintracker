@@ -11,6 +11,9 @@ import "package:sqflite/sqflite.dart";
 
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:fintracker/model/account.model.dart';
+import 'package:fintracker/model/category.model.dart';
+import 'package:fintracker/model/payment.model.dart';
 
 Database? database;
 Future<Database> getDBInstance() async {
@@ -206,46 +209,80 @@ Future<void> import(String path) async {
       List<dynamic> recurring = (data["recurring_transactions"] ?? []);
       List<dynamic> savingsGoals = (data["savings_goals"] ?? []);
 
-      for(Map<String, dynamic> category in categories.cast<Map<String, dynamic>>()){
-        int id0 = category["id"] ?? 0;
+      for (Map<String, dynamic> categoryMap in categories.cast<Map<String, dynamic>>()) {
+        int id0 = categoryMap["id"] ?? 0;
+        final categoryObj = Category.fromJson(categoryMap);
+        Map<String, dynamic> category = categoryObj.toJson();
         category.remove("id");
         int id = await transaction.insert("categories", category);
         categoriesMap[id0] = id;
       }
 
-      for(Map<String, dynamic> account in accounts.cast<Map<String, dynamic>>()){
-        int id0 = account["id"] ?? 0;
+      for (Map<String, dynamic> accountMap in accounts.cast<Map<String, dynamic>>()) {
+        int id0 = accountMap["id"] ?? 0;
+        final accountObj = Account.fromJson(accountMap);
+        Map<String, dynamic> account = accountObj.toJson();
         account.remove("id");
         int id = await transaction.insert("accounts", account);
         accountsMap[id0] = id;
       }
 
-      for(Map<String, dynamic> payment in payments.cast<Map<String, dynamic>>()){
-        payment.remove("id");
-        int? accountId = accountsMap[payment["account"]];
-        int? categoryId = categoriesMap[payment["category"]];
+      for (Map<String, dynamic> paymentMap in payments.cast<Map<String, dynamic>>()) {
+        int? accountId = accountsMap[paymentMap["account"]];
+        int? categoryId = categoriesMap[paymentMap["category"]];
         if (accountId == null || categoryId == null) continue;
-        payment["account"] = accountId;
-        payment["category"] = categoryId;
+        
+        paymentMap["account"] = accountId;
+        paymentMap["category"] = categoryId;
+        
+        final paymentObj = Payment.fromJson(paymentMap);
+        Map<String, dynamic> payment = paymentObj.toJson();
+        payment.remove("id");
+        
         await transaction.insert("payments", payment);
       }
 
-      for(Map<String, dynamic> item in recurring.cast<Map<String, dynamic>>()){
-        item.remove("id");
-        int? accountId = accountsMap[item["account"]];
-        int? categoryId = categoriesMap[item["category"]];
+      for (Map<String, dynamic> itemMap in recurring.cast<Map<String, dynamic>>()) {
+        int? accountId = accountsMap[itemMap["account"]];
+        int? categoryId = categoriesMap[itemMap["category"]];
         if (accountId == null || categoryId == null) continue;
-        item["account"] = accountId;
-        item["category"] = categoryId;
+        
+        itemMap["account"] = accountId;
+        itemMap["category"] = categoryId;
+        
+        // Since we don't have a specific RecurringTransaction model handy, we will manually sanitize it
+        // based on the standard table structure:
+        Map<String, dynamic> item = {
+          "title": itemMap["title"],
+          "description": itemMap["description"],
+          "account": accountId,
+          "category": categoryId,
+          "amount": itemMap["amount"],
+          "type": itemMap["type"],
+          "frequency": itemMap["frequency"],
+          "next_date": itemMap["next_date"],
+          "end_date": itemMap["end_date"],
+        };
+        
         await transaction.insert("recurring_transactions", item);
       }
 
-      for(Map<String, dynamic> goal in savingsGoals.cast<Map<String, dynamic>>()){
-        goal.remove("id");
-        final accountId = goal["account"];
+      for (Map<String, dynamic> goalMap in savingsGoals.cast<Map<String, dynamic>>()) {
+        final accountId = goalMap["account"];
+        int? mappedAccountId = accountId;
         if (accountId != null) {
-          goal["account"] = accountsMap[accountId] ?? accountId;
+          mappedAccountId = accountsMap[accountId] ?? accountId;
         }
+        
+        Map<String, dynamic> goal = {
+          "title": goalMap["title"],
+          "description": goalMap["description"],
+          "account": mappedAccountId,
+          "amount": goalMap["amount"],
+          "target_amount": goalMap["target_amount"],
+          "target_date": goalMap["target_date"],
+        };
+        
         await transaction.insert("savings_goals", goal);
       }
 
