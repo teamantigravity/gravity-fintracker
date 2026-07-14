@@ -71,8 +71,8 @@ class SubscriptionService {
       final monthly = offerings.current?.monthly;
       if (monthly != null) {
         // ignore: deprecated_member_use
-        final customerInfo = await Purchases.purchasePackage(monthly);
-        _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
+        final purchaseResult = await Purchases.purchasePackage(monthly);
+        _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
         return _isPro;
       }
       return false;
@@ -91,8 +91,8 @@ class SubscriptionService {
       final annual = offerings.current?.annual;
       if (annual != null) {
         // ignore: deprecated_member_use
-        final customerInfo = await Purchases.purchasePackage(annual);
-        _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
+        final purchaseResult = await Purchases.purchasePackage(annual);
+        _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
         return _isPro;
       }
       return false;
