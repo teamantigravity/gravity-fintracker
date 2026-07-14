@@ -70,8 +70,9 @@ class SubscriptionService {
       final offerings = await Purchases.getOfferings();
       final monthly = offerings.current?.monthly;
       if (monthly != null) {
-        final result = await Purchases.purchasePackage(monthly);
-        _isPro = result.entitlements.all['pro']?.isActive ?? false;
+        // ignore: deprecated_member_use
+        final customerInfo = await Purchases.purchasePackage(monthly);
+        _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
         return _isPro;
       }
       return false;
@@ -89,8 +90,9 @@ class SubscriptionService {
       final offerings = await Purchases.getOfferings();
       final annual = offerings.current?.annual;
       if (annual != null) {
-        final result = await Purchases.purchasePackage(annual);
-        _isPro = result.entitlements.all['pro']?.isActive ?? false;
+        // ignore: deprecated_member_use
+        final customerInfo = await Purchases.purchasePackage(annual);
+        _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
         return _isPro;
       }
       return false;

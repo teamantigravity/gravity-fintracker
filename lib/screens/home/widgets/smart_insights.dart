@@ -1,5 +1,6 @@
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/services/insights_service.dart';
+import 'package:fintracker/services/forecasting_service.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -18,7 +19,9 @@ class _SmartInsightsCardState extends State<SmartInsightsCard> {
   @override
   Widget build(BuildContext context) {
     final insights = InsightsService.analyze(widget.payments);
-    if (insights.isEmpty) return const SizedBox.shrink();
+    final forecasts = ForecastingService.generateForecastInsights(widget.payments);
+    final allInsights = [...forecasts, ...insights];
+    if (allInsights.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -61,17 +64,17 @@ class _SmartInsightsCardState extends State<SmartInsightsCard> {
           height: 108,
           child: PageView.builder(
             controller: _controller,
-            itemCount: insights.length,
+            itemCount: allInsights.length,
             onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (context, i) => _InsightCard(insight: insights[i]),
+            itemBuilder: (context, i) => _InsightCard(insight: allInsights[i]),
           ),
         ),
-        if (insights.length > 1) ...[
+        if (allInsights.length > 1) ...[
           const SizedBox(height: 8),
           Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: List.generate(insights.length, (i) {
+              children: List.generate(allInsights.length, (i) {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: _page == i ? 16 : 5,
@@ -79,7 +82,7 @@ class _SmartInsightsCardState extends State<SmartInsightsCard> {
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
                     color: _page == i
-                        ? _insightColor(insights[i].type)
+                        ? _insightColor(allInsights[i].type)
                         : colorScheme.outlineVariant.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(60),
                   ),
