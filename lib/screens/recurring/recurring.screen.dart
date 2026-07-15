@@ -119,9 +119,12 @@ class _RecurringScreenState extends State<RecurringScreen> {
           IconButton(
             icon: const Icon(Symbols.receipt_long, fill: 1),
             tooltip: 'Scan Subscription',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
-            ),
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
+              );
+              _loadData();
+            },
           ),
         ],
       ),

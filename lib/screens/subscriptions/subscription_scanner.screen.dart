@@ -197,7 +197,6 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
             onSave: (recurring) async {
               await _recurringDao.create(recurring);
               if (!mounted) return;
-              if (!context.mounted) return;
               Navigator.of(context).pop();
             },
           ),
