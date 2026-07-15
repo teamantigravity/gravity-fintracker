@@ -82,21 +82,48 @@ class SyncService {
   Future<Uint8List?> _getMasterKey() async {
     String? stored = await _secureStorage.read(key: _masterKeyStorageKey);
     if (stored == null) return null;
+    // Legacy unsalted keys have no separator; modern format is salt:key.
+    if (stored.contains(':')) return base64Decode(stored.split(':')[1]);
     return base64Decode(stored);
   }
 
-  Future<void> setEncryptionKey(String passphrase) async {
-    // Derive master key from passphrase using SHA-512 (quantum-resistant hash)
-    Uint8List passphraseBytes = Uint8List.fromList(utf8.encode(passphrase));
-    // Multi-round hashing for key stretching
-    Digest hash = sha512.convert(passphraseBytes);
-    for (int i = 0; i < 100000; i++) {
-      hash = sha512.convert([...hash.bytes, ...passphraseBytes]);
+  Uint8List _pbkdf2Sha512(
+    Uint8List password,
+    Uint8List salt,
+    int iterations,
+    int keyLength,
+  ) {
+    final hmac = Hmac(sha512, password);
+    final saltWithI = Uint8List(salt.length + 4);
+    saltWithI.setRange(0, salt.length, salt);
+    saltWithI[salt.length] = 0;
+    saltWithI[salt.length + 1] = 0;
+    saltWithI[salt.length + 2] = 0;
+    saltWithI[salt.length + 3] = 1;
+
+    Digest digest = hmac.convert(saltWithI);
+    Uint8List last = Uint8List.fromList(digest.bytes);
+    Uint8List result = Uint8List.fromList(last);
+
+    for (int i = 1; i < iterations; i++) {
+      digest = hmac.convert(last);
+      last = Uint8List.fromList(digest.bytes);
+      for (int j = 0; j < result.length; j++) {
+        result[j] ^= last[j];
+      }
     }
-    Uint8List masterKey = Uint8List.fromList(hash.bytes.sublist(0, _keyLength));
+
+    return Uint8List.fromList(result.sublist(0, keyLength));
+  }
+
+  Future<void> setEncryptionKey(String passphrase) async {
+    // Derive master key from passphrase using PBKDF2-HMAC-SHA512.
+    final passphraseBytes = Uint8List.fromList(utf8.encode(passphrase));
+    final salt = _generateSecureBytes(_saltLength);
+    final masterKey = _pbkdf2Sha512(passphraseBytes, salt, 100000, _keyLength);
     await _secureStorage.write(
       key: _masterKeyStorageKey,
-      value: base64Encode(masterKey),
+      value: '${base64Encode(salt)}:${base64Encode(masterKey)}',
     );
   }
 
@@ -270,6 +297,10 @@ class SyncService {
   }
 
   Future<void> signOut() async {
+    if (!isEnabled) {
+      debugPrint('Sync not enabled. Configure Supabase in constants.dart');
+      return;
+    }
     await Supabase.instance.client.auth.signOut();
   }
 
