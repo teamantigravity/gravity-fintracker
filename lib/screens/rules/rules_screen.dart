@@ -370,8 +370,16 @@ class _RuleFormState extends State<_RuleForm> {
 
   void _save() {
     final name = _nameController.text.trim();
-    if (name.isEmpty || _targetAccount == null || _targetCategory == null) {
+    final targetAccount = _targetAccount;
+    final targetCategory = _targetCategory;
+    if (name.isEmpty || targetAccount == null || targetCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name, target account, and target category are required')));
+      return;
+    }
+    final targetAccountId = targetAccount.id;
+    final targetCategoryId = targetCategory.id;
+    if (targetAccountId == null || targetCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selected account or category has no ID')));
       return;
     }
     final percentage = double.tryParse(_percentageController.text) ?? 0;
@@ -379,7 +387,7 @@ class _RuleFormState extends State<_RuleForm> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Percentage must be between 1 and 100')));
       return;
     }
-    final rule = widget.rule ?? Rule(name: name, targetAccountId: _targetAccount!.id!, targetCategoryId: _targetCategory!.id!);
+    final rule = widget.rule ?? Rule(name: name, targetAccountId: targetAccountId, targetCategoryId: targetCategoryId);
     rule.name = name;
     rule.description = _descController.text;
     rule.enabled = _enabled;
@@ -389,8 +397,8 @@ class _RuleFormState extends State<_RuleForm> {
     rule.minAmount = double.tryParse(_minController.text);
     rule.maxAmount = double.tryParse(_maxController.text);
     rule.percentage = percentage / 100;
-    rule.targetAccountId = _targetAccount!.id!;
-    rule.targetCategoryId = _targetCategory!.id!;
+    rule.targetAccountId = targetAccountId;
+    rule.targetCategoryId = targetCategoryId;
     rule.targetType = _targetType ?? 'DR';
     widget.onSave(rule);
     Navigator.of(context).pop();
