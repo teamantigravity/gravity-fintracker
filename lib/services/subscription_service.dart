@@ -166,6 +166,7 @@ class SubscriptionService {
   // Feature gates
   bool get canSync => isPro;
   bool get canExportPdf => isPlus;
+  bool get canUseTaxReports => isPlus;
   bool get canUseRecurring => isPlus;
   bool get canUseAdvancedCharts => isPlus;
   bool get canUseMultiDevice => isPro;

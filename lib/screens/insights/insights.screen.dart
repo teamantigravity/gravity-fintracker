@@ -11,6 +11,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../premium/paywall.screen.dart';
 import '../savings_goals/savings_goals.screen.dart';
 import 'coach.screen.dart';
+import 'reports.screen.dart';
+import 'what_if.screen.dart';
 
 class InsightsScreen extends StatefulWidget {
   const InsightsScreen({super.key});
@@ -70,6 +72,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
               _buildAnomaliesCard(theme, colorScheme),
               const SizedBox(height: 16),
               _buildForecastCard(theme, colorScheme),
+              const SizedBox(height: 16),
+              _buildReportsCard(theme, colorScheme),
+              const SizedBox(height: 16),
+              _buildWhatIfCard(theme, colorScheme),
               const SizedBox(height: 16),
               _buildCoachCard(theme, colorScheme),
               const SizedBox(height: 16),
@@ -199,6 +205,28 @@ class _InsightsScreenState extends State<InsightsScreen> {
               },
             )
           : _proTile('Get a 90-day balance forecast and low-balance alerts', theme, () => _openPaywall()),
+    );
+  }
+
+  Widget _buildReportsCard(ThemeData theme, ColorScheme colorScheme) {
+    final unlocked = SubscriptionService().canUseTaxReports;
+    return _card(
+      title: 'Tax & Export Reports',
+      pro: !_plus,
+      child: unlocked
+          ? _proTile('Generate category summaries and export tax-ready CSVs', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen())))
+          : _proTile('Generate tax-ready reports and export CSVs', theme, () => _openPaywall()),
+    );
+  }
+
+  Widget _buildWhatIfCard(ThemeData theme, ColorScheme colorScheme) {
+    final unlocked = SubscriptionService().canUseWhatIfPlanner;
+    return _card(
+      title: 'What-If Planner',
+      pro: !_pro,
+      child: unlocked
+          ? _proTile('Simulate changes to income, expenses, and recurring payments', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WhatIfScreen())))
+          : _proTile('Run cash-flow scenarios before making financial decisions', theme, () => _openPaywall()),
     );
   }
 
