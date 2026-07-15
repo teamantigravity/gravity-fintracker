@@ -51,5 +51,7 @@
     <true/>
     <key>UIFileSharingEnabled</key>
     <true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Unlock Gravity Fintracker with Face ID.</string>
 </dict>
 </plist>

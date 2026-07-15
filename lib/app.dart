@@ -105,6 +105,8 @@ class AppLockWrapper extends StatefulWidget {
 class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObserver {
   bool _isLocked = false;
   bool _showPinInput = false;
+  bool _isAuthenticating = false;
+  bool _hasResumedOnce = false;
   final TextEditingController _pinController = TextEditingController();
 
   @override
@@ -126,12 +128,21 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkLock();
+    if (state != AppLifecycleState.resumed) return;
+    // The first resumed event fires during launch and is already handled by
+    // the addPostFrameCallback in initState. Calling _checkLock again can
+    // trigger a second biometric prompt that confuses the plugin and locks
+    // the user out.
+    if (!_hasResumedOnce) {
+      _hasResumedOnce = true;
+      return;
     }
+    _checkLock();
   }
 
   Future<void> _checkLock() async {
+    if (_isAuthenticating) return;
+
     final appState = context.read<AppCubit>().state;
     if (!appState.appLockEnabled) {
       if (mounted) setState(() => _isLocked = false);
@@ -140,11 +151,15 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
 
     if (mounted) setState(() => _isLocked = true);
 
+    _isAuthenticating = true;
     final LocalAuthentication localAuth = LocalAuthentication();
     try {
       bool authenticated = await localAuth.authenticate(
         localizedReason: 'Unlock ${AppConstants.appName}',
-        options: const AuthenticationOptions(biometricOnly: false),
+        options: const AuthenticationOptions(
+          biometricOnly: false,
+          stickyAuth: true,
+        ),
       );
       if (authenticated && mounted) {
         setState(() => _isLocked = false);
@@ -152,11 +167,21 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
       }
     } catch (e) {
       // Fall through to PIN fallback
+    } finally {
+      _isAuthenticating = false;
     }
 
-    if (await PinService().hasPin() && mounted) {
-      setState(() => _showPinInput = true);
-      return;
+    try {
+      if (await PinService().hasPin() && mounted) {
+        setState(() => _showPinInput = true);
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not read PIN: $e')),
+        );
+      }
     }
 
     // No biometric and no PIN: lock is not enforceable, so unlock
@@ -168,14 +193,23 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
   Future<void> _verifyPin() async {
     final pin = _pinController.text;
     if (pin.isEmpty) return;
-    final valid = await PinService().verifyPin(pin);
-    if (valid && mounted) {
-      setState(() => _isLocked = false);
-      _pinController.clear();
-    } else {
+    try {
+      final valid = await PinService().verifyPin(pin);
+      if (valid && mounted) {
+        setState(() => _isLocked = false);
+        _pinController.clear();
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Incorrect PIN')),
+          );
+          _pinController.clear();
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Incorrect PIN')),
+          SnackBar(content: Text('PIN verification failed: $e')),
         );
         _pinController.clear();
       }

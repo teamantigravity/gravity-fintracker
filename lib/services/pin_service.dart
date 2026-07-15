@@ -22,22 +22,30 @@ class PinService {
   }
 
   Future<bool> verifyPin(String pin) async {
-    final stored = await _secureStorage.read(key: _pinHashKey);
-    if (stored == null || stored.isEmpty) return false;
+    try {
+      final stored = await _secureStorage.read(key: _pinHashKey);
+      if (stored == null || stored.isEmpty) return false;
 
-    final parts = stored.split(':');
-    if (parts.length == 2) {
-      final salt = base64Decode(parts[0]);
-      return _hash(pin, salt) == parts[1];
+      final parts = stored.split(':');
+      if (parts.length == 2) {
+        final salt = base64Decode(parts[0]);
+        return _hash(pin, salt) == parts[1];
+      }
+
+      // Legacy unsalted SHA-256 fallback (setPin now always stores salt)
+      return stored == _legacyHash(pin);
+    } catch (e) {
+      return false;
     }
-
-    // Legacy unsalted SHA-256 fallback (setPin now always stores salt)
-    return stored == _legacyHash(pin);
   }
 
   Future<bool> hasPin() async {
-    final stored = await _secureStorage.read(key: _pinHashKey);
-    return stored != null && stored.isNotEmpty;
+    try {
+      final stored = await _secureStorage.read(key: _pinHashKey);
+      return stored != null && stored.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<void> clearPin() async {
