@@ -86,7 +86,7 @@ class ReceiptScannerService {
       final m = p.firstMatch(line);
       if (m != null) {
         try {
-          final parts = m.group(0)!.split(RegExp(r'[\/\-.]'));
+          final parts = (m.group(0) ?? '').split(RegExp(r'[\/\-.]'));
           if (parts.length == 3) {
             final a = int.parse(parts[0]);
             final b = int.parse(parts[1]);
@@ -132,7 +132,7 @@ class ReceiptScannerService {
   static double? _extractAmount(String line) {
     final matches = RegExp(r'(?:^|\s|\$|€|£|₹|Rs\.?)(\d+(?:[.,]\d{1,2})?)\s*').allMatches(line);
     for (final m in matches) {
-      final raw = m.group(1)!.replaceAll(',', '.');
+      final raw = (m.group(1) ?? '').replaceAll(',', '.');
       final value = double.tryParse(raw);
       if (value != null && value > 0) return value;
     }
