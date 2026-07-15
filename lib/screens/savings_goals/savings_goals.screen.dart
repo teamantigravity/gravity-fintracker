@@ -97,7 +97,8 @@ class _GoalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = goal.color != null ? Color(goal.color!) : theme.colorScheme.primary;
+    final colorValue = goal.color;
+    final color = colorValue != null ? Color(colorValue) : theme.colorScheme.primary;
     final progress = goal.progress;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -114,7 +115,7 @@ class _GoalCard extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: color.withValues(alpha: 0.2),
                 child: goal.icon != null
-                    ? Text(String.fromCharCode(goal.icon!), style: TextStyle(fontFamily: 'MaterialIcons', fontSize: 24, color: color))
+                    ? Text(String.fromCharCode(goal.icon ?? Symbols.savings.codePoint), style: TextStyle(fontFamily: 'MaterialIcons', fontSize: 24, color: color))
                     : Icon(Symbols.savings, color: color),
               ),
               const SizedBox(width: 12),
@@ -124,7 +125,8 @@ class _GoalCard extends StatelessWidget {
                   if (value == 'add') {
                     _showAddContribution(context, goal);
                   } else if (value == 'delete') {
-                    await SavingsGoalDao().delete(goal.id!);
+                    final id = goal.id;
+                    if (id != null) await SavingsGoalDao().delete(id);
                     onRefresh();
                   }
                 },

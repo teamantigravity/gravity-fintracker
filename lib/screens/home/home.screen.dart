@@ -157,7 +157,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _deletePayment(Payment payment) async {
     HapticService.heavy();
-    await _paymentDao.deleteTransaction(payment.id!);
+    final id = payment.id;
+    if (id != null) await _paymentDao.deleteTransaction(id);
     globalEvent.emit("payment_update");
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -43,15 +43,17 @@ class PaymentDao {
     }
 
     //account check
-    if(account != null && account.id != null){
+    final accountId = account?.id;
+    if(accountId != null){
       whereClauses.add("account = ?");
-      whereArgs.add(account.id!);
+      whereArgs.add(accountId);
     }
 
     //category check
-    if(category != null && category.id != null){
+    final categoryId = category?.id;
+    if(categoryId != null){
       whereClauses.add("category = ?");
-      whereArgs.add(category.id!);
+      whereArgs.add(categoryId);
     }
 
     //categories

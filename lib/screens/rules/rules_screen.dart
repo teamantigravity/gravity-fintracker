@@ -69,8 +69,9 @@ class _RulesScreenState extends State<RulesScreen> {
   }
 
   Future<void> _delete(Rule rule) async {
-    if (rule.id == null) return;
-    await _ruleDao.delete(rule.id!);
+    final id = rule.id;
+    if (id == null) return;
+    await _ruleDao.delete(id);
     _load();
   }
 

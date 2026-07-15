@@ -69,8 +69,10 @@ class _RecurringScreenState extends State<RecurringScreen> {
   }
 
   void _toggleActive(RecurringTransaction recurring) async {
+    final id = recurring.id;
+    if (id == null) return;
     if (recurring.isActive) {
-      await _recurringDao.deactivate(recurring.id!);
+      await _recurringDao.deactivate(id);
     } else {
       await _recurringDao.update(RecurringTransaction(
         id: recurring.id,
@@ -177,7 +179,10 @@ class _RecurringScreenState extends State<RecurringScreen> {
                     color: AppTheme.expenseColor.withValues(alpha: 0.1),
                     child: const Icon(Symbols.delete, color: AppTheme.expenseColor),
                   ),
-                  onDismissed: (_) => _deleteRecurring(item.id!),
+                  onDismissed: (_) {
+                    final id = item.id;
+                    if (id != null) _deleteRecurring(id);
+                  },
                   child: ListTile(
                     leading: Container(
                       height: 42,
@@ -196,7 +201,10 @@ class _RecurringScreenState extends State<RecurringScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      "${item.intervalLabel} · Next: ${item.nextDueDate != null ? DateFormat('dd MMM').format(item.nextDueDate!) : 'N/A'}",
+                      "${item.intervalLabel} · Next: ${() {
+                        final nextDueDate = item.nextDueDate;
+                        return nextDueDate != null ? DateFormat('dd MMM').format(nextDueDate) : 'N/A';
+                      }()}",
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
