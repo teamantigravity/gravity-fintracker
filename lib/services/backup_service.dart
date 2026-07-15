@@ -102,6 +102,7 @@ class BackupService {
     final payments = await db.database!.query('payments');
     final recurring = await db.database!.query('recurring_transactions');
     final savingsGoals = await db.database!.query('savings_goals');
+    final rules = await db.database!.query('rules');
 
     final data = {
       'accounts': accounts,
@@ -109,7 +110,9 @@ class BackupService {
       'payments': payments,
       'recurring_transactions': recurring,
       'savings_goals': savingsGoals,
+      'rules': rules,
       'timestamp': DateTime.now().toIso8601String(),
+      'version': 4,
     };
 
     final encrypted = await encryptWithPassword(jsonEncode(data), password);
