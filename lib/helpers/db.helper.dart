@@ -21,17 +21,14 @@ import 'package:fintracker/model/savings_goal.model.dart';
 
 Database? database;
 Future<Database> getDBInstance() async {
-  if(database == null) {
-    String databasesPath = await getDatabasesPath();
-    String dbPath = join(databasesPath, 'database.db');
-    Database db = await openDatabase(dbPath, version: 4, onCreate: onCreate, onUpgrade: onUpgrade);
+  final db = database;
+  if (db != null) return db;
 
-    database = db;
-    return db;
-  } else {
-    Database db = database!;
-    return db;
-  }
+  final databasesPath = await getDatabasesPath();
+  final dbPath = join(databasesPath, 'database.db');
+  final newDb = await openDatabase(dbPath, version: 4, onCreate: onCreate, onUpgrade: onUpgrade);
+  database = newDb;
+  return newDb;
 }
 
 typedef MigrationCallback = Function(Database database);
