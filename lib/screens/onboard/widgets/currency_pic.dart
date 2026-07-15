@@ -44,7 +44,7 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
               const SizedBox(height: 50,),
               const Icon(Icons.currency_exchange, size: 40,),
               const SizedBox(height: 15,),
-              Text("Select Currency", style: theme.textTheme.headlineMedium!.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
+              Text("Select Currency", style: theme.textTheme.headlineMedium?.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
               const SizedBox(height: 25,),
               TextFormField(
                 onChanged: (text){

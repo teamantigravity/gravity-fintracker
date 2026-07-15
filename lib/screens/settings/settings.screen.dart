@@ -80,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("What should we call you?", style: theme.textTheme.bodyLarge!.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge!.color ?? theme.colorScheme.onSurface), fontWeightDelta: 1)),
+                            Text("What should we call you?", style: theme.textTheme.bodyLarge?.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface), fontWeightDelta: 1)),
                             const SizedBox(height: 15),
                             TextFormField(
                               controller: controller,
@@ -352,8 +352,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         }
                         return;
                       }
-                      PlatformFile file = pick.files.first;
-                      if (file.path == null || file.path!.isEmpty) {
+                      final file = pick.files.first;
+                      final path = file.path;
+                      if (path == null || path.isEmpty) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selected file has no path")));
                         }
@@ -367,7 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Navigator.of(context).pop();
                               LoadingModal.showLoadingDialog(context, content: const Text("Importing..."));
                               try {
-                                await import(file.path!);
+                                await import(path);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Successfully imported")));
                                   Navigator.of(context).pop();
@@ -439,8 +440,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         }
                         return;
                       }
-                      PlatformFile file = pick.files.first;
-                      if (file.path == null || file.path!.isEmpty) {
+                      final file = pick.files.first;
+                      final path = file.path;
+                      if (path == null || path.isEmpty) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selected file has no path")));
                         }
@@ -451,7 +453,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (password == null || password.isEmpty) return;
                       if (!context.mounted) return;
                       LoadingModal.showLoadingDialog(context, content: const Text("Decrypting..."));
-                      await BackupService.importEncrypted(file.path!, password);
+                      await BackupService.importEncrypted(path, password);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Successfully imported")));
                         Navigator.of(context).pop();
