@@ -1,9 +1,5 @@
-import 'package:fintracker/dao/account_dao.dart';
-import 'package:fintracker/dao/payment_dao.dart';
-import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/services/notification_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -58,29 +54,4 @@ class DailyDigestService {
     }
   }
 
-  static Future<void> showNow() async {
-    final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day);
-    final payments = await PaymentDao().find(range: DateTimeRange(start: start, end: now));
-    final accounts = await AccountDao().find(withSummery: true);
-
-    double spent = 0;
-    double earned = 0;
-    for (final p in payments) {
-      if (p.type == PaymentType.debit) {
-        spent += p.amount;
-      } else {
-        earned += p.amount;
-      }
-    }
-    final balance = accounts.fold<double>(0, (s, a) => s + (a.balance ?? 0));
-
-    final body = 'Earned ${earned.toStringAsFixed(0)} · Spent ${spent.toStringAsFixed(0)} · Balance ${balance.toStringAsFixed(0)}';
-
-    await NotificationService().showNotification(
-      id: _digestId,
-      title: 'Today\'s Financial Snapshot',
-      body: body,
-    );
-  }
 }
