@@ -122,13 +122,13 @@ Future<String> getExternalDocumentPath({String? fallbackPath}) async {
 }
 Future<String> export({String? directory, String? filePath}) async {
   if (kIsWeb) throw UnsupportedError('JSON export is not supported on web.');
-  await getDBInstance();
-  List<dynamic> accounts = await database!.query("accounts",);
-  List<dynamic> categories = await database!.query("categories",);
-  List<dynamic> payments = await database!.query("payments",);
-  List<dynamic> recurring = await database!.query("recurring_transactions",);
-  List<dynamic> savingsGoals = await database!.query("savings_goals",);
-  List<dynamic> rules = await database!.query("rules",);
+  final db = await getDBInstance();
+  List<dynamic> accounts = await db.query("accounts",);
+  List<dynamic> categories = await db.query("categories",);
+  List<dynamic> payments = await db.query("payments",);
+  List<dynamic> recurring = await db.query("recurring_transactions",);
+  List<dynamic> savingsGoals = await db.query("savings_goals",);
+  List<dynamic> rules = await db.query("rules",);
   Map<String, dynamic> data = {};
   data["accounts"] = accounts;
   data["categories"] = categories;
@@ -155,8 +155,8 @@ Future<String> export({String? directory, String? filePath}) async {
 
 Future<String> exportCsv({String? directory, String? filePath}) async {
   if (kIsWeb) throw UnsupportedError('CSV export is not supported on web.');
-  await getDBInstance();
-  List<dynamic> payments = await database!.rawQuery(
+  final db = await getDBInstance();
+  List<dynamic> payments = await db.rawQuery(
     "SELECT p.id, p.title, p.description, p.amount, p.type, p.datetime, "
     "c.name as categoryName, a.name as accountName "
     "FROM payments p "
@@ -208,8 +208,8 @@ Future<void> import(String path) async {
   try{
     final String content = await file.readAsString();
     Map<String, dynamic> data = jsonDecode(content);
-    await getDBInstance();
-    await database!.transaction((transaction) async{
+    final db = await getDBInstance();
+    await db.transaction((transaction) async{
       await transaction.delete("recurring_transactions");
       await transaction.delete("payments");
       await transaction.delete("savings_goals");

@@ -96,13 +96,13 @@ class BackupService {
 
   static Future<String> exportEncrypted(String password, {String? directory, String? filePath}) async {
     if (kIsWeb) throw UnsupportedError('Encrypted backups are not supported on web.');
-    await db.getDBInstance();
-    final accounts = await db.database!.query('accounts');
-    final categories = await db.database!.query('categories');
-    final payments = await db.database!.query('payments');
-    final recurring = await db.database!.query('recurring_transactions');
-    final savingsGoals = await db.database!.query('savings_goals');
-    final rules = await db.database!.query('rules');
+    final database = await db.getDBInstance();
+    final accounts = await database.query('accounts');
+    final categories = await database.query('categories');
+    final payments = await database.query('payments');
+    final recurring = await database.query('recurring_transactions');
+    final savingsGoals = await database.query('savings_goals');
+    final rules = await database.query('rules');
 
     final data = {
       'accounts': accounts,
