@@ -3,7 +3,12 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image_picker/image_picker.dart';
 
 class ReceiptScannerService {
-  static final TextRecognizer _recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  static TextRecognizer? _recognizer;
+
+  static TextRecognizer get _recognizerInstance {
+    _recognizer ??= TextRecognizer(script: TextRecognitionScript.latin);
+    return _recognizer!;
+  }
 
   static bool get isSupported {
     return !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
@@ -24,7 +29,7 @@ class ReceiptScannerService {
   static Future<ReceiptScanResult> _process(XFile image) async {
     try {
       final inputImage = InputImage.fromFilePath(image.path);
-      final recognized = await _recognizer.processImage(inputImage);
+      final recognized = await _recognizerInstance.processImage(inputImage);
       final text = recognized.text;
       final lines = recognized.blocks
           .expand((b) => b.lines)
@@ -132,7 +137,8 @@ class ReceiptScannerService {
   }
 
   static void dispose() {
-    _recognizer.close();
+    _recognizer?.close();
+    _recognizer = null;
   }
 }
 

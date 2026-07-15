@@ -4,6 +4,7 @@ import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/screens/main.screen.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/pin_service.dart';
+import 'package:fintracker/services/receipt_scanner_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -123,11 +124,16 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
   void dispose() {
     _pinController.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    ReceiptScannerService.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      ReceiptScannerService.dispose();
+      return;
+    }
     if (state != AppLifecycleState.resumed) return;
     // The first resumed event fires during launch and is already handled by
     // the addPostFrameCallback in initState. Calling _checkLock again can
