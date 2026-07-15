@@ -171,9 +171,12 @@ class _PaymentForm extends State<PaymentForm>{
   }
 
   void handleSaveTransaction(context) async{
+    final account = _account;
+    final category = _category;
+    if (account == null || category == null) return;
     Payment payment = Payment(id: _id,
-        account: _account!,
-        category: _category!,
+        account: account,
+        category: category,
         amount: _amount,
         type: _type,
         datetime: _datetime,
@@ -226,7 +229,8 @@ class _PaymentForm extends State<PaymentForm>{
                   onPressed: (){
                     ConfirmModal.showConfirmDialog(context, title: "Are you sure?", content: const Text("After deleting payment can't be recovered."),
                         onConfirm: () async {
-                          await _paymentDao.deleteTransaction(_id!);
+                          final id = _id;
+                          if (id != null) await _paymentDao.deleteTransaction(id);
                           globalEvent.emit("payment_update");
                           if (!context.mounted) return;
                           Navigator.pop(context);

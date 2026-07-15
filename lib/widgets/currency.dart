@@ -18,8 +18,9 @@ class CurrencyText extends StatelessWidget{
       final String currencyCode = state.currency ?? 'USD';
       Currency? currency = currencyService.findByCode(currencyCode);
       final bool privacy = state.privacyMode;
+      final amountValue = amount;
       return Text(
-        amount==null ? (currency?.symbol ?? '\$') : (privacy ? '•••' : CurrencyHelper.format(amount!, symbol: currency?.symbol ?? '\$')),
+        amountValue == null ? (currency?.symbol ?? '\$') : (privacy ? '•••' : CurrencyHelper.format(amountValue, symbol: currency?.symbol ?? '\$')),
         style: style,
         overflow: overflow,
       );

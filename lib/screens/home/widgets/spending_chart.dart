@@ -19,8 +19,9 @@ class _SpendingChartState extends State<SpendingChart> {
     for (var payment in widget.payments) {
       if (payment.type == PaymentType.debit) {
         String name = payment.category.name;
-        if (breakdown.containsKey(name)) {
-          breakdown[name]!.amount += payment.amount;
+        final spend = breakdown[name];
+        if (spend != null) {
+          spend.amount += payment.amount;
         } else {
           breakdown[name] = _CategorySpend(
             name: name,

@@ -174,7 +174,8 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
   }
 
   Widget _buildConfirmation(ThemeData theme, ColorScheme colorScheme) {
-    final suggestion = _suggestion!;
+    final suggestion = _suggestion;
+    if (suggestion == null) return const SizedBox.shrink();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(

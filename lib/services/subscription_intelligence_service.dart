@@ -70,7 +70,8 @@ class SubscriptionIntelligenceService {
     // Mark duplicates: same amount and same normalized title with different categories
     for (final subscription in subscriptions) {
       final dupKey = _normalize('${subscription.amount}_${subscription.type}');
-      if (duplicateGroups[dupKey] != null && duplicateGroups[dupKey]!.length > 1) {
+      final group = duplicateGroups[dupKey];
+      if (group != null && group.length > 1) {
         subscription.hasDuplicate = true;
       }
     }

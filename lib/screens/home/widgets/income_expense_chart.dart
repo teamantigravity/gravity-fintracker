@@ -12,13 +12,11 @@ class IncomeExpenseChart extends StatelessWidget {
     Map<String, _DayData> daily = {};
     for (var payment in payments) {
       String key = DateFormat('yyyy-MM-dd').format(payment.datetime);
-      if (!daily.containsKey(key)) {
-        daily[key] = _DayData(date: payment.datetime);
-      }
+      final day = daily.putIfAbsent(key, () => _DayData(date: payment.datetime));
       if (payment.type == PaymentType.credit) {
-        daily[key]!.income += payment.amount;
+        day.income += payment.amount;
       } else {
-        daily[key]!.expense += payment.amount;
+        day.expense += payment.amount;
       }
     }
     return daily;
@@ -36,10 +34,10 @@ class IncomeExpenseChart extends StatelessWidget {
 
     double maxY = 0;
     for (var key in displayKeys) {
-      double income = daily[key]!.income;
-      double expense = daily[key]!.expense;
-      if (income > maxY) maxY = income;
-      if (expense > maxY) maxY = expense;
+      final data = daily[key];
+      if (data == null) continue;
+      if (data.income > maxY) maxY = data.income;
+      if (data.expense > maxY) maxY = data.expense;
     }
     maxY = maxY * 1.2;
     if (maxY == 0) maxY = 100;
@@ -95,10 +93,12 @@ class IncomeExpenseChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         int index = value.toInt();
                         if (index >= 0 && index < displayKeys.length) {
+                          final day = daily[displayKeys[index]];
+                          if (day == null) return const SizedBox.shrink();
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              DateFormat('dd MMM').format(daily[displayKeys[index]]!.date),
+                              DateFormat('dd MMM').format(day.date),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 9,
                                     color: isDark ? Colors.white54 : Colors.black45,
@@ -131,26 +131,31 @@ class IncomeExpenseChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: List.generate(displayKeys.length, (i) {
-                  final data = daily[displayKeys[i]]!;
-                  return BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: data.income,
-                        color: AppTheme.incomeColor.withValues(alpha: 0.8),
-                        width: 8,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                      ),
-                      BarChartRodData(
-                        toY: data.expense,
-                        color: AppTheme.expenseColor.withValues(alpha: 0.8),
-                        width: 8,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                      ),
-                    ],
-                  );
-                }),
+                barGroups: () {
+                  final groups = <BarChartGroupData>[];
+                  for (int i = 0; i < displayKeys.length; i++) {
+                    final data = daily[displayKeys[i]];
+                    if (data == null) continue;
+                    groups.add(BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: data.income,
+                          color: AppTheme.incomeColor.withValues(alpha: 0.8),
+                          width: 8,
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        ),
+                        BarChartRodData(
+                          toY: data.expense,
+                          color: AppTheme.expenseColor.withValues(alpha: 0.8),
+                          width: 8,
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        ),
+                      ],
+                    ));
+                  }
+                  return groups;
+                }(),
               ),
             ),
           ),

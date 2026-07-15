@@ -106,5 +106,8 @@ class VoiceResult {
   VoiceResult({this.text, this.amount, this.title, this.type, this.error});
   VoiceResult.error(String message) : this(error: message);
 
-  bool get isSuccess => error == null && amount != null && amount! > 0;
+  bool get isSuccess {
+    final amt = amount;
+    return error == null && amt != null && amt > 0;
+  }
 }

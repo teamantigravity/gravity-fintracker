@@ -276,7 +276,7 @@ class _PrivacyItem extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      notApplicableReason!,
+                      notApplicableReason ?? '',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey,
                         fontStyle: FontStyle.italic,

@@ -47,19 +47,22 @@ class RecurringTransaction {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "title": title,
-        "description": description,
-        "account": account.id,
-        "category": category.id,
-        "amount": amount,
-        "type": type,
-        "interval": interval.name,
-        "startDate": DateFormat('yyyy-MM-dd').format(startDate),
-        "nextDueDate": nextDueDate != null ? DateFormat('yyyy-MM-dd').format(nextDueDate!) : null,
-        "isActive": isActive ? 1 : 0,
-      };
+  Map<String, dynamic> toJson() {
+    final nextDueDate = this.nextDueDate;
+    return {
+      "id": id,
+      "title": title,
+      "description": description,
+      "account": account.id,
+      "category": category.id,
+      "amount": amount,
+      "type": type,
+      "interval": interval.name,
+      "startDate": DateFormat('yyyy-MM-dd').format(startDate),
+      "nextDueDate": nextDueDate != null ? DateFormat('yyyy-MM-dd').format(nextDueDate) : null,
+      "isActive": isActive ? 1 : 0,
+    };
+  }
 
   DateTime calculateNextDueDate() {
     DateTime from = nextDueDate ?? startDate;

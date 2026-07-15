@@ -443,7 +443,9 @@ class _RecurringFormState extends State<RecurringForm> {
                     return;
                   }
 
-                  if (_selectedAccount == null || _selectedCategory == null) {
+                  final account = _selectedAccount;
+                  final category = _selectedCategory;
+                  if (account == null || category == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Please select an account and category")),
                     );
@@ -451,8 +453,8 @@ class _RecurringFormState extends State<RecurringForm> {
                   }
 
                   final recurring = RecurringTransaction(
-                    account: _selectedAccount!,
-                    category: _selectedCategory!,
+                    account: account,
+                    category: category,
                     amount: amount,
                     type: _type,
                     title: _titleController.text,

@@ -24,12 +24,13 @@ class IconHelper {
 
   static IconData lookup(int? codePoint, {required IconData fallback}) {
     if (codePoint == null) return fallback;
-    if (_cache.containsKey(codePoint)) return _cache[codePoint]!;
+    final cached = _cache[codePoint];
+    if (cached != null) return cached;
 
-    if (_migrationMap.containsKey(codePoint)) {
-      final match = _migrationMap[codePoint]!;
-      _cache[codePoint] = match;
-      return match;
+    final migrated = _migrationMap[codePoint];
+    if (migrated != null) {
+      _cache[codePoint] = migrated;
+      return migrated;
     }
 
     final match = _all.firstWhere(

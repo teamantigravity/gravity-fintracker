@@ -15,17 +15,15 @@ class TrendChart extends StatelessWidget {
 
     for (var payment in sorted) {
       String key = DateFormat('yyyy-MM-dd').format(payment.datetime);
-      if (!daily.containsKey(key)) {
-        daily[key] = _DayData(date: payment.datetime);
-      }
+      final day = daily.putIfAbsent(key, () => _DayData(date: payment.datetime));
       if (payment.type == PaymentType.credit) {
-        daily[key]!.income += payment.amount;
+        day.income += payment.amount;
         runningBalance += payment.amount;
       } else {
-        daily[key]!.expense += payment.amount;
+        day.expense += payment.amount;
         runningBalance -= payment.amount;
       }
-      daily[key]!.balance = runningBalance;
+      day.balance = runningBalance;
     }
     return daily;
   }
@@ -43,9 +41,10 @@ class TrendChart extends StatelessWidget {
     double maxY = 0;
     double minY = 0;
     for (var key in displayKeys) {
-      double balance = daily[key]!.balance;
-      if (balance > maxY) maxY = balance;
-      if (balance < minY) minY = balance;
+      final data = daily[key];
+      if (data == null) continue;
+      if (data.balance > maxY) maxY = data.balance;
+      if (data.balance < minY) minY = data.balance;
     }
     double range = maxY - minY;
     if (range == 0) range = 100;
@@ -97,11 +96,12 @@ class TrendChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         int index = value.toInt();
                         if (index >= 0 && index < displayKeys.length) {
-                          final day = daily[displayKeys[index]]!.date;
+                          final day = daily[displayKeys[index]];
+                          if (day == null) return const SizedBox.shrink();
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              DateFormat('dd MMM').format(day),
+                              DateFormat('dd MMM').format(day.date),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 9,
                                     color: isDark ? Colors.white54 : Colors.black45,
@@ -144,9 +144,15 @@ class TrendChart extends StatelessWidget {
                 ),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: List.generate(displayKeys.length, (i) {
-                      return FlSpot(i.toDouble(), daily[displayKeys[i]]!.balance);
-                    }),
+                    spots: () {
+                      final spots = <FlSpot>[];
+                      for (int i = 0; i < displayKeys.length; i++) {
+                        final data = daily[displayKeys[i]];
+                        if (data == null) continue;
+                        spots.add(FlSpot(i.toDouble(), data.balance));
+                      }
+                      return spots;
+                    }(),
                     isCurved: true,
                     color: AppTheme.incomeColor,
                     barWidth: 3,
@@ -158,9 +164,15 @@ class TrendChart extends StatelessWidget {
                     ),
                   ),
                   LineChartBarData(
-                    spots: List.generate(displayKeys.length, (i) {
-                      return FlSpot(i.toDouble(), daily[displayKeys[i]]!.expense);
-                    }),
+                    spots: () {
+                      final spots = <FlSpot>[];
+                      for (int i = 0; i < displayKeys.length; i++) {
+                        final data = daily[displayKeys[i]];
+                        if (data == null) continue;
+                        spots.add(FlSpot(i.toDouble(), data.expense));
+                      }
+                      return spots;
+                    }(),
                     isCurved: true,
                     color: AppTheme.expenseColor,
                     barWidth: 2,
