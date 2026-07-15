@@ -107,14 +107,6 @@ class PaymentDao {
     }
   }
 
-  Future<int> update(Payment payment) async {
-    final db = await getDBInstance();
-
-    var result = await db.update("payments", payment.toJson(), where: "id = ?", whereArgs: [payment.id]);
-
-    return result;
-  }
-
   Future<int> upsert(Payment payment) async {
     final db = await getDBInstance();
     int result;
