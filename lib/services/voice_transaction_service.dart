@@ -75,7 +75,7 @@ class VoiceTransactionService {
     final lower = text.toLowerCase();
     // Extract amount
     final amountMatch = RegExp(r'(\d+(?:[.,]\d{1,2})?)').firstMatch(lower);
-    final amount = amountMatch != null ? double.tryParse(amountMatch.group(1)!.replaceAll(',', '.')) : null;
+    final amount = amountMatch != null ? double.tryParse((amountMatch.group(1) ?? '').replaceAll(',', '.')) : null;
 
     if (amount == null || amount <= 0) {
       return VoiceResult.error('Could not understand the amount. Try saying "Coffee 4.50".');
