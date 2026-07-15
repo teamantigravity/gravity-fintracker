@@ -53,7 +53,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
               await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
               );
-              _load();
+              if (mounted) _load();
             },
           ),
           IconButton(

@@ -125,7 +125,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
               await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
               );
-              _loadData();
+              if (mounted) _loadData();
             },
           ),
         ],

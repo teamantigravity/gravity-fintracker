@@ -56,7 +56,7 @@ class _RulesScreenState extends State<RulesScreen> {
           } else {
             await _ruleDao.update(r);
           }
-          _load();
+          if (mounted) _load();
         },
       ),
     );
@@ -65,14 +65,14 @@ class _RulesScreenState extends State<RulesScreen> {
   Future<void> _toggleEnabled(Rule rule) async {
     rule.enabled = !rule.enabled;
     await _ruleDao.update(rule);
-    _load();
+    if (mounted) _load();
   }
 
   Future<void> _delete(Rule rule) async {
     final id = rule.id;
     if (id == null) return;
     await _ruleDao.delete(id);
-    _load();
+    if (mounted) _load();
   }
 
   @override
