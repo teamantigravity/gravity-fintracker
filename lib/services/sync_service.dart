@@ -42,7 +42,7 @@ class SyncService {
   static const int _ivLength = 16; // 128-bit IV for AES
 
   bool get isEnabled => AppConstants.enableSync;
-  bool get isAuthenticated => Supabase.instance.client.auth.currentSession != null;
+  bool get isAuthenticated => isEnabled && Supabase.instance.client.auth.currentSession != null;
 
   // CSPRNG
   final Random _secureRandom = Random.secure();
@@ -193,6 +193,7 @@ class SyncService {
     List<dynamic> payments = await db.query("payments");
     List<dynamic> recurring = await db.query("recurring_transactions");
     List<dynamic> savingsGoals = await db.query("savings_goals");
+    List<dynamic> rules = await db.query("rules");
 
     Map<String, dynamic> snapshot = {
       "accounts": accounts,
@@ -200,6 +201,7 @@ class SyncService {
       "payments": payments,
       "recurring_transactions": recurring,
       "savings_goals": savingsGoals,
+      "rules": rules,
       "timestamp": DateTime.now().toIso8601String(),
       "version": AppConstants.dbVersion,
       "encryption": "AES-256-GCM+HKDF-SHA512",
@@ -222,6 +224,7 @@ class SyncService {
 
     final db = await getDBInstance();
     await db.transaction((txn) async {
+      await txn.delete("rules");
       await txn.delete("savings_goals");
       await txn.delete("payments");
       await txn.delete("recurring_transactions");
@@ -236,6 +239,7 @@ class SyncService {
       List<dynamic> payments = (snapshot["payments"] ?? []);
       List<dynamic> recurring = (snapshot["recurring_transactions"] ?? []);
       List<dynamic> savingsGoals = (snapshot["savings_goals"] ?? []);
+      List<dynamic> rules = (snapshot["rules"] ?? []);
 
       for (Map<String, dynamic> category in categories.cast<Map<String, dynamic>>()) {
         int oldId = category["id"] ?? 0;
@@ -279,11 +283,30 @@ class SyncService {
         }
         await txn.insert("savings_goals", goal);
       }
+
+      for (Map<String, dynamic> rule in rules.cast<Map<String, dynamic>>()) {
+        rule.remove("id");
+        _remapRuleId(rule, "sourceAccount", accountsMap);
+        _remapRuleId(rule, "targetAccount", accountsMap);
+        _remapRuleId(rule, "sourceCategory", categoriesMap);
+        _remapRuleId(rule, "targetCategory", categoriesMap);
+        await txn.insert("rules", rule);
+      }
     });
 
     globalEvent.emit("payment_update");
     globalEvent.emit("account_update");
     globalEvent.emit("category_update");
+    globalEvent.emit("recurring_update");
+    globalEvent.emit("savings_goal_update");
+    globalEvent.emit("rule_update");
+  }
+
+  void _remapRuleId(Map<String, dynamic> rule, String field, Map<int, int> idMap) {
+    final id = rule[field];
+    if (id != null && idMap.containsKey(id)) {
+      rule[field] = idMap[id];
+    }
   }
 
   // Supabase sync real implementation

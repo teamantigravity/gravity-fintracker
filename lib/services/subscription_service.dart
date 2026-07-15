@@ -120,7 +120,7 @@ class SubscriptionService {
         final purchaseResult = await Purchases.purchasePackage(package);
         _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
         _isPlus = purchaseResult.customerInfo.entitlements.all['plus']?.isActive ?? false;
-        return isPro;
+        return isPlus || isPro;
       }
       return false;
     } catch (e) {
@@ -139,7 +139,15 @@ class SubscriptionService {
       if (p.identifier == packageId) return p;
     }
 
-    // Fallback to RevenueCat's current monthly/annual
+    // Fallback: package identifier containing the tier and billing interval
+    final tierKeyword = isPlus ? 'plus' : 'pro';
+    final intervalKeyword = yearly ? 'yearly' : 'monthly';
+    for (final p in current.availablePackages) {
+      final id = p.identifier.toLowerCase();
+      if (id.contains(tierKeyword) && id.contains(intervalKeyword)) return p;
+    }
+
+    // Last-resort fallback to RevenueCat's current monthly/annual
     return yearly ? current.annual : current.monthly;
   }
 

@@ -188,6 +188,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
   }
 
   Widget _buildAlertTile(Subscription sub, ThemeData theme, ColorScheme colorScheme, String subtitle) {
+    final isCredit = sub.type == 'CR';
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -208,7 +209,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
               ],
             ),
           ),
-          CurrencyText(sub.amount, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+          CurrencyText(isCredit ? sub.amount : -sub.amount, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -246,7 +247,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
             mainAxisSize: MainAxisSize.min,
             children: [
               CurrencyText(
-                -sub.monthlyCost,
+                isCredit ? sub.monthlyCost : -sub.monthlyCost,
                 style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.5)),
               ),
               Text('/mo', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.5))),

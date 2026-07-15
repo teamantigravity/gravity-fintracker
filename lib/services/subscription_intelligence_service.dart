@@ -82,8 +82,8 @@ class SubscriptionIntelligenceService {
     final possiblyUnused = subscriptions.where((s) => s.isPossiblyUnused).toList();
     final overdue = subscriptions.where((s) => s.isOverdue).toList();
 
-    final monthlySpend = subscriptions.fold<double>(0, (sum, s) => sum + s.monthlyCost);
-    final yearlySpend = subscriptions.fold<double>(0, (sum, s) => sum + s.yearlyCost);
+    final monthlySpend = subscriptions.where((s) => s.type == 'DR').fold<double>(0, (sum, s) => sum + s.monthlyCost);
+    final yearlySpend = subscriptions.where((s) => s.type == 'DR').fold<double>(0, (sum, s) => sum + s.yearlyCost);
 
     return SubscriptionSummary(
       totalSubscriptions: subscriptions.length,

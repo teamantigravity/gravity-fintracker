@@ -6,7 +6,6 @@ import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/model/rule.model.dart';
-import 'package:intl/intl.dart';
 
 class RuleService {
   static final RuleDao _ruleDao = RuleDao();
@@ -47,15 +46,6 @@ class RuleService {
     return created;
   }
 
-  static Future<List<Payment>> evaluateAll() async {
-    final payments = await _allPayments();
-    final all = <Payment>[];
-    for (final payment in payments) {
-      all.addAll(await evaluate(payment));
-    }
-    return all;
-  }
-
   static bool _matches(Payment payment, Rule rule) {
     if (rule.sourceAccountId != null && payment.account.id != rule.sourceAccountId) return false;
     if (rule.sourceCategoryId != null && payment.category.id != rule.sourceCategoryId) return false;
@@ -86,26 +76,4 @@ class RuleService {
     }
   }
 
-  static Future<List<Payment>> _allPayments() async {
-    final db = await getDBInstance();
-    final accounts = await AccountDao().find();
-    final categories = await CategoryDao().find(withSummery: false);
-    final rows = await db.query("payments", orderBy: "datetime DESC, id DESC");
-
-    final payments = <Payment>[];
-    for (final row in rows) {
-      final data = Map<String, dynamic>.from(row);
-      try {
-        final account = accounts.firstWhere((a) => a.id == data["account"]);
-        final category = categories.firstWhere((c) => c.id == data["category"]);
-        data["account"] = account.toJson();
-        data["category"] = category.toJson();
-        data["datetime"] = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(data["datetime"]));
-        payments.add(Payment.fromJson(data));
-      } catch (_) {
-        // skip orphaned
-      }
-    }
-    return payments;
-  }
 }
