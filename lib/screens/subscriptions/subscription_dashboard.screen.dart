@@ -1,5 +1,6 @@
 import 'package:fintracker/model/subscription.model.dart';
 import 'package:fintracker/screens/premium/paywall.screen.dart';
+import 'package:fintracker/screens/subscriptions/subscription_scanner.screen.dart';
 import 'package:fintracker/services/subscription_intelligence_service.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
@@ -45,6 +46,13 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
       appBar: AppBar(
         title: const Text('Subscriptions'),
         actions: [
+          IconButton(
+            icon: const Icon(Symbols.receipt_long, fill: 1),
+            tooltip: 'Scan Subscription',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Symbols.refresh),
             onPressed: _load,

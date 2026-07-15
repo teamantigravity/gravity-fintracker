@@ -18,6 +18,28 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool _isYearly = true;
   bool _isLoading = false;
 
+  Future<void> _handleLifetimePurchase() async {
+    setState(() => _isLoading = true);
+    try {
+      final success = await _subscriptionService.purchaseLifetime();
+      if (success && mounted) {
+        context.read<AppCubit>().updatePro(true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Welcome to Lifetime Pro!")),
+        );
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Purchase failed: $e")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _handlePurchase() async {
     setState(() => _isLoading = true);
     try {
@@ -184,6 +206,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                Center(
+                  child: TextButton(
+                    onPressed: _isLoading ? null : _handleLifetimePurchase,
+                    child: const Text("Or unlock Lifetime Pro"),
+                  ),
+                ),
                 Center(
                   child: TextButton(
                     onPressed: () async {
