@@ -23,9 +23,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
     try {
       final success = await _subscriptionService.purchaseLifetime();
       if (success && mounted) {
-        context.read<AppCubit>().updatePro(true);
+        final subscriptionService = SubscriptionService();
+        if (subscriptionService.isPro) {
+          context.read<AppCubit>().updatePro(true);
+        } else {
+          context.read<AppCubit>().updatePlus(true);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Welcome to Lifetime Pro!")),
+          SnackBar(content: Text(subscriptionService.isPro ? "Welcome to Lifetime Pro!" : "Welcome to Lifetime Plus!")),
         );
         Navigator.of(context).pop(true);
       }
