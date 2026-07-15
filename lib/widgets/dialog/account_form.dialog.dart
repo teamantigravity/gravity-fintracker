@@ -15,19 +15,20 @@ class AccountForm extends StatefulWidget {
 }
 class _AccountForm extends State<AccountForm>{
   final AccountDao _accountDao = AccountDao();
-  Account? _account;
+  late Account _account;
   @override
   void initState() {
     super.initState();
-    if(widget.account != null){
+    final account = widget.account;
+    if (account != null) {
       _account = Account(
-          id: widget.account!.id,
-          name: widget.account!.name,
-          holderName: widget.account!.holderName,
-          accountNumber: widget.account!.accountNumber,
-          icon: widget.account!.icon,
-          color: widget.account!.color,
-          isDefault: widget.account!.isDefault,
+          id: account.id,
+          name: account.name,
+          holderName: account.holderName,
+          accountNumber: account.accountNumber,
+          icon: account.icon,
+          color: account.color,
+          isDefault: account.isDefault,
       );
     } else {
       _account = Account(
@@ -41,22 +42,19 @@ class _AccountForm extends State<AccountForm>{
   }
 
   void onSave (context) async{
-    if (_account!.name.trim().isEmpty) {
+    if (_account.name.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Account name is required")),
       );
       return;
     }
-    await _accountDao.upsert(_account!);
+    await _accountDao.upsert(_account);
     if (!context.mounted) return;
     Navigator.pop(context);
     globalEvent.emit("account_update");
   }
   @override
   Widget build(BuildContext context) {
-    if(_account == null ){
-      return const CircularProgressIndicator();
-    }
     return AlertDialog(
       title: Text(widget.account!=null?"Edit Account":"New Account", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
       scrollable: true,
@@ -76,16 +74,16 @@ class _AccountForm extends State<AccountForm>{
                     height: 50,
                     width: 50,
                     decoration: BoxDecoration(
-                        color: _account!.color,
+                        color: _account.color,
                         borderRadius: BorderRadius.circular(40)
                     ),
                     alignment: Alignment.center,
-                    child: Icon(_account!.icon, color: Colors.white,),
+                    child: Icon(_account.icon, color: Colors.white,),
                   ),
                   const SizedBox(width: 15,),
                   Expanded(
                       child: TextFormField(
-                        initialValue: _account!.name,
+                        initialValue: _account.name,
                         decoration: InputDecoration(
                             labelText: 'Name',
                             hintText: 'Account name',
@@ -94,7 +92,7 @@ class _AccountForm extends State<AccountForm>{
                         ),
                         onChanged: (String text){
                           setState(() {
-                            _account!.name = text;
+                            _account.name = text;
                           });
                         },
                       )
@@ -110,10 +108,10 @@ class _AccountForm extends State<AccountForm>{
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),),
                       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15)
                   ),
-                  initialValue: _account!.holderName,
+                  initialValue: _account.holderName,
                   onChanged: (text){
                     setState(() {
-                      _account!.holderName = text;
+                      _account.holderName = text;
                     });
                   },
                 ),
@@ -128,10 +126,10 @@ class _AccountForm extends State<AccountForm>{
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),),
                       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15)
                   ),
-                  initialValue: _account!.accountNumber,
+                  initialValue: _account.accountNumber,
                   onChanged: (text){
                     setState(() {
-                      _account!.accountNumber = text;
+                      _account.accountNumber = text;
                     });
                   },
                 ),
@@ -152,7 +150,7 @@ class _AccountForm extends State<AccountForm>{
                           child: GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _account!.color = Colors.primaries[index];
+                                  _account.color = Colors.primaries[index];
                                 });
                               },
                               child:  Container(
@@ -161,7 +159,7 @@ class _AccountForm extends State<AccountForm>{
                                     borderRadius: BorderRadius.circular(40),
                                     border: Border.all(
                                       width: 2,
-                                      color: _account!.color.toARGB32() == Colors.primaries[index].toARGB32() ? Colors.white: Colors.transparent,
+                                      color: _account.color.toARGB32() == Colors.primaries[index].toARGB32() ? Colors.white: Colors.transparent,
                                     )
                                 ),
                               )
@@ -186,7 +184,7 @@ class _AccountForm extends State<AccountForm>{
                         child: GestureDetector(
                             onTap: () {
                               setState(() {
-                                _account!.icon = AppIcons.icons[index];
+                                _account.icon = AppIcons.icons[index];
                               });
                             },
                             child:  Container(
@@ -196,7 +194,7 @@ class _AccountForm extends State<AccountForm>{
                                   color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(40),
                                   border: Border.all(
-                                      color: _account!.icon == AppIcons.icons[index] ? Theme.of(context).colorScheme.primary: Colors.transparent,
+                                      color: _account.icon == AppIcons.icons[index] ? Theme.of(context).colorScheme.primary: Colors.transparent,
                                       width: 2
                                   )
                               ),

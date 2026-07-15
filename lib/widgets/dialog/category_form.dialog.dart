@@ -22,9 +22,10 @@ class _CategoryForm extends State<CategoryForm>{
   @override
   void initState() {
     super.initState();
-    if(widget.category != null){
-      _nameController.text = widget.category!.name;
-      _category = widget.category??Category(name: "", icon: Icons.wallet_outlined, color: Colors.pink);
+    final category = widget.category;
+    if (category != null) {
+      _nameController.text = category.name;
+      _category = category;
     }
   }
 
