@@ -127,12 +127,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     });
                   },
                   leading: Builder(builder: (context) {
-                    Currency? currency = state.currency != null ? CurrencyService().findByCode(state.currency!) : null;
+                    final currencyCode = state.currency;
+                    final currency = currencyCode != null ? CurrencyService().findByCode(currencyCode) : null;
                     return CircleAvatar(child: Text(currency?.symbol ?? '\$'));
                   }),
                   title: Text('Currency', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Builder(builder: (context) {
-                    Currency? currency = state.currency != null ? CurrencyService().findByCode(state.currency!) : null;
+                    final currencyCode = state.currency;
+                    final currency = currencyCode != null ? CurrencyService().findByCode(currencyCode) : null;
                     return Text(currency?.name ?? 'Not set', style: theme.textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis));
                   }),
                 ),

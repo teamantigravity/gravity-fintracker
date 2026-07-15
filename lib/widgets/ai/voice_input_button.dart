@@ -50,8 +50,9 @@ class VoiceInputButton extends StatelessWidget {
 
     if (context.mounted) Navigator.pop(context);
 
-    if (result.error != null) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.error!)));
+    final error = result.error;
+    if (error != null) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
 

@@ -68,13 +68,16 @@ class _SpendingChartState extends State<SpendingChart> {
                         touchCallback: (FlTouchEvent event, pieTouchResponse) {
                           setState(() {
                             if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
+                                pieTouchResponse == null) {
                               _touchedIndex = -1;
                               return;
                             }
-                            _touchedIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
+                            final touchedSection = pieTouchResponse.touchedSection;
+                            if (touchedSection == null) {
+                              _touchedIndex = -1;
+                              return;
+                            }
+                            _touchedIndex = touchedSection.touchedSectionIndex;
                           });
                         },
                       ),

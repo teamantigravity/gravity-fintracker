@@ -167,7 +167,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
               future: _forecast,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
-                final forecast = snapshot.data!;
+                final forecast = snapshot.data;
+                if (forecast == null) return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
                 final min = forecast.minProjectedBalance;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

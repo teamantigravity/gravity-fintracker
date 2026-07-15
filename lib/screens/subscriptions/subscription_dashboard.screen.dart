@@ -68,7 +68,8 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final summary = snapshot.data!;
+          final summary = snapshot.data;
+          if (summary == null) return const SizedBox.shrink();
           return RefreshIndicator(
             onRefresh: () async => _load(),
             child: CustomScrollView(
@@ -232,7 +233,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
       ),
       title: Text(sub.title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
       subtitle: Text(
-        '${sub.frequency} · Last paid ${DateFormat('dd MMM').format(sub.lastPaid)}${sub.nextDue != null ? ' · Next ${DateFormat('dd MMM').format(sub.nextDue!)}' : ''}',
+        '${sub.frequency} · Last paid ${DateFormat('dd MMM').format(sub.lastPaid)}${() { final nextDue = sub.nextDue; return nextDue != null ? ' · Next ${DateFormat('dd MMM').format(nextDue)}' : ''; }()}',
         style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
       ),
       trailing: Column(

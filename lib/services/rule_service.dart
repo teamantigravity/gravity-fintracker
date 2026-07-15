@@ -53,8 +53,10 @@ class RuleService {
       final paymentType = payment.type == PaymentType.credit ? 'CR' : 'DR';
       if (paymentType != rule.type) return false;
     }
-    if (rule.minAmount != null && payment.amount < rule.minAmount!) return false;
-    if (rule.maxAmount != null && payment.amount > rule.maxAmount!) return false;
+    final minAmount = rule.minAmount;
+    final maxAmount = rule.maxAmount;
+    if (minAmount != null && payment.amount < minAmount) return false;
+    if (maxAmount != null && payment.amount > maxAmount) return false;
     return true;
   }
 

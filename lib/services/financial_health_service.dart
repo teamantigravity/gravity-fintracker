@@ -74,10 +74,11 @@ class FinancialHealthService {
     int overBudget = 0;
     int withBudget = 0;
     for (final c in categories) {
-      if (c.budget != null && c.budget! > 0) {
+      final budget = c.budget;
+      if (budget != null && budget > 0) {
         withBudget++;
         final spend = categorySpend[c.id ?? 0] ?? 0;
-        if (spend > c.budget!) overBudget++;
+        if (spend > budget) overBudget++;
       }
     }
     if (withBudget == 0) return 75;

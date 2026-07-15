@@ -100,12 +100,13 @@ class CoachService {
 
     // Budget warnings
     for (final c in categories) {
-      if (c.budget == null || c.budget! <= 0) continue;
+      final budget = c.budget;
+      if (budget == null || budget <= 0) continue;
       final spend = categorySpend[c.name] ?? 0;
-      if (spend > c.budget!) {
+      if (spend > budget) {
         messages.add(CoachMessage(
           type: CoachMessageType.warning,
-          text: "${c.name} is over budget. You've spent ${_formatCurrency(spend)} of ${_formatCurrency(c.budget!)}.",
+          text: "${c.name} is over budget. You've spent ${_formatCurrency(spend)} of ${_formatCurrency(budget)}.",
         ));
       }
     }

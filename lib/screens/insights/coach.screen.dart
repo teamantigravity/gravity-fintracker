@@ -27,7 +27,7 @@ class _CoachScreenState extends State<CoachScreen> {
         future: _messages,
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final messages = snapshot.data!;
+          final messages = snapshot.data ?? [];
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: messages.length,
