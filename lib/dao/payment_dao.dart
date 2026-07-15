@@ -118,12 +118,18 @@ class PaymentDao {
   Future<int> upsert(Payment payment) async {
     final db = await getDBInstance();
     int result;
+    final wasNew = payment.id == null;
     if(payment.id != null) {
       result = await db.update(
           "payments", payment.toJson(), where: "id = ?",
           whereArgs: [payment.id]);
     } else {
       result = await db.insert("payments", payment.toJson());
+      payment.id = result;
+    }
+
+    if (wasNew) {
+      await RuleService.evaluate(payment);
     }
 
     return result;
