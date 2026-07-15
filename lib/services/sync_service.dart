@@ -336,38 +336,46 @@ class SyncService {
 
   Future<void> pushToCloud() async {
     if (!isEnabled || !isAuthenticated) return;
-    final snapshot = await exportEncryptedSnapshot();
+    try {
+      final snapshot = await exportEncryptedSnapshot();
 
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return;
 
-    // Upsert into Supabase (assumes a 'sync_snapshots' table exists with user_id, encrypted_data, timestamp)
-    await Supabase.instance.client.from('sync_snapshots').upsert({
-      'user_id': userId,
-      'encrypted_data': snapshot['encrypted_data'],
-      'updated_at': snapshot['timestamp'],
-    });
+      // Upsert into Supabase (assumes a 'sync_snapshots' table exists with user_id, encrypted_data, timestamp)
+      await Supabase.instance.client.from('sync_snapshots').upsert({
+        'user_id': userId,
+        'encrypted_data': snapshot['encrypted_data'],
+        'updated_at': snapshot['timestamp'],
+      });
 
-    debugPrint('Push to cloud complete: ${snapshot["timestamp"]}');
+      debugPrint('Push to cloud complete: ${snapshot["timestamp"]}');
+    } catch (e) {
+      debugPrint('Push to cloud failed: $e');
+    }
   }
 
   Future<void> pullFromCloud() async {
     if (!isEnabled || !isAuthenticated) return;
 
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return;
 
-    final response = await Supabase.instance.client
-        .from('sync_snapshots')
-        .select('encrypted_data, updated_at')
-        .eq('user_id', userId)
-        .maybeSingle();
+      final response = await Supabase.instance.client
+          .from('sync_snapshots')
+          .select('encrypted_data, updated_at')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-    if (response != null && response['encrypted_data'] != null) {
-      await importEncryptedSnapshot(response['encrypted_data'] as String);
-      debugPrint('Pull from cloud complete: ${response["updated_at"]}');
-    } else {
-      debugPrint('No cloud snapshot found.');
+      if (response != null && response['encrypted_data'] != null) {
+        await importEncryptedSnapshot(response['encrypted_data'] as String);
+        debugPrint('Pull from cloud complete: ${response["updated_at"]}');
+      } else {
+        debugPrint('No cloud snapshot found.');
+      }
+    } catch (e) {
+      debugPrint('Pull from cloud failed: $e');
     }
   }
 
