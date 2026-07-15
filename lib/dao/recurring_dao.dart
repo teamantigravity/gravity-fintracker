@@ -36,16 +36,18 @@ class RecurringDao {
     List<RecurringTransaction> results = [];
     for (var row in rows) {
       Map<String, dynamic> data = Map<String, dynamic>.from(row);
-      try {
-        Account account = accounts.firstWhere((a) => a.id == data["account"]);
-        Category category = categories.firstWhere((c) => c.id == data["category"]);
-        data["account"] = account.toJson();
-        data["category"] = category.toJson();
-        results.add(RecurringTransaction.fromJson(data));
-      } catch (_) {
-        // Skip if account/category was deleted
-        continue;
-      }
+      final Account? account = accounts.cast<Account?>().firstWhere(
+        (a) => a?.id == data["account"],
+        orElse: () => null,
+      );
+      final Category? category = categories.cast<Category?>().firstWhere(
+        (c) => c?.id == data["category"],
+        orElse: () => null,
+      );
+      if (account == null || category == null) continue;
+      data["account"] = account.toJson();
+      data["category"] = category.toJson();
+      results.add(RecurringTransaction.fromJson(data));
     }
     return results;
   }
@@ -65,15 +67,18 @@ class RecurringDao {
     List<RecurringTransaction> results = [];
     for (var row in rows) {
       Map<String, dynamic> data = Map<String, dynamic>.from(row);
-      try {
-        Account account = accounts.firstWhere((a) => a.id == data["account"]);
-        Category category = categories.firstWhere((c) => c.id == data["category"]);
-        data["account"] = account.toJson();
-        data["category"] = category.toJson();
-        results.add(RecurringTransaction.fromJson(data));
-      } catch (_) {
-        continue;
-      }
+      final Account? account = accounts.cast<Account?>().firstWhere(
+        (a) => a?.id == data["account"],
+        orElse: () => null,
+      );
+      final Category? category = categories.cast<Category?>().firstWhere(
+        (c) => c?.id == data["category"],
+        orElse: () => null,
+      );
+      if (account == null || category == null) continue;
+      data["account"] = account.toJson();
+      data["category"] = category.toJson();
+      results.add(RecurringTransaction.fromJson(data));
     }
     return results;
   }

@@ -68,15 +68,18 @@ class PaymentDao {
     );
     for (var row in rows) {
       Map<String, dynamic> payment = Map<String, dynamic>.from(row);
-      try {
-        Account account = accounts.firstWhere((a) => a.id == payment["account"]);
-        Category category = categories.firstWhere((c) => c.id == payment["category"]);
-        payment["category"] = category.toJson();
-        payment["account"] = account.toJson();
-        payments.add(Payment.fromJson(payment));
-      } catch (_) {
-        // Skip orphaned payments whose account/category no longer exists
-      }
+      final Account? account = accounts.cast<Account?>().firstWhere(
+        (a) => a?.id == payment["account"],
+        orElse: () => null,
+      );
+      final Category? category = categories.cast<Category?>().firstWhere(
+        (c) => c?.id == payment["category"],
+        orElse: () => null,
+      );
+      if (account == null || category == null) continue;
+      payment["category"] = category.toJson();
+      payment["account"] = account.toJson();
+      payments.add(Payment.fromJson(payment));
     }
 
     return payments;
@@ -96,15 +99,18 @@ class PaymentDao {
     );
     if (rows.isEmpty) return null;
     Map<String, dynamic> payment = Map<String, dynamic>.from(rows.first);
-    try {
-      Account account = accounts.firstWhere((a) => a.id == payment["account"]);
-      Category category = categories.firstWhere((c) => c.id == payment["category"]);
-      payment["category"] = category.toJson();
-      payment["account"] = account.toJson();
-      return Payment.fromJson(payment);
-    } catch (_) {
-      return null;
-    }
+    final Account? account = accounts.cast<Account?>().firstWhere(
+      (a) => a?.id == payment["account"],
+      orElse: () => null,
+    );
+    final Category? category = categories.cast<Category?>().firstWhere(
+      (c) => c?.id == payment["category"],
+      orElse: () => null,
+    );
+    if (account == null || category == null) return null;
+    payment["category"] = category.toJson();
+    payment["account"] = account.toJson();
+    return Payment.fromJson(payment);
   }
 
   Future<int> upsert(Payment payment) async {

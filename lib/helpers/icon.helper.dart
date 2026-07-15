@@ -32,13 +32,11 @@ class IconHelper {
       return match;
     }
 
-    try {
-      final match = _all.firstWhere((icon) => icon.codePoint == codePoint);
-      _cache[codePoint] = match;
-      return match;
-    } catch (_) {
-      _cache[codePoint] = fallback;
-      return fallback;
-    }
+    final match = _all.firstWhere(
+      (icon) => icon.codePoint == codePoint,
+      orElse: () => fallback,
+    );
+    _cache[codePoint] = match;
+    return match;
   }
 }
