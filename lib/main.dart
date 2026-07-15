@@ -40,7 +40,6 @@ void main() async {
   }
 
   AppState appState = await AppState.getState();
-  appState.isPro = SubscriptionService().isPro || appState.isPro;
 
   if (appState.dailyDigestEnabled) {
     try {
