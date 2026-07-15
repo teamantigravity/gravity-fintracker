@@ -6,6 +6,7 @@ import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/recurring.model.dart';
 import 'package:fintracker/screens/rules/rules_screen.dart';
 import 'package:fintracker/screens/subscriptions/subscription_dashboard.screen.dart';
+import 'package:fintracker/screens/subscriptions/subscription_scanner.screen.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _RecurringForm(
+      builder: (context) => RecurringForm(
         categories: categories,
         accounts: accounts,
         onSave: (recurring) async {
@@ -113,6 +114,13 @@ class _RecurringScreenState extends State<RecurringScreen> {
             tooltip: 'Automation Rules',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const RulesScreen()),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Symbols.receipt_long, fill: 1),
+            tooltip: 'Scan Subscription',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
             ),
           ),
         ],
@@ -219,22 +227,25 @@ class _RecurringScreenState extends State<RecurringScreen> {
   }
 }
 
-class _RecurringForm extends StatefulWidget {
+class RecurringForm extends StatefulWidget {
   final List<Category> categories;
   final List<Account> accounts;
+  final RecurringTransaction? initial;
   final Function(RecurringTransaction) onSave;
 
-  const _RecurringForm({
+  const RecurringForm({
+    super.key,
     required this.categories,
     required this.accounts,
+    this.initial,
     required this.onSave,
   });
 
   @override
-  State<_RecurringForm> createState() => _RecurringFormState();
+  State<RecurringForm> createState() => _RecurringFormState();
 }
 
-class _RecurringFormState extends State<_RecurringForm> {
+class _RecurringFormState extends State<RecurringForm> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -247,8 +258,20 @@ class _RecurringFormState extends State<_RecurringForm> {
   @override
   void initState() {
     super.initState();
-    if (widget.categories.isNotEmpty) _selectedCategory = widget.categories.first;
-    if (widget.accounts.isNotEmpty) _selectedAccount = widget.accounts.first;
+    final initial = widget.initial;
+    if (initial != null) {
+      _titleController.text = initial.title;
+      _amountController.text = initial.amount.toString();
+      _descriptionController.text = initial.description;
+      _selectedCategory = widget.categories.cast<Category?>().firstWhere((c) => c?.id == initial.category.id, orElse: () => null) ?? (widget.categories.isNotEmpty ? widget.categories.first : null);
+      _selectedAccount = widget.accounts.cast<Account?>().firstWhere((a) => a?.id == initial.account.id, orElse: () => null) ?? (widget.accounts.isNotEmpty ? widget.accounts.first : null);
+      _interval = initial.interval;
+      _type = initial.type;
+      _startDate = initial.startDate;
+    } else {
+      if (widget.categories.isNotEmpty) _selectedCategory = widget.categories.first;
+      if (widget.accounts.isNotEmpty) _selectedAccount = widget.accounts.first;
+    }
   }
 
   @override
