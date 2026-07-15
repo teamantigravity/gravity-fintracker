@@ -47,6 +47,15 @@ class NotificationService {
       }
       return status.isGranted;
     }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+      final ios = _notifications.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (ios != null) {
+        final result = await ios.requestPermissions(alert: true, badge: true, sound: true);
+        return result ?? false;
+      }
+    }
+
     return true;
   }
 

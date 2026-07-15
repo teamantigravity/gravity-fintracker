@@ -21,7 +21,7 @@ class SubscriptionScannerService {
       category: fallbackCategory,
       amount: result.total,
       type: 'DR',
-      title: result.merchant,
+      title: result.merchant.isNotEmpty ? result.merchant : 'Scanned subscription',
       description: 'Scanned from receipt',
       interval: RecurringInterval.monthly,
       startDate: result.date,

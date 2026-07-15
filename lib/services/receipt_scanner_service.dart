@@ -74,8 +74,8 @@ class ReceiptScannerService {
 
   static DateTime? _extractDate(String line) {
     final patterns = [
-      RegExp(r'(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})'),
       RegExp(r'(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})'),
+      RegExp(r'(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})'),
     ];
     for (final p in patterns) {
       final m = p.firstMatch(line);
@@ -86,19 +86,39 @@ class ReceiptScannerService {
             final a = int.parse(parts[0]);
             final b = int.parse(parts[1]);
             final c = int.parse(parts[2]);
-            if (c > 1000) {
-              return DateTime(c, b, a);
-            } else if (a > 1000) {
+            if (a > 1000) {
+              // ISO-like: yyyy-mm-dd
               return DateTime(a, b, c);
+            } else if (c > 1000) {
+              // day/month/year or month/day/year
+              final year = c;
+              // prefer day/month/year; if a > 12 it must be day
+              if (a <= 12 && b <= 12) {
+                // ambiguous: try day/month/year first; if invalid, try month/day/year
+                return _safeDate(year, b, a) ?? _safeDate(year, a, b);
+              }
+              return _safeDate(year, b, a);
             } else {
+              // two-digit year
               final year = c < 50 ? 2000 + c : 1900 + c;
-              return DateTime(year, b, a);
+              if (a <= 12 && b <= 12) {
+                return _safeDate(year, b, a) ?? _safeDate(year, a, b);
+              }
+              return _safeDate(year, b, a);
             }
           }
         } catch (_) {}
       }
     }
     return null;
+  }
+
+  static DateTime? _safeDate(int year, int month, int day) {
+    try {
+      return DateTime(year, month, day);
+    } catch (_) {
+      return null;
+    }
   }
 
   static double? _extractAmount(String line) {

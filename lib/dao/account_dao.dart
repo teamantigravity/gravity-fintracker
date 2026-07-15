@@ -60,6 +60,8 @@ class AccountDao {
     final db = await getDBInstance();
     await db.delete("payments", where: "account = ?", whereArgs: [id]);
     await db.delete("recurring_transactions", where: "account = ?", whereArgs: [id]);
+    await db.update("savings_goals", {"account": null}, where: "account = ?", whereArgs: [id]);
+    await db.delete("rules", where: "sourceAccount = ? OR targetAccount = ?", whereArgs: [id, id]);
     var result = await db.delete("accounts", where: 'id = ?', whereArgs: [id]);
     return result;
   }

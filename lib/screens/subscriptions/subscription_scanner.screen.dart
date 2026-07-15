@@ -11,6 +11,7 @@ import 'package:fintracker/services/subscription_scanner_service.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class SubscriptionScannerScreen extends StatefulWidget {
@@ -185,7 +186,7 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
             child: ListTile(
               leading: const Icon(Symbols.receipt_long, fill: 1),
               title: Text(suggestion.title),
-              subtitle: Text('Amount: ${suggestion.amount.toStringAsFixed(2)} · Monthly · ${suggestion.startDate}'),
+              subtitle: Text('Amount: ${suggestion.amount.toStringAsFixed(2)} · Monthly · ${DateFormat('dd MMM yyyy').format(suggestion.startDate)}'),
             ),
           ),
           const SizedBox(height: 24),

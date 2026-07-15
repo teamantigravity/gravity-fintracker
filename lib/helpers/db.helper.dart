@@ -16,6 +16,7 @@ import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/model/recurring.model.dart';
+import 'package:fintracker/model/rule.model.dart';
 import 'package:fintracker/model/savings_goal.model.dart';
 
 Database? database;
@@ -127,12 +128,14 @@ Future<String> export({String? directory, String? filePath}) async {
   List<dynamic> payments = await database!.query("payments",);
   List<dynamic> recurring = await database!.query("recurring_transactions",);
   List<dynamic> savingsGoals = await database!.query("savings_goals",);
+  List<dynamic> rules = await database!.query("rules",);
   Map<String, dynamic> data = {};
   data["accounts"] = accounts;
   data["categories"] = categories;
   data["payments"] = payments;
   data["recurring_transactions"] = recurring;
   data["savings_goals"] = savingsGoals;
+  data["rules"] = rules;
 
   if (filePath != null && filePath.isNotEmpty) {
     File file = File(filePath);
@@ -210,6 +213,7 @@ Future<void> import(String path) async {
       await transaction.delete("recurring_transactions");
       await transaction.delete("payments");
       await transaction.delete("savings_goals");
+      await transaction.delete("rules");
       await transaction.delete("categories");
       await transaction.delete("accounts");
 
@@ -218,6 +222,7 @@ Future<void> import(String path) async {
       List<dynamic> payments = (data["payments"] ?? []);
       List<dynamic> recurring = (data["recurring_transactions"] ?? []);
       List<dynamic> savingsGoals = (data["savings_goals"] ?? []);
+      List<dynamic> rules = (data["rules"] ?? []);
 
       for (Map<String, dynamic> categoryMap in categories.cast<Map<String, dynamic>>()) {
         int id0 = categoryMap["id"] ?? 0;
@@ -274,6 +279,17 @@ Future<void> import(String path) async {
         await transaction.insert("savings_goals", goal);
       }
 
+      for (Map<String, dynamic> ruleMap in rules.cast<Map<String, dynamic>>()) {
+        ruleMap["sourceAccount"] = _remapId(ruleMap["sourceAccount"], accountsMap);
+        ruleMap["targetAccount"] = _remapId(ruleMap["targetAccount"], accountsMap);
+        ruleMap["sourceCategory"] = _remapId(ruleMap["sourceCategory"], categoriesMap);
+        ruleMap["targetCategory"] = _remapId(ruleMap["targetCategory"], categoriesMap);
+        ruleMap.remove("id");
+
+        final rule = Rule.fromJson(ruleMap).toJson();
+        await transaction.insert("rules", rule);
+      }
+
       return transaction;
     });
 
@@ -285,3 +301,9 @@ Future<void> import(String path) async {
   }
 }
 
+int? _remapId(dynamic id, Map<int, int> idMap) {
+  if (id == null) return null;
+  final intId = id is int ? id : int.tryParse(id.toString());
+  if (intId == null) return null;
+  return idMap[intId];
+}

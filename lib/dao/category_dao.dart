@@ -57,6 +57,7 @@ class CategoryDao {
     final db = await getDBInstance();
     await db.delete("payments", where: 'category = ?', whereArgs: [id]);
     await db.delete("recurring_transactions", where: "category = ?", whereArgs:[id]);
+    await db.delete("rules", where: "sourceCategory = ? OR targetCategory = ?", whereArgs: [id, id]);
     var result = await db.delete("categories", where: 'id = ?', whereArgs: [id]);
     return result;
   }
