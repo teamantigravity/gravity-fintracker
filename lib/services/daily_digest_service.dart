@@ -14,6 +14,8 @@ class DailyDigestService {
   static Future<void> schedule({int hour = 8, int minute = 0}) async {
     if (kIsWeb) return;
     try {
+      final hasPermission = await NotificationService().requestPermission();
+      if (!hasPermission) return;
       tz.initializeTimeZones();
       final now = tz.TZDateTime.now(tz.local);
       var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);

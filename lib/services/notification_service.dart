@@ -98,6 +98,8 @@ class NotificationService {
   }) async {
     try {
       if (!_initialized) await init();
+      final hasPermission = await requestPermission();
+      if (!hasPermission) return;
       const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
         'general_channel',
         'General',
