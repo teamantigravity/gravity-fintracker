@@ -4,6 +4,7 @@ import 'package:fintracker/dao/recurring_dao.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/recurring.model.dart';
+import 'package:fintracker/screens/subscriptions/subscription_dashboard.screen.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
@@ -98,6 +99,15 @@ class _RecurringScreenState extends State<RecurringScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Recurring"),
+        actions: [
+          IconButton(
+            icon: const Icon(Symbols.insights, fill: 1),
+            tooltip: 'Subscription Intelligence',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SubscriptionDashboardScreen()),
+            ),
+          ),
+        ],
       ),
       body: _recurring.isEmpty
           ? Center(

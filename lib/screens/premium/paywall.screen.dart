@@ -14,6 +14,7 @@ class PaywallScreen extends StatefulWidget {
 
 class _PaywallScreenState extends State<PaywallScreen> {
   final SubscriptionService _subscriptionService = SubscriptionService();
+  String _selectedTier = 'plus';
   bool _isYearly = true;
   bool _isLoading = false;
 
@@ -21,15 +22,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
     setState(() => _isLoading = true);
     try {
       bool success;
-      if (_isYearly) {
-        success = await _subscriptionService.purchaseYearly();
+      if (_selectedTier == 'plus') {
+        success = await _subscriptionService.purchasePlus(yearly: _isYearly);
       } else {
-        success = await _subscriptionService.purchaseMonthly();
+        success = await _subscriptionService.purchasePro(yearly: _isYearly);
       }
       if (success && mounted) {
-        context.read<AppCubit>().updatePro(true);
+        if (_selectedTier == 'pro') {
+          context.read<AppCubit>().updatePro(true);
+        } else {
+          context.read<AppCubit>().updatePlus(true);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Welcome to Pro!")),
+          SnackBar(content: Text(_selectedTier == 'pro' ? "Welcome to Pro!" : "Welcome to Plus!")),
         );
         Navigator.of(context).pop(true);
       }
@@ -49,6 +54,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final offering = _subscriptionService.offering;
+    final isPro = _selectedTier == 'pro';
+    final monthlyPrice = isPro ? offering.proMonthlyPrice : offering.plusMonthlyPrice;
+    final yearlyPrice = isPro ? offering.proYearlyPrice : offering.plusYearlyPrice;
 
     return Scaffold(
       body: SafeArea(
@@ -58,7 +66,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Close button
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
@@ -66,10 +73,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     icon: const Icon(Symbols.close),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
-                // Header
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -77,7 +81,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "PRO",
+                    isPro ? "PRO" : "PLUS",
                     style: TextStyle(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w700,
@@ -88,7 +92,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  "Unlock the\nFull Experience",
+                  isPro ? "Unlock Everything" : "Unlock Smart Recurring",
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -101,99 +105,56 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
-                // Features
-                _FeatureItem(
-                  icon: Symbols.sync,
-                  title: "E2E Encrypted Sync",
-                  description: "Your data, encrypted on your device. We can't read it. Nobody can.",
-                  color: colorScheme.primary,
-                ),
-                _FeatureItem(
-                  icon: Symbols.devices,
-                  title: "Multi-Device",
-                  description: "Phone, tablet, desktop — all in sync.",
-                  color: colorScheme.tertiary,
-                ),
-                const _FeatureItem(
-                  icon: Symbols.repeat,
-                  title: "Recurring Transactions",
-                  description: "Automate bills, subscriptions, and income tracking.",
-                  color: AppTheme.incomeColor,
-                ),
-                _FeatureItem(
-                  icon: Symbols.bar_chart,
-                  title: "Advanced Reports",
-                  description: "PDF & CSV export, year-over-year analysis.",
-                  color: colorScheme.secondary,
-                ),
-                const _FeatureItem(
-                  icon: Symbols.cloud_upload,
-                  title: "Automatic Backups",
-                  description: "Daily encrypted backups. Never lose your data.",
-                  color: AppTheme.expenseColor,
-                ),
-                const _FeatureItem(
-                  icon: Symbols.shield,
-                  title: "Zero Knowledge",
-                  description: "We literally cannot see your financial data.",
-                  color: Color(0xFF6750A4),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Plan selector
                 Row(
                   children: [
                     Expanded(
                       child: _PlanCard(
-                        title: "Monthly",
-                        price: offering.monthlyPrice,
-                        isSelected: !_isYearly,
-                        onTap: () => setState(() => _isYearly = false),
+                        title: "Plus",
+                        price: _isYearly ? offering.plusYearlyPrice : offering.plusMonthlyPrice,
+                        subtitle: "Save ${offering.plusYearlySavings}",
+                        features: const [
+                          'Subscription intelligence',
+                          'Smart recurring rules',
+                          'Advanced reports',
+                          'Receipt & voice input',
+                          'Savings goals',
+                        ],
+                        isSelected: !isPro,
+                        onTap: () => setState(() => _selectedTier = 'plus'),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          _PlanCard(
-                            title: "Yearly",
-                            price: offering.yearlyPrice,
-                            isSelected: _isYearly,
-                            onTap: () => setState(() => _isYearly = true),
-                          ),
-                          Positioned(
-                            top: -10,
-                            right: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppTheme.incomeColor,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                "Save ${offering.yearlySavings}",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
+                      child: _PlanCard(
+                        title: "Pro",
+                        price: _isYearly ? offering.proYearlyPrice : offering.proMonthlyPrice,
+                        subtitle: "Save ${offering.proYearlySavings}",
+                        features: const [
+                          'Everything in Plus',
+                          'E2E encrypted sync',
+                          'Household P2P sync',
+                          'AI financial coach',
+                          'Document vault',
                         ],
+                        isSelected: isPro,
+                        onTap: () => setState(() => _selectedTier = 'pro'),
                       ),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 24),
-
-                // CTA
+                Center(
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(value: false, label: Text('Monthly')),
+                      ButtonSegment(value: true, label: Text('Yearly')),
+                    ],
+                    selected: {_isYearly},
+                    onSelectionChanged: (v) => setState(() => _isYearly = v.first),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -214,7 +175,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             ),
                           )
                         : Text(
-                            "Start Pro — ${_isYearly ? offering.yearlyPrice : offering.monthlyPrice}",
+                            "Start ${_selectedTier.toUpperCase()} — ${_isYearly ? yearlyPrice : monthlyPrice}",
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
@@ -222,10 +183,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
-                // Restore
                 Center(
                   child: TextButton(
                     onPressed: () async {
@@ -233,6 +191,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       if (!context.mounted) return;
                       if (_subscriptionService.isPro) {
                         context.read<AppCubit>().updatePro(true);
+                      } else if (_subscriptionService.isPlus) {
+                        context.read<AppCubit>().updatePlus(true);
                       }
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Purchases restored")),
@@ -241,10 +201,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     child: const Text("Restore Purchases"),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
-                // Privacy note
                 Center(
                   child: Text(
                     "Cancel anytime. No questions asked.",
@@ -253,7 +210,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 24),
               ],
             ),
@@ -264,71 +220,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 }
 
-class _FeatureItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color color;
-
-  const _FeatureItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20, fill: 1),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                        height: 1.3,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PlanCard extends StatelessWidget {
   final String title;
   final String price;
+  final String subtitle;
+  final List<String> features;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _PlanCard({
     required this.title,
     required this.price,
+    required this.subtitle,
+    required this.features,
     required this.isSelected,
     required this.onTap,
   });
@@ -340,7 +244,7 @@ class _PlanCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
@@ -354,12 +258,32 @@ class _PlanCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.incomeColor,
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  child: Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
@@ -368,6 +292,25 @@ class _PlanCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
             ),
+            const SizedBox(height: 10),
+            ...features.map((f) => Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Symbols.check, size: 12, color: colorScheme.primary),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          f,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
           ],
         ),
       ),

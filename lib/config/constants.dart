@@ -16,7 +16,10 @@ class AppConstants {
 
   // Subscription tiers
   static const String freeTierName = 'Free';
+  static const String plusTierName = 'Plus';
   static const String proTierName = 'Pro';
+  static const double plusMonthlyPrice = 1.99;
+  static const double plusYearlyPrice = 14.99;
   static const double proMonthlyPrice = 3.99;
   static const double proYearlyPrice = 34.99;
 

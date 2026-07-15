@@ -489,16 +489,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Icon(Symbols.workspace_premium, color: colorScheme.primary, fill: 1),
                     ),
                     title: Text(
-                      state.isPro ? 'Gravity Pro' : 'Upgrade to Pro',
+                      state.isPro ? 'Gravity Pro' : state.isPlus ? 'Gravity Plus' : 'Upgrade',
                       style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                     ),
                     subtitle: Text(
                       state.isPro
                           ? "Sync, recurring, advanced reports"
-                          : "E2E sync, multi-device, and more",
+                          : state.isPlus
+                              ? "Subscription intelligence, smart rules, reports"
+                              : "E2E sync, multi-device, and more",
                       style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                     ),
-                    trailing: state.isPro
+                    trailing: state.isPlus || state.isPro
                         ? Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(

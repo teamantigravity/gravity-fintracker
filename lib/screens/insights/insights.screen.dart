@@ -23,6 +23,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   Future<FinancialHealth>? _health;
   Future<List<Anomaly>>? _anomalies;
   Future<CashflowForecast>? _forecast;
+  final bool _plus = SubscriptionService().isPlus;
   final bool _pro = SubscriptionService().isPro;
 
   @override
@@ -35,7 +36,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     setState(() {
       _health = FinancialHealthService.compute();
       _anomalies = AnomalyDetectionService.detect();
-      if (_pro && SubscriptionService().canUseCashFlowForecast) {
+      if (_plus && SubscriptionService().canUseCashFlowForecast) {
         _forecast = CashflowForecastService.forecast();
       }
     });
@@ -160,7 +161,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final unlocked = SubscriptionService().canUseCashFlowForecast;
     return _card(
       title: 'Cash Flow Forecast',
-      pro: !_pro,
+      pro: !_plus,
       child: unlocked
           ? FutureBuilder<CashflowForecast>(
               future: _forecast,
@@ -222,7 +223,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final unlocked = SubscriptionService().canUseSavingsGoals;
     return _card(
       title: 'Savings Goals',
-      pro: !_pro,
+      pro: !_plus,
       child: unlocked
           ? _proTile('Track goals and run what-if scenarios', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingsGoalsScreen())))
           : _proTile('Create savings goals and what-if plans', theme, () => _openPaywall()),

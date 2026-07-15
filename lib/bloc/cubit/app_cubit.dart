@@ -9,6 +9,7 @@ class AppState {
   late String? currency;
   late AppThemeMode themeMode;
   late bool appLockEnabled;
+  late bool isPlus;
   late bool isPro;
   late bool privacyMode;
   late bool dailyDigestEnabled;
@@ -20,6 +21,7 @@ class AppState {
     String? currency = prefs.getString("currency");
     String? themeModeStr = prefs.getString("themeMode");
     bool? appLock = prefs.getBool("appLockEnabled");
+    bool? isPlus = prefs.getBool("isPlus");
     bool? isPro = prefs.getBool("isPro");
     bool? privacyMode = prefs.getBool("privacyMode");
     bool? dailyDigest = prefs.getBool("dailyDigestEnabled");
@@ -31,6 +33,7 @@ class AppState {
     appState.themeMode = _parseThemeMode(themeModeStr);
     appState.appLockEnabled = appLock ?? false;
     appState.isPro = (isPro ?? false) || SubscriptionService().isPro;
+    appState.isPlus = (isPlus ?? false) || appState.isPro || SubscriptionService().isPlus;
     appState.privacyMode = privacyMode ?? false;
     appState.dailyDigestEnabled = dailyDigest ?? false;
 
@@ -84,9 +87,17 @@ class AppCubit extends Cubit<AppState> {
     emit(await AppState.getState());
   }
 
+  Future<void> updatePlus(bool isPlus) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("isPlus", isPlus);
+    if (!isPlus) await prefs.setBool("isPro", false);
+    emit(await AppState.getState());
+  }
+
   Future<void> updatePro(bool isPro) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool("isPro", isPro);
+    if (isPro) await prefs.setBool("isPlus", true);
     emit(await AppState.getState());
   }
 
@@ -109,6 +120,7 @@ class AppCubit extends Cubit<AppState> {
     await prefs.remove("username");
     await prefs.remove("themeMode");
     await prefs.remove("appLockEnabled");
+    await prefs.remove("isPlus");
     await prefs.remove("isPro");
     await prefs.remove("privacyMode");
     await prefs.remove("dailyDigestEnabled");
