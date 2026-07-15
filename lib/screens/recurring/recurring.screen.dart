@@ -254,6 +254,7 @@ class _RecurringFormState extends State<RecurringForm> {
   RecurringInterval _interval = RecurringInterval.monthly;
   String _type = "DR";
   DateTime _startDate = DateTime.now();
+  DateTime _nextDueDate = DateTime.now();
 
   @override
   void initState() {
@@ -268,6 +269,7 @@ class _RecurringFormState extends State<RecurringForm> {
       _interval = initial.interval;
       _type = initial.type;
       _startDate = initial.startDate;
+      _nextDueDate = initial.nextDueDate ?? initial.startDate;
     } else {
       if (widget.categories.isNotEmpty) _selectedCategory = widget.categories.first;
       if (widget.accounts.isNotEmpty) _selectedAccount = widget.accounts.first;
@@ -393,7 +395,12 @@ class _RecurringFormState extends State<RecurringForm> {
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2030),
                 );
-                if (picked != null && mounted) setState(() => _startDate = picked);
+                if (picked != null && mounted) {
+                  setState(() {
+                    _startDate = picked;
+                    if (widget.initial == null) _nextDueDate = picked;
+                  });
+                }
               },
             ),
             const SizedBox(height: 12),
@@ -441,7 +448,7 @@ class _RecurringFormState extends State<RecurringForm> {
                     description: _descriptionController.text,
                     interval: _interval,
                     startDate: _startDate,
-                    nextDueDate: _startDate,
+                    nextDueDate: _nextDueDate,
                     isActive: true,
                   );
 
