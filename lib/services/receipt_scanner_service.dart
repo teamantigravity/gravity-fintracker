@@ -112,7 +112,9 @@ class ReceiptScannerService {
               return _safeDate(year, b, a);
             }
           }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('Receipt date parse error: $e');
+        }
       }
     }
     return null;
@@ -121,7 +123,8 @@ class ReceiptScannerService {
   static DateTime? _safeDate(int year, int month, int day) {
     try {
       return DateTime(year, month, day);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Receipt safeDate error: $e');
       return null;
     }
   }

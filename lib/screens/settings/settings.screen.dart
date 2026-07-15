@@ -41,14 +41,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       bool available = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
       if (mounted) setState(() => _biometricAvailable = available);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Biometric check failed: $e');
+    }
   }
 
   Future<void> _checkPin() async {
     try {
       bool hasPin = await PinService().hasPin();
       if (mounted) setState(() => _hasPin = hasPin);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('PIN check failed: $e');
+    }
   }
 
   @override

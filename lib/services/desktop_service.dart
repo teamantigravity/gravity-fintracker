@@ -62,13 +62,17 @@ class DesktopService {
     if (!_initialized) return;
     try {
       await _appWindow.hide();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Desktop hide failed: $e');
+    }
   }
 
   static Future<void> show() async {
     if (!_initialized) return;
     try {
       await _appWindow.show();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Desktop show failed: $e');
+    }
   }
 }

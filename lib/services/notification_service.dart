@@ -85,8 +85,9 @@ class NotificationService {
         body ?? 'A recurring payment is due today',
         details,
       );
-    } catch (_) {
+    } catch (e) {
       // Notifications are best-effort; never break transaction processing
+      debugPrint('Show due bill notification failed: $e');
     }
   }
 
@@ -114,8 +115,9 @@ class NotificationService {
         linux: LinuxNotificationDetails(),
       );
       await _notifications.show(id, title, body, details, payload: payload);
-    } catch (_) {
+    } catch (e) {
       // Notifications are best-effort
+      debugPrint('Show notification failed: $e');
     }
   }
 }
