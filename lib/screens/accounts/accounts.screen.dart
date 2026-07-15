@@ -190,10 +190,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
                                     ConfirmModal.showConfirmDialog(
                                         context,
                                         title: "Are you sure?",
-                                        content: const Text("All the paymentswill be deleted belongs to this account"),
+                                        content: const Text("All payments belonging to this account will be deleted."),
                                         onConfirm: () async {
+                                          final accountId = account.id;
+                                          if (accountId == null) return;
                                           Navigator.pop(context);
-                                          await _accountDao.delete(account.id!);
+                                          await _accountDao.delete(accountId);
                                           globalEvent.emit("account_update");
                                         },
                                         onCancel: (){
