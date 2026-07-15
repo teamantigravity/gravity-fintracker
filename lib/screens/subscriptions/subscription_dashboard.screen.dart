@@ -83,7 +83,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
                         const SizedBox(height: 16),
                         if (summary.priceChanges.isNotEmpty) ...[
                           _buildSectionTitle('Price changes'),
-                          ...summary.priceChanges.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'Price ${s.priceChangeDirection} ${s.priceChangePercent!.toStringAsFixed(0)}%')),
+                          ...summary.priceChanges.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'Price ${s.priceChangeDirection} ${s.priceChangePercent?.toStringAsFixed(0) ?? '0'}%')),
                           const SizedBox(height: 16),
                         ],
                         if (summary.duplicates.isNotEmpty) ...[
@@ -93,12 +93,12 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
                         ],
                         if (summary.possiblyUnused.isNotEmpty) ...[
                           _buildSectionTitle('Possibly unused'),
-                          ...summary.possiblyUnused.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'No payment since ${DateFormat('dd MMM').format(s.nextDue!)}')),
+                          ...summary.possiblyUnused.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'No payment since ${DateFormat('dd MMM').format(s.nextDue ?? DateTime.now())}')),
                           const SizedBox(height: 16),
                         ],
                         if (summary.overdue.isNotEmpty) ...[
                           _buildSectionTitle('Overdue'),
-                          ...summary.overdue.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'Due ${DateFormat('dd MMM').format(s.nextDue!)}')),
+                          ...summary.overdue.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'Due ${DateFormat('dd MMM').format(s.nextDue ?? DateTime.now())}')),
                           const SizedBox(height: 16),
                         ],
                         _buildSectionTitle('All subscriptions'),

@@ -77,13 +77,14 @@ class _PaymentForm extends State<PaymentForm>{
     await loadCategories();
     if (!mounted) return;
 
-    if (widget.payment != null) {
-      final paymentAccount = widget.payment!.account;
-      final paymentCategory = widget.payment!.category;
+    final payment = widget.payment;
+    if (payment != null) {
+      final paymentAccount = payment.account;
+      final paymentCategory = payment.category;
       setState(() {
-        _id = widget.payment!.id;
-        _title = widget.payment!.title;
-        _description = widget.payment!.description;
+        _id = payment.id;
+        _title = payment.title;
+        _description = payment.description;
         _account = _accounts.cast<Account?>().firstWhere(
           (a) => a?.id == paymentAccount.id,
           orElse: () => paymentAccount,
@@ -92,9 +93,9 @@ class _PaymentForm extends State<PaymentForm>{
           (c) => c?.id == paymentCategory.id,
           orElse: () => paymentCategory,
         );
-        _amount = widget.payment!.amount;
-        _type = widget.payment!.type;
-        _datetime = widget.payment!.datetime;
+        _amount = payment.amount;
+        _type = payment.type;
+        _datetime = payment.datetime;
         _initialised = true;
       });
     } else {

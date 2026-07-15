@@ -115,7 +115,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    ...snapshot.data!.suggestions.take(2).map((s) => Padding(
+                    ...?snapshot.data?.suggestions.take(2).map((s) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +211,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               future: CoachService.generateInsights(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()));
-                final messages = snapshot.data!;
+                final messages = snapshot.data ?? [];
                 return _proTile('${messages.length} personalized insights ready', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoachScreen())));
               },
             )

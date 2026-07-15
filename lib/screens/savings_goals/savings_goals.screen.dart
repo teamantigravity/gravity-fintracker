@@ -213,12 +213,13 @@ class _GoalFormState extends State<_GoalForm> {
   @override
   void initState() {
     super.initState();
-    if (widget.goal != null) {
-      _nameController.text = widget.goal!.name;
-      _targetController.text = widget.goal!.targetAmount.toString();
-      _deadline = widget.goal!.deadline;
-      _selectedColor = widget.goal!.color ?? _selectedColor;
-      _selectedIcon = widget.goal!.icon ?? _selectedIcon;
+    final goal = widget.goal;
+    if (goal != null) {
+      _nameController.text = goal.name;
+      _targetController.text = goal.targetAmount.toString();
+      _deadline = goal.deadline;
+      _selectedColor = goal.color ?? _selectedColor;
+      _selectedIcon = goal.icon ?? _selectedIcon;
     }
   }
 
