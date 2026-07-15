@@ -114,13 +114,6 @@ jobs:
           path: build/app/outputs/bundle/release/*.aab
           retention-days: 30
 
-      - name: Upload debug symbols (for de-obfuscating crash reports)
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-symbols
-          path: build/symbols/android/
-          retention-days: 90
-
   build-web:
     name: Build Web
     needs: analyze
@@ -191,13 +184,6 @@ jobs:
           path: build/linux/x64/release/bundle/
           retention-days: 30
 
-      - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-symbols
-          path: build/symbols/linux/
-          retention-days: 90
-
   build-windows:
     name: Build Windows
     needs: analyze
@@ -232,13 +218,6 @@ jobs:
           path: build/windows/x64/runner/Release/
           retention-days: 30
 
-      - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-symbols
-          path: build/symbols/windows/
-          retention-days: 90
-
   build-macos:
     name: Build macOS
     needs: analyze
@@ -270,13 +249,6 @@ jobs:
           name: macos-build
           path: build/macos/Build/Products/Release/
           retention-days: 30
-
-      - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-symbols
-          path: build/symbols/macos/
-          retention-days: 90
 
   build-ios:
     name: Build iOS (no signing)
@@ -310,13 +282,6 @@ jobs:
           name: ios-build
           path: build/ios/iphoneos/
           retention-days: 30
-
-      - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-symbols
-          path: build/symbols/ios/
-          retention-days: 90
 
   publish-release:
     name: Publish rolling release
