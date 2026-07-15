@@ -5,6 +5,7 @@ import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
+import 'package:fintracker/services/rule_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -13,6 +14,8 @@ class PaymentDao {
   Future<int> create(Payment payment) async {
     final db = await getDBInstance();
     var result = await db.insert("payments", payment.toJson());
+    payment.id = result;
+    await RuleService.evaluate(payment);
     return result;
   }
 

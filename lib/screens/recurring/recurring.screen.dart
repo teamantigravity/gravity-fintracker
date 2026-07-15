@@ -4,6 +4,7 @@ import 'package:fintracker/dao/recurring_dao.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/recurring.model.dart';
+import 'package:fintracker/screens/rules/rules_screen.dart';
 import 'package:fintracker/screens/subscriptions/subscription_dashboard.screen.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
@@ -105,6 +106,13 @@ class _RecurringScreenState extends State<RecurringScreen> {
             tooltip: 'Subscription Intelligence',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SubscriptionDashboardScreen()),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.rule),
+            tooltip: 'Automation Rules',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const RulesScreen()),
             ),
           ),
         ],

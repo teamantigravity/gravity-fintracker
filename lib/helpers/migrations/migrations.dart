@@ -65,3 +65,22 @@ void v3(Database database) async {
       "isArchived INTEGER DEFAULT 0"
       ")");
 }
+
+void v4(Database database) async {
+  debugPrint("Running fourth migration — automation rules....");
+  await database.execute("CREATE TABLE IF NOT EXISTS rules ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "name TEXT,"
+      "enabled INTEGER DEFAULT 1,"
+      "sourceAccount INTEGER,"
+      "sourceCategory INTEGER,"
+      "type TEXT,"
+      "minAmount REAL,"
+      "maxAmount REAL,"
+      "percentage REAL,"
+      "targetAccount INTEGER,"
+      "targetCategory INTEGER,"
+      "targetType TEXT,"
+      "description TEXT"
+      ")");
+}

@@ -7,6 +7,7 @@ import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/model/recurring.model.dart';
 import 'package:fintracker/services/notification_service.dart';
+import 'package:fintracker/services/rule_service.dart';
 
 class RecurringDao {
   Future<int> create(RecurringTransaction recurring) async {
@@ -137,7 +138,7 @@ class RecurringDao {
       recurring.nextDueDate = next;
 
       await db.transaction((txn) async {
-        await txn.insert("payments", payment.toJson());
+        payment.id = await txn.insert("payments", payment.toJson());
         await txn.update(
           "recurring_transactions",
           recurring.toJson(),
@@ -145,6 +146,8 @@ class RecurringDao {
           whereArgs: [recurring.id],
         );
       });
+
+      await RuleService.evaluate(payment);
 
       await NotificationService().showDueBill(
         title: recurring.title,
