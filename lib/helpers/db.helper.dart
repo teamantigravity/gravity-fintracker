@@ -3,6 +3,7 @@ import "dart:convert";
 import "dart:io";
 import "package:csv/csv.dart";
 import "package:fintracker/events.dart";
+import "package:flutter/foundation.dart" show kIsWeb;
 import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 import "package:path/path.dart";
@@ -14,6 +15,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
+import 'package:fintracker/model/recurring.model.dart';
+import 'package:fintracker/model/savings_goal.model.dart';
 
 Database? database;
 Future<Database> getDBInstance() async {
@@ -91,6 +94,8 @@ Future<void> resetDatabase() async {
 
 
 Future<String> getExternalDocumentPath({String? fallbackPath}) async {
+  if (kIsWeb) throw UnsupportedError('External storage is not available on web.');
+
   // To check whether permission is given for this app or not.
   Directory? directory;
   if (Platform.isAndroid) {
@@ -113,6 +118,7 @@ Future<String> getExternalDocumentPath({String? fallbackPath}) async {
   return exPath;
 }
 Future<String> export({String? directory, String? filePath}) async {
+  if (kIsWeb) throw UnsupportedError('JSON export is not supported on web.');
   await getDBInstance();
   List<dynamic> accounts = await database!.query("accounts",);
   List<dynamic> categories = await database!.query("categories",);
@@ -143,6 +149,7 @@ Future<String> export({String? directory, String? filePath}) async {
 
 
 Future<String> exportCsv({String? directory, String? filePath}) async {
+  if (kIsWeb) throw UnsupportedError('CSV export is not supported on web.');
   await getDBInstance();
   List<dynamic> payments = await database!.rawQuery(
     "SELECT p.id, p.title, p.description, p.amount, p.type, p.datetime, "
@@ -188,6 +195,7 @@ Future<String> exportCsv({String? directory, String? filePath}) async {
 }
 
 Future<void> import(String path) async {
+  if (kIsWeb) throw UnsupportedError('JSON import is not supported on web.');
   File file = File(path);
   Map<int, int> accountsMap = {};
   Map<int, int> categoriesMap = {};
@@ -246,43 +254,21 @@ Future<void> import(String path) async {
         int? accountId = accountsMap[itemMap["account"]];
         int? categoryId = categoriesMap[itemMap["category"]];
         if (accountId == null || categoryId == null) continue;
-        
+
         itemMap["account"] = accountId;
         itemMap["category"] = categoryId;
-        
-        // Since we don't have a specific RecurringTransaction model handy, we will manually sanitize it
-        // based on the standard table structure:
-        Map<String, dynamic> item = {
-          "title": itemMap["title"],
-          "description": itemMap["description"],
-          "account": accountId,
-          "category": categoryId,
-          "amount": itemMap["amount"],
-          "type": itemMap["type"],
-          "frequency": itemMap["frequency"],
-          "next_date": itemMap["next_date"],
-          "end_date": itemMap["end_date"],
-        };
-        
-        await transaction.insert("recurring_transactions", item);
+        itemMap.remove("id");
+
+        final rec = RecurringTransaction.fromJson(itemMap).toJson();
+        await transaction.insert("recurring_transactions", rec);
       }
 
       for (Map<String, dynamic> goalMap in savingsGoals.cast<Map<String, dynamic>>()) {
         final accountId = goalMap["account"];
-        int? mappedAccountId = accountId;
-        if (accountId != null) {
-          mappedAccountId = accountsMap[accountId] ?? accountId;
-        }
-        
-        Map<String, dynamic> goal = {
-          "title": goalMap["title"],
-          "description": goalMap["description"],
-          "account": mappedAccountId,
-          "amount": goalMap["amount"],
-          "target_amount": goalMap["target_amount"],
-          "target_date": goalMap["target_date"],
-        };
-        
+        goalMap["account"] = accountId != null ? accountsMap[accountId] : null;
+        goalMap.remove("id");
+
+        final goal = SavingsGoal.fromJson(goalMap).toJson();
         await transaction.insert("savings_goals", goal);
       }
 

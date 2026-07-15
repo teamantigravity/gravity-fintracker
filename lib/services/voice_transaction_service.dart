@@ -33,28 +33,36 @@ class VoiceTransactionService {
     if (!ready) return VoiceResult.error('Voice input is unavailable. Check microphone permission.');
 
     final completer = Completer<VoiceResult>();
-    Timer? timer;
 
-    _speech.listen(
-      onResult: (result) {
-        if (result.finalResult) {
-          timer?.cancel();
-          _speech.stop();
-          completer.complete(_parse(result.recognizedWords));
-        }
-      },
-      listenOptions: SpeechListenOptions(
-        listenMode: ListenMode.confirmation,
-        cancelOnError: true,
-      ),
-    );
-
-    timer = Timer(timeout, () async {
+    final timer = Timer(timeout, () async {
       if (!completer.isCompleted) {
         await _speech.stop();
         completer.complete(VoiceResult.error('No voice detected. Please try again.'));
       }
     });
+
+    unawaited(
+      _speech.listen(
+        onResult: (result) {
+          if (result.finalResult) {
+            timer.cancel();
+            _speech.stop();
+            if (!completer.isCompleted) {
+              completer.complete(_parse(result.recognizedWords));
+            }
+          }
+        },
+        listenOptions: SpeechListenOptions(
+          listenMode: ListenMode.confirmation,
+          cancelOnError: true,
+        ),
+      ).catchError((e) {
+        timer.cancel();
+        if (!completer.isCompleted) {
+          completer.complete(VoiceResult.error('Voice input failed: $e'));
+        }
+      }),
+    );
 
     return completer.future;
   }

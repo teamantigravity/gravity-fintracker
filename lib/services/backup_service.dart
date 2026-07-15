@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:flutter/foundation.dart';
 import 'package:fintracker/helpers/db.helper.dart' as db;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -95,6 +95,7 @@ class BackupService {
   }
 
   static Future<String> exportEncrypted(String password, {String? directory, String? filePath}) async {
+    if (kIsWeb) throw UnsupportedError('Encrypted backups are not supported on web.');
     await db.getDBInstance();
     final accounts = await db.database!.query('accounts');
     final categories = await db.database!.query('categories');
@@ -128,6 +129,7 @@ class BackupService {
   }
 
   static Future<void> importEncrypted(String filePath, String password) async {
+    if (kIsWeb) throw UnsupportedError('Encrypted backups are not supported on web.');
     final file = File(filePath);
     final encrypted = await file.readAsString();
     final plain = await decryptWithPassword(encrypted, password);

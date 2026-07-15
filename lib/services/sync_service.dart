@@ -61,7 +61,7 @@ class SyncService {
     Uint8List t = Uint8List(0);
     for (int i = 1; i <= n; i++) {
       var hmacSha512 = Hmac(sha512, prk);
-      var input = Uint8List.fromList([...t, ...info, i]);
+      var input = Uint8List.fromList([...t, ...info, i & 0xFF]);
       t = Uint8List.fromList(hmacSha512.convert(input).bytes);
       okm = Uint8List.fromList([...okm, ...t]);
     }
@@ -83,8 +83,15 @@ class SyncService {
     String? stored = await _secureStorage.read(key: _masterKeyStorageKey);
     if (stored == null) return null;
     // Legacy unsalted keys have no separator; modern format is salt:key.
-    if (stored.contains(':')) return base64Decode(stored.split(':')[1]);
-    return base64Decode(stored);
+    if (stored.contains(':')) {
+      final parts = stored.split(':');
+      if (parts.length >= 2 && parts[1].isNotEmpty) {
+        return base64Decode(parts[1]);
+      }
+      return null;
+    }
+    if (stored.isNotEmpty) return base64Decode(stored);
+    return null;
   }
 
   Uint8List _pbkdf2Sha512(
@@ -268,7 +275,7 @@ class SyncService {
         goal.remove("id");
         final accountId = goal["account"];
         if (accountId != null) {
-          goal["account"] = accountsMap[accountId] ?? accountId;
+          goal["account"] = accountsMap[accountId];
         }
         await txn.insert("savings_goals", goal);
       }
@@ -307,30 +314,32 @@ class SyncService {
   Future<void> pushToCloud() async {
     if (!isEnabled || !isAuthenticated) return;
     final snapshot = await exportEncryptedSnapshot();
-    
-    final userId = Supabase.instance.client.auth.currentUser!.id;
-    
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
     // Upsert into Supabase (assumes a 'sync_snapshots' table exists with user_id, encrypted_data, timestamp)
     await Supabase.instance.client.from('sync_snapshots').upsert({
       'user_id': userId,
       'encrypted_data': snapshot['encrypted_data'],
       'updated_at': snapshot['timestamp'],
     });
-    
+
     debugPrint('Push to cloud complete: ${snapshot["timestamp"]}');
   }
 
   Future<void> pullFromCloud() async {
     if (!isEnabled || !isAuthenticated) return;
-    
-    final userId = Supabase.instance.client.auth.currentUser!.id;
-    
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
     final response = await Supabase.instance.client
         .from('sync_snapshots')
         .select('encrypted_data, updated_at')
         .eq('user_id', userId)
         .maybeSingle();
-        
+
     if (response != null && response['encrypted_data'] != null) {
       await importEncryptedSnapshot(response['encrypted_data'] as String);
       debugPrint('Pull from cloud complete: ${response["updated_at"]}');
