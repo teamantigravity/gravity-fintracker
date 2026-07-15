@@ -62,18 +62,12 @@ class RuleService {
 
   static Future<Account?> _resolveAccount(int id) async {
     final accounts = await AccountDao().find();
-    return accounts.cast<Account?>().firstWhere(
-      (a) => a?.id == id,
-      orElse: () => null,
-    );
+    return {for (final a in accounts) a.id: a}[id];
   }
 
   static Future<Category?> _resolveCategory(int id) async {
     final categories = await CategoryDao().find(withSummery: false);
-    return categories.cast<Category?>().firstWhere(
-      (c) => c?.id == id,
-      orElse: () => null,
-    );
+    return {for (final c in categories) c.id: c}[id];
   }
 
 }

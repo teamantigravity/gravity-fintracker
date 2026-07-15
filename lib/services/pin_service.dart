@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Secure PIN storage and verification.
@@ -46,6 +46,7 @@ class PinService {
       // Legacy unsalted SHA-256 fallback
       return stored == _legacyHash(pin);
     } catch (e) {
+      debugPrint('PIN verification error: $e');
       return false;
     }
   }
@@ -55,6 +56,7 @@ class PinService {
       final stored = await _secureStorage.read(key: _pinHashKey);
       return stored != null && stored.isNotEmpty;
     } catch (e) {
+      debugPrint('PIN check error: $e');
       return false;
     }
   }

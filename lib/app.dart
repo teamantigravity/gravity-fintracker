@@ -172,7 +172,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
         return;
       }
     } catch (e) {
-      // Fall through to PIN fallback
+      debugPrint('Biometric unlock failed: $e');
     } finally {
       _isAuthenticating = false;
     }
@@ -183,6 +183,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
         return;
       }
     } catch (e) {
+      debugPrint('PIN read failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not read PIN: $e')),
@@ -213,6 +214,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
         }
       }
     } catch (e) {
+      debugPrint('PIN verification failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('PIN verification failed: $e')),

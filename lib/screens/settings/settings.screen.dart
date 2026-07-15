@@ -195,6 +195,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               context.read<AppCubit>().updateAppLock(true);
                             }
                           } catch (e) {
+                            debugPrint('Biometric auth error: $e');
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text("Biometric error: $e")),
@@ -283,6 +284,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
                             }
                           } catch (err) {
+                            debugPrint('JSON export error: $err');
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export failed")));
                             }
@@ -322,6 +324,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
                             }
                           } catch (err) {
+                            debugPrint('CSV export error: $err');
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("CSV export failed")));
                             }
@@ -376,6 +379,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   Navigator.of(context).pop();
                                 }
                               } catch (err) {
+                                debugPrint('JSON import error: $err');
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
                                   Navigator.of(context).pop();
@@ -386,6 +390,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       }
                     } catch (err) {
+                      debugPrint('File picker import error: $err');
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
                       }
@@ -416,6 +421,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Navigator.of(context).pop();
                       }
                     } catch (err) {
+                      debugPrint('Encrypted export error: $err');
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export failed")));
                         Navigator.of(context).pop();
@@ -461,6 +467,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Navigator.of(context).pop();
                       }
                     } catch (err) {
+                      debugPrint('Encrypted import error: $err');
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
                         Navigator.of(context).pop();

@@ -1,6 +1,5 @@
 import 'package:fintracker/dao/account_dao.dart';
 import 'package:fintracker/helpers/db.helper.dart';
-import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/savings_goal.model.dart';
 
 class SavingsGoalDao {
@@ -12,6 +11,7 @@ class SavingsGoalDao {
   Future<List<SavingsGoal>> find({bool includeArchived = false}) async {
     final db = await getDBInstance();
     final accounts = await AccountDao().find();
+    final accountMap = {for (final a in accounts) a.id: a};
     final rows = await db.query(
       'savings_goals',
       orderBy: 'deadline ASC',
@@ -22,10 +22,7 @@ class SavingsGoalDao {
       final map = Map<String, dynamic>.from(row);
       final accountId = map['account'];
       if (accountId != null) {
-        final account = accounts.cast<Account?>().firstWhere(
-          (a) => a?.id == accountId,
-          orElse: () => null,
-        );
+        final account = accountMap[accountId];
         map['account'] = account?.toJson();
       }
       final goal = SavingsGoal.fromJson(map);

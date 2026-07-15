@@ -22,6 +22,9 @@ class RecurringDao {
     List<Category> categories = await CategoryDao().find(withSummery: false);
     List<Account> accounts = await AccountDao().find();
 
+    final accountMap = {for (final a in accounts) a.id: a};
+    final categoryMap = {for (final c in categories) c.id: c};
+
     String? where;
     if (activeOnly) {
       where = "isActive = 1";
@@ -36,14 +39,8 @@ class RecurringDao {
     List<RecurringTransaction> results = [];
     for (var row in rows) {
       Map<String, dynamic> data = Map<String, dynamic>.from(row);
-      final Account? account = accounts.cast<Account?>().firstWhere(
-        (a) => a?.id == data["account"],
-        orElse: () => null,
-      );
-      final Category? category = categories.cast<Category?>().firstWhere(
-        (c) => c?.id == data["category"],
-        orElse: () => null,
-      );
+      final Account? account = accountMap[data["account"]];
+      final Category? category = categoryMap[data["category"]];
       if (account == null || category == null) continue;
       data["account"] = account.toJson();
       data["category"] = category.toJson();
@@ -57,6 +54,9 @@ class RecurringDao {
     List<Category> categories = await CategoryDao().find(withSummery: false);
     List<Account> accounts = await AccountDao().find();
 
+    final accountMap = {for (final a in accounts) a.id: a};
+    final categoryMap = {for (final c in categories) c.id: c};
+
     final now = DateTime.now().toIso8601String().substring(0, 10);
     List<Map<String, Object?>> rows = await db.query(
       "recurring_transactions",
@@ -67,14 +67,8 @@ class RecurringDao {
     List<RecurringTransaction> results = [];
     for (var row in rows) {
       Map<String, dynamic> data = Map<String, dynamic>.from(row);
-      final Account? account = accounts.cast<Account?>().firstWhere(
-        (a) => a?.id == data["account"],
-        orElse: () => null,
-      );
-      final Category? category = categories.cast<Category?>().firstWhere(
-        (c) => c?.id == data["category"],
-        orElse: () => null,
-      );
+      final Account? account = accountMap[data["account"]];
+      final Category? category = categoryMap[data["category"]];
       if (account == null || category == null) continue;
       data["account"] = account.toJson();
       data["category"] = category.toJson();

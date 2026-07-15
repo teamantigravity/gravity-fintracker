@@ -52,7 +52,7 @@ class WhatIfService {
         if (!r.isActive) continue;
         final next = _nextDueDateOnOrBefore(r, date, r.startDate);
         if (next != null && next.year == date.year && next.month == date.month && next.day == date.day) {
-          final adjustedAmount = (r.amount + (r.type == 'DR' ? recurringDelta : -recurringDelta)).clamp(0, double.infinity).toDouble();
+          final adjustedAmount = (r.amount + recurringDelta).clamp(0, double.infinity).toDouble();
           if (r.type == 'CR') {
             recurringNet += adjustedAmount;
           } else {

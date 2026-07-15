@@ -60,6 +60,8 @@ class PaymentDao {
     List<Category> categories = await CategoryDao().find();
     List<Account> accounts = await AccountDao().find();
 
+    final accountMap = {for (final a in accounts) a.id: a};
+    final categoryMap = {for (final c in categories) c.id: c};
 
     List<Payment> payments = [];
     List<Map<String, Object?>> rows =  await db.query(
@@ -70,14 +72,8 @@ class PaymentDao {
     );
     for (var row in rows) {
       Map<String, dynamic> payment = Map<String, dynamic>.from(row);
-      final Account? account = accounts.cast<Account?>().firstWhere(
-        (a) => a?.id == payment["account"],
-        orElse: () => null,
-      );
-      final Category? category = categories.cast<Category?>().firstWhere(
-        (c) => c?.id == payment["category"],
-        orElse: () => null,
-      );
+      final Account? account = accountMap[payment["account"]];
+      final Category? category = categoryMap[payment["category"]];
       if (account == null || category == null) continue;
       payment["category"] = category.toJson();
       payment["account"] = account.toJson();
@@ -92,6 +88,9 @@ class PaymentDao {
     List<Category> categories = await CategoryDao().find();
     List<Account> accounts = await AccountDao().find();
 
+    final accountMap = {for (final a in accounts) a.id: a};
+    final categoryMap = {for (final c in categories) c.id: c};
+
     List<Map<String, Object?>> rows = await db.query(
       "payments",
       where: "LOWER(title) = LOWER(?) AND type = ?",
@@ -101,14 +100,8 @@ class PaymentDao {
     );
     if (rows.isEmpty) return null;
     Map<String, dynamic> payment = Map<String, dynamic>.from(rows.first);
-    final Account? account = accounts.cast<Account?>().firstWhere(
-      (a) => a?.id == payment["account"],
-      orElse: () => null,
-    );
-    final Category? category = categories.cast<Category?>().firstWhere(
-      (c) => c?.id == payment["category"],
-      orElse: () => null,
-    );
+    final Account? account = accountMap[payment["account"]];
+    final Category? category = categoryMap[payment["category"]];
     if (account == null || category == null) return null;
     payment["category"] = category.toJson();
     payment["account"] = account.toJson();
