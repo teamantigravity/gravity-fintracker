@@ -11,7 +11,6 @@ import "package:fintracker/helpers/migrations/migrations.dart";
 import "package:sqflite/sqflite.dart";
 
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/model/payment.model.dart';
@@ -96,22 +95,11 @@ Future<void> resetDatabase() async {
 Future<String> getExternalDocumentPath({String? fallbackPath}) async {
   if (kIsWeb) throw UnsupportedError('External storage is not available on web.');
 
-  // To check whether permission is given for this app or not.
-  Directory? directory;
-  if (Platform.isAndroid) {
-    var status = await Permission.storage.status;
-    if (status.isGranted) {
-      directory = Directory("/storage/emulated/0/Download");
-    }
-  }
-
-  if (directory == null) {
-    if (fallbackPath != null && fallbackPath.isNotEmpty) {
-      directory = Directory(fallbackPath);
-    } else {
-      directory = await getApplicationDocumentsDirectory();
-    }
-  }
+  // Avoid broad storage permissions. Use the provided path or the app-specific
+  // documents directory; file picking/saving is handled by FilePicker/SAF.
+  final directory = (fallbackPath != null && fallbackPath.isNotEmpty)
+      ? Directory(fallbackPath)
+      : await getApplicationDocumentsDirectory();
 
   final exPath = directory.path;
   await Directory(exPath).create(recursive: true);
