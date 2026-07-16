@@ -49,47 +49,6 @@ class App extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
             ],
-            builder: (context, child) {
-              return Shortcuts(
-                shortcuts: const {
-                  SingleActivator(LogicalKeyboardKey.keyN, control: true): NewPaymentIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyN, meta: true): NewPaymentIntent(),
-                  SingleActivator(LogicalKeyboardKey.digit1, control: true): NavigateToTabIntent(0),
-                  SingleActivator(LogicalKeyboardKey.digit1, meta: true): NavigateToTabIntent(0),
-                  SingleActivator(LogicalKeyboardKey.digit2, control: true): NavigateToTabIntent(1),
-                  SingleActivator(LogicalKeyboardKey.digit2, meta: true): NavigateToTabIntent(1),
-                  SingleActivator(LogicalKeyboardKey.digit3, control: true): NavigateToTabIntent(2),
-                  SingleActivator(LogicalKeyboardKey.digit3, meta: true): NavigateToTabIntent(2),
-                  SingleActivator(LogicalKeyboardKey.digit4, control: true): NavigateToTabIntent(3),
-                  SingleActivator(LogicalKeyboardKey.digit4, meta: true): NavigateToTabIntent(3),
-                  SingleActivator(LogicalKeyboardKey.digit5, control: true): NavigateToTabIntent(4),
-                  SingleActivator(LogicalKeyboardKey.digit5, meta: true): NavigateToTabIntent(4),
-                },
-                child: Actions(
-                  actions: {
-                    NewPaymentIntent: CallbackAction<NewPaymentIntent>(
-                      onInvoke: (_) {
-                        App.navigatorKey.currentState?.push(
-                          MaterialPageRoute(builder: (_) => const PaymentForm(type: PaymentType.debit)),
-                        );
-                        return null;
-                      },
-                    ),
-                    NavigateToTabIntent: CallbackAction<NavigateToTabIntent>(
-                      onInvoke: (intent) {
-                        App.mainScreenKey.currentState?.navigateTo(intent.index);
-                        return null;
-                      },
-                    ),
-                  },
-                  child: Focus(
-                    autofocus: true,
-                    canRequestFocus: true,
-                    child: child ?? const SizedBox.shrink(),
-                  ),
-                ),
-              );
-            },
           );
         });
   }
@@ -147,7 +106,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
   }
 
   Future<void> _checkLock() async {
-    if (_isAuthenticating) return;
+    if (!mounted || _isAuthenticating) return;
 
     final appState = context.read<AppCubit>().state;
     if (!appState.appLockEnabled) {
@@ -155,7 +114,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
       return;
     }
 
-    if (mounted) setState(() => _isLocked = true);
+    if (mounted) setState(() { _isLocked = true; _showPinInput = false; });
 
     _isAuthenticating = true;
     final LocalAuthentication localAuth = LocalAuthentication();
@@ -226,7 +185,47 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
-    if (!_isLocked) return widget.child;
+    if (!_isLocked) {
+      return Shortcuts(
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.keyN, control: true): NewPaymentIntent(),
+          SingleActivator(LogicalKeyboardKey.keyN, meta: true): NewPaymentIntent(),
+          SingleActivator(LogicalKeyboardKey.digit1, control: true): NavigateToTabIntent(0),
+          SingleActivator(LogicalKeyboardKey.digit1, meta: true): NavigateToTabIntent(0),
+          SingleActivator(LogicalKeyboardKey.digit2, control: true): NavigateToTabIntent(1),
+          SingleActivator(LogicalKeyboardKey.digit2, meta: true): NavigateToTabIntent(1),
+          SingleActivator(LogicalKeyboardKey.digit3, control: true): NavigateToTabIntent(2),
+          SingleActivator(LogicalKeyboardKey.digit3, meta: true): NavigateToTabIntent(2),
+          SingleActivator(LogicalKeyboardKey.digit4, control: true): NavigateToTabIntent(3),
+          SingleActivator(LogicalKeyboardKey.digit4, meta: true): NavigateToTabIntent(3),
+          SingleActivator(LogicalKeyboardKey.digit5, control: true): NavigateToTabIntent(4),
+          SingleActivator(LogicalKeyboardKey.digit5, meta: true): NavigateToTabIntent(4),
+        },
+        child: Actions(
+          actions: {
+            NewPaymentIntent: CallbackAction<NewPaymentIntent>(
+              onInvoke: (_) {
+                App.navigatorKey.currentState?.push(
+                  MaterialPageRoute(builder: (_) => const PaymentForm(type: PaymentType.debit)),
+                );
+                return null;
+              },
+            ),
+            NavigateToTabIntent: CallbackAction<NavigateToTabIntent>(
+              onInvoke: (intent) {
+                App.mainScreenKey.currentState?.navigateTo(intent.index);
+                return null;
+              },
+            ),
+          },
+          child: Focus(
+            autofocus: true,
+            canRequestFocus: true,
+            child: widget.child,
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: Center(

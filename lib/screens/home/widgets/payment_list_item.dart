@@ -1,32 +1,31 @@
 import 'package:fintracker/model/payment.model.dart';
+import 'package:fintracker/theme/colors.dart';
+import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../theme/colors.dart';
 
-class PaymentListItem extends StatelessWidget{
+class PaymentListItem extends StatelessWidget {
   final Payment payment;
   final VoidCallback onTap;
   const PaymentListItem({super.key, required this.payment, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    bool isCredit = payment.type == PaymentType.credit;
+    final isCredit = payment.type == PaymentType.credit;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final amountColor = isCredit ? ThemeColors.success : ThemeColors.error;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    return PrismListTile(
       onTap: onTap,
-      leading: Container(
-        height: 48,
-        width: 48,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          color: payment.category.color.withValues(alpha: 0.12),
-        ),
-        child: Icon(payment.category.icon, size: 22, color: payment.category.color),
+      leading: PrismAvatar(
+        icon: payment.category.icon,
+        color: payment.category.color,
+        size: 48,
+        iconSize: 22,
+        shape: BoxShape.rectangle,
+        borderRadius: PrismTokens.radiusSm,
       ),
       title: Row(
         children: [
@@ -37,20 +36,10 @@ class PaymentListItem extends StatelessWidget{
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: payment.category.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              payment.category.name,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: payment.category.color,
-              ),
-            ),
+          PrismChip(
+            label: payment.category.name,
+            color: payment.category.color,
+            isSmall: true,
           ),
         ],
       ),
@@ -61,19 +50,22 @@ class PaymentListItem extends StatelessWidget{
             if (payment.account.name.isNotEmpty)
               TextSpan(text: " • ${payment.account.name}"),
           ],
-          style: theme.textTheme.bodySmall?.apply(color: colorScheme.onSurface.withValues(alpha: 0.5), overflow: TextOverflow.ellipsis),
+          style: theme.textTheme.bodySmall?.apply(
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isCredit ? ThemeColors.success.withValues(alpha: 0.08) : ThemeColors.error.withValues(alpha: 0.08),
+          color: amountColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
         ),
         child: CurrencyText(
           isCredit ? payment.amount : -payment.amount,
           style: theme.textTheme.bodyMedium?.apply(
-            color: isCredit ? ThemeColors.success : ThemeColors.error,
+            color: amountColor,
             fontWeightDelta: 1,
           ),
         ),

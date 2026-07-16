@@ -63,13 +63,13 @@ class SubscriptionIntelligenceService {
         isPossiblyUnused: isPossiblyUnused,
       ));
 
-      final dupKey = _normalize('${last.amount}_${last.type == PaymentType.credit ? 'CR' : 'DR'}');
+      final dupKey = _normalize('${last.amount}_${last.type == PaymentType.credit ? 'CR' : 'DR'}_${last.title}');
       duplicateGroups.putIfAbsent(dupKey, () => []).add(last);
     }
 
     // Mark duplicates: same amount and same normalized title with different categories
     for (final subscription in subscriptions) {
-      final dupKey = _normalize('${subscription.amount}_${subscription.type}');
+      final dupKey = _normalize('${subscription.amount}_${subscription.type}_${subscription.title}');
       final group = duplicateGroups[dupKey];
       if (group != null && group.length > 1) {
         subscription.hasDuplicate = true;
@@ -129,9 +129,13 @@ class SubscriptionIntelligenceService {
       case 'bi-monthly':
         return last.add(const Duration(days: 60));
       case 'monthly':
-        return DateTime(last.year, last.month + 1, last.day);
+        final lastDay = DateTime(last.year, last.month + 2, 0).day;
+        final day = last.day <= lastDay ? last.day : lastDay;
+        return DateTime(last.year, last.month + 1, day);
       case 'yearly':
-        return DateTime(last.year + 1, last.month, last.day);
+        final lastDay = DateTime(last.year + 1, last.month + 1, 0).day;
+        final day = last.day <= lastDay ? last.day : lastDay;
+        return DateTime(last.year + 1, last.month, day);
       default:
         return null;
     }

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:events_emitter/events_emitter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
@@ -18,6 +17,7 @@ import 'package:fintracker/screens/home/widgets/trend_chart.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/haptic_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
+import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -224,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   if (_payments.isNotEmpty)
                     SmartInsightsCard(payments: _payments).animate().fade(duration: 600.ms, delay: 300.ms).slideY(begin: 0.1),
                   _buildTransactionsHeader(theme, colorScheme),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -303,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsScreen())),
+            onPressed: () => Navigator.push(context, PrismPageRoute(builder: (_) => const InsightsScreen())),
             icon: const Icon(Symbols.insights, fill: 1, size: 22),
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -325,33 +325,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           const Expanded(child: SizedBox()),
           if (_filteredPayments.isNotEmpty)
-            Text(
-              "${_filteredPayments.length}",
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
+            PrismChip(
+              label: "${_filteredPayments.length}",
+              color: colorScheme.onSurface,
+              isSmall: true,
             ),
           const SizedBox(width: 8),
-          InkWell(
+          PrismChip(
+            icon: Symbols.calendar_month,
+            label: "${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}",
+            color: colorScheme.primary,
             onTap: handleChooseDateRange,
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Icon(Icons.arrow_drop_down_outlined, size: 18, color: colorScheme.primary),
-                ],
-              ),
-            ),
+            isSmall: true,
           ),
         ],
       ),
@@ -361,34 +346,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildTransactionsList(ThemeData theme, ColorScheme colorScheme) {
     if (_filteredPayments.isEmpty) {
       return SliverToBoxAdapter(
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40),
-          alignment: Alignment.center,
-          child: Column(
-            children: [
-              Icon(
-                Symbols.receipt_long,
-                size: 48,
-                color: colorScheme.onSurface.withValues(alpha: 0.15),
-                fill: 1,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _searchController.text.isEmpty ? "No transactions yet" : "No matches found",
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.3),
-                ),
-              ),
-              if (_searchController.text.isEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  "Tap + to add your first transaction",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.2),
-                  ),
-                ),
-              ],
-            ],
+          child: PrismEmptyState(
+            icon: Symbols.receipt_long,
+            title: _searchController.text.isEmpty ? "No transactions yet" : "No matches found",
+            subtitle: _searchController.text.isEmpty ? "Tap + to add your first transaction" : null,
           ),
         ),
       );
@@ -515,41 +478,32 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withValues(alpha: 0.15),
-                color.withValues(alpha: 0.05),
-              ],
-            ),
-            border: Border.all(
-              color: color.withValues(alpha: 0.25),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+    return PrismCard(
+      isGlass: true,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          color.withValues(alpha: 0.18),
+          color.withValues(alpha: 0.05),
+        ],
+      ),
+      borderColor: color.withValues(alpha: 0.25),
+      shadowColor: color.withValues(alpha: 0.1),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
+              PrismAvatar(
+                icon: icon,
+                color: color,
+                size: 28,
+                iconSize: 14,
+                backgroundColor: color.withValues(alpha: 0.12),
+              ),
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
@@ -560,7 +514,7 @@ class _SummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           CurrencyText(
             amount,
             style: TextStyle(
@@ -571,7 +525,6 @@ class _SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-    ),
-  ));
+    );
   }
 }

@@ -189,9 +189,14 @@ class SubscriptionService {
     plusYearlyPrice: '\$${AppConstants.plusYearlyPrice.toStringAsFixed(2)}/yr',
     proMonthlyPrice: '\$${AppConstants.proMonthlyPrice.toStringAsFixed(2)}/mo',
     proYearlyPrice: '\$${AppConstants.proYearlyPrice.toStringAsFixed(2)}/yr',
-    plusYearlySavings: '${((1 - (AppConstants.plusYearlyPrice / (AppConstants.plusMonthlyPrice * 12))) * 100).round()}%',
-    proYearlySavings: '${((1 - (AppConstants.proYearlyPrice / (AppConstants.proMonthlyPrice * 12))) * 100).round()}%',
+    plusYearlySavings: '${_computeYearlySavings(AppConstants.plusYearlyPrice, AppConstants.plusMonthlyPrice)}%',
+    proYearlySavings: '${_computeYearlySavings(AppConstants.proYearlyPrice, AppConstants.proMonthlyPrice)}%',
   );
+
+  static int _computeYearlySavings(double yearly, double monthly) {
+    if (monthly <= 0) return 0;
+    return ((1 - (yearly / (monthly * 12))) * 100).round();
+  }
 }
 
 class SubscriptionOffering {

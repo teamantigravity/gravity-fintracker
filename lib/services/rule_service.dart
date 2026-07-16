@@ -60,12 +60,14 @@ class RuleService {
     return true;
   }
 
-  static Future<Account?> _resolveAccount(int id) async {
+  static Future<Account?> _resolveAccount(int? id) async {
+    if (id == null) return null;
     final accounts = await AccountDao().find();
     return {for (final a in accounts) a.id: a}[id];
   }
 
-  static Future<Category?> _resolveCategory(int id) async {
+  static Future<Category?> _resolveCategory(int? id) async {
+    if (id == null) return null;
     final categories = await CategoryDao().find(withSummery: false);
     return {for (final c in categories) c.id: c}[id];
   }

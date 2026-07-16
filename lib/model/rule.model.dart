@@ -8,8 +8,8 @@ class Rule {
   double? minAmount;
   double? maxAmount;
   double percentage;
-  int targetAccountId;
-  int targetCategoryId;
+  int? targetAccountId;
+  int? targetCategoryId;
   String? targetType;
   String description;
 

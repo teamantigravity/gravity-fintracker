@@ -41,8 +41,20 @@ class SyncService {
   static const int _saltLength = 32; // 256-bit salt
   static const int _ivLength = 16; // 128-bit IV for AES
 
+  bool _isInitialized = false;
+
   bool get isEnabled => AppConstants.enableSync;
-  bool get isAuthenticated => isEnabled && Supabase.instance.client.auth.currentSession != null;
+  bool get isInitialized => _isInitialized;
+
+  bool get isAuthenticated {
+    if (!isEnabled || !_isInitialized) return false;
+    try {
+      return Supabase.instance.client.auth.currentSession != null;
+    } catch (e) {
+      debugPrint('Supabase session check failed: $e');
+      return false;
+    }
+  }
 
   // CSPRNG
   final Random _secureRandom = Random.secure();
@@ -136,6 +148,25 @@ class SyncService {
 
   Future<bool> hasEncryptionKey() async {
     return await _secureStorage.read(key: _masterKeyStorageKey) != null;
+  }
+
+  Future<void> initialize() async {
+    if (!isEnabled || _isInitialized) return;
+    try {
+      const url = AppConstants.supabaseUrl;
+      final key = AppConstants.supabasePublishableKey.isNotEmpty
+          ? AppConstants.supabasePublishableKey
+          : AppConstants.supabaseAnonKey;
+      if (url.isEmpty || key.isEmpty) {
+        debugPrint('Supabase URL/key not set. Sync disabled.');
+        return;
+      }
+      await Supabase.initialize(url: url, publishableKey: key);
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('Supabase init failed: $e');
+      _isInitialized = false;
+    }
   }
 
   // Encrypt with quantum-hardened AES-256-GCM + HKDF-SHA512
@@ -315,6 +346,8 @@ class SyncService {
       debugPrint('Sync not enabled. Configure Supabase in constants.dart');
       return;
     }
+    await initialize();
+    if (!isInitialized) throw Exception('Sync not initialized');
     await Supabase.instance.client.auth.signInWithPassword(email: email, password: password);
   }
 
@@ -323,6 +356,8 @@ class SyncService {
       debugPrint('Sync not enabled. Configure Supabase in constants.dart');
       return;
     }
+    await initialize();
+    if (!isInitialized) throw Exception('Sync not initialized');
     await Supabase.instance.client.auth.signUp(email: email, password: password);
   }
 
@@ -331,6 +366,8 @@ class SyncService {
       debugPrint('Sync not enabled. Configure Supabase in constants.dart');
       return;
     }
+    await initialize();
+    if (!isInitialized) return;
     await Supabase.instance.client.auth.signOut();
   }
 

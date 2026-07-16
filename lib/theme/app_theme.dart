@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fintracker/ui/prism_tokens.dart';
 
 enum AppThemeMode { light, dark, amoled, system }
 
@@ -30,6 +32,8 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.light,
+      pageTransitionsTheme: _pageTransitionsTheme,
+      splashFactory: InkSparkle.splashFactory,
     );
     return base.copyWith(
       textTheme: _buildTextTheme(base.textTheme),
@@ -48,7 +52,7 @@ class AppTheme {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusMd)),
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: DividerThemeData(
@@ -67,6 +71,8 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.dark,
+      pageTransitionsTheme: _pageTransitionsTheme,
+      splashFactory: InkSparkle.splashFactory,
     );
     return base.copyWith(
       textTheme: _buildTextTheme(base.textTheme),
@@ -85,7 +91,7 @@ class AppTheme {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusMd)),
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: DividerThemeData(
@@ -108,6 +114,8 @@ class AppTheme {
       colorScheme: colorScheme,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: Colors.black,
+      pageTransitionsTheme: _pageTransitionsTheme,
+      splashFactory: InkSparkle.splashFactory,
     );
     return base.copyWith(
       textTheme: _buildTextTheme(base.textTheme),
@@ -116,7 +124,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusLg)),
         color: const Color(0xFF121212),
       ),
       appBarTheme: AppBarTheme(
@@ -133,7 +141,7 @@ class AppTheme {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusMd)),
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: const DividerThemeData(
@@ -191,7 +199,7 @@ class AppTheme {
   static CardThemeData _cardTheme(ColorScheme colorScheme) {
     return CardThemeData(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusLg)),
       color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
     );
   }
@@ -201,18 +209,29 @@ class AppTheme {
       filled: true,
       fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(PrismTokens.radiusMd),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(PrismTokens.radiusMd),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(PrismTokens.radiusMd),
         borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
     );
   }
+
+  static const PageTransitionsTheme _pageTransitionsTheme = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: CupertinoPageTransitionsBuilder(),
+    },
+  );
 }

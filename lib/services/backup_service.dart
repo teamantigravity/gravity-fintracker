@@ -12,7 +12,6 @@ import 'package:path_provider/path_provider.dart';
 /// No cloud, no analytics — the encrypted file is stored locally.
 class BackupService {
   static const String _version = 'v2';
-  static const String _legacyVersion = 'v1';
   static const int _keyLength = 32;
   static const int _saltLength = 32;
   static const int _ivLength = 16;
@@ -21,13 +20,6 @@ class BackupService {
 
   static Uint8List _randomBytes(int length) {
     return Uint8List.fromList(List<int>.generate(length, (_) => _secureRandom.nextInt(256)));
-  }
-
-  static encrypt.Key _deriveKeyV1(String password, Uint8List salt) {
-    final passwordBytes = utf8.encode(password);
-    final hmac = Hmac(sha256, salt);
-    final digest = hmac.convert(passwordBytes);
-    return encrypt.Key(Uint8List.fromList(digest.bytes));
   }
 
   static Uint8List _pbkdf2Sha256(
@@ -80,16 +72,12 @@ class BackupService {
       throw const FormatException('Invalid encrypted backup');
     }
     final version = parts[0];
+    if (version != _version) {
+      throw const FormatException('Unsupported encrypted backup version');
+    }
     final salt = base64Decode(parts[1]);
     final iv = encrypt.IV.fromBase64(parts[2]);
-    final encrypt.Key key;
-    if (version == _version) {
-      key = _deriveKeyV2(password, salt);
-    } else if (version == _legacyVersion) {
-      key = _deriveKeyV1(password, salt);
-    } else {
-      throw const FormatException('Invalid encrypted backup');
-    }
+    final key = _deriveKeyV2(password, salt);
     final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.gcm));
     return encrypter.decrypt64(parts[3], iv: iv);
   }

@@ -10,6 +10,7 @@ import 'package:fintracker/services/backup_service.dart';
 import 'package:fintracker/services/daily_digest_service.dart';
 import 'package:fintracker/services/pin_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
+import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/dialog/confirm.modal.dart';
 import 'package:fintracker/widgets/dialog/loading_dialog.dart';
@@ -69,8 +70,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return ListView(
               children: [
                 // PROFILE SECTION
-                const _SectionHeader(title: "Profile"),
-                ListTile(
+                PrismSection(
+                  title: "Profile",
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  children: [
+                PrismListTile(
                   onTap: () {
                     showDialog(context: context, builder: (context) {
                       TextEditingController controller = TextEditingController(text: context.read<AppCubit>().state.username);
@@ -116,11 +120,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     });
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.person)),
+                  icon: Symbols.person,
                   title: Text('Name', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text(state.username ?? 'Guest', style: theme.textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () {
                     showCurrencyPicker(context: context, onSelect: (Currency currency) {
                       context.read<AppCubit>().updateCurrency(currency.code);
@@ -129,7 +133,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: Builder(builder: (context) {
                     final currencyCode = state.currency;
                     final currency = currencyCode != null ? CurrencyService().findByCode(currencyCode) : null;
-                    return CircleAvatar(child: Text(currency?.symbol ?? '\$'));
+                    return PrismAvatar(
+                      child: Text(
+                        currency?.symbol ?? '\$',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.primary),
+                      ),
+                    );
                   }),
                   title: Text('Currency', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Builder(builder: (context) {
@@ -138,11 +147,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     return Text(currency?.name ?? 'Not set', style: theme.textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis));
                   }),
                 ),
+                ]),
 
                 // APPEARANCE SECTION
-                const _SectionHeader(title: "Appearance"),
-                ListTile(
-                  leading: const CircleAvatar(child: Icon(Symbols.palette)),
+                PrismSection(
+                  title: "Appearance",
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
+                  icon: Symbols.palette,
                   title: Text('Theme', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text(
                     _themeModeName(state.themeMode),
@@ -150,8 +163,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   onTap: () => _showThemeSelector(context, state.themeMode),
                 ),
-                ListTile(
-                  leading: const CircleAvatar(child: Icon(Symbols.format_paint)),
+                PrismListTile(
+                  icon: Symbols.format_paint,
                   title: Text('Accent Color', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -169,99 +182,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
+                ]),
 
                 // SECURITY SECTION
-                const _SectionHeader(title: "Security"),
+                PrismSection(
+                  title: "Security",
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
                 if (AppConstants.enableBiometricLock && (_biometricAvailable || _hasPin))
-                  SwitchListTile(
-                    secondary: CircleAvatar(
-                      backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
-                      child: Icon(Symbols.fingerprint, color: colorScheme.primary),
-                    ),
+                  PrismListTile(
+                    icon: Symbols.fingerprint,
+                    iconColor: colorScheme.primary,
                     title: Text('App Lock', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                     subtitle: Text(
                       "Require biometric or PIN to open app",
                       style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                     ),
-                    value: state.appLockEnabled,
-                    onChanged: (value) async {
-                      if (value) {
-                        if (_biometricAvailable) {
-                          try {
-                            bool authenticated = await _localAuth.authenticate(
-                              localizedReason: 'Verify your identity to enable app lock',
-                            );
-                            if (authenticated && context.mounted) {
-                              context.read<AppCubit>().updateAppLock(true);
-                            }
-                          } catch (e) {
-                            debugPrint('Biometric auth error: $e');
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Biometric error: $e")),
-                              );
-                            }
-                          }
-                        } else if (_hasPin) {
-                          context.read<AppCubit>().updateAppLock(true);
-                        }
-                      } else {
-                        context.read<AppCubit>().updateAppLock(false);
-                      }
-                    },
+                    trailing: Switch(
+                      value: state.appLockEnabled,
+                      onChanged: (value) { _toggleAppLock(value); },
+                    ),
                   ),
                 if (AppConstants.enableBiometricLock)
-                  ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
-                      child: Icon(Symbols.pin, color: colorScheme.primary),
-                    ),
+                  PrismListTile(
+                    icon: Symbols.pin,
                     title: Text(_hasPin ? 'Change PIN' : 'Set PIN', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                     subtitle: Text(_hasPin ? 'Update your fallback PIN' : 'Set a PIN fallback for app lock', style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                     onTap: () => _showPinDialog(context),
                   ),
+                ]),
 
                 // PRIVACY SECTION
-                const _SectionHeader(title: "Privacy"),
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF2E7D32).withValues(alpha: 0.1),
-                    child: const Icon(Symbols.verified_user, color: Color(0xFF2E7D32)),
-                  ),
+                PrismSection(
+                  title: "Privacy",
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
+                  icon: Symbols.verified_user,
+                  iconColor: const Color(0xFF2E7D32),
                   title: Text('Privacy Dashboard', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text("Score: 100% — Zero tracking", style: theme.textTheme.bodySmall?.apply(color: const Color(0xFF2E7D32))),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const PrivacyDashboardScreen()),
+                      PrismPageRoute(builder: (_) => const PrivacyDashboardScreen()),
                     );
                   },
                 ),
-                SwitchListTile(
-                  value: state.privacyMode,
+                PrismListTile(
+                  icon: Symbols.visibility_off,
                   title: Text('Privacy Mode', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text('Hide all amounts with •••', style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
-                  secondary: const CircleAvatar(child: Icon(Symbols.visibility_off)),
-                  onChanged: (value) => context.read<AppCubit>().updatePrivacyMode(value),
+                  trailing: Switch(
+                    value: state.privacyMode,
+                    onChanged: (value) { context.read<AppCubit>().updatePrivacyMode(value); },
+                  ),
                 ),
-                SwitchListTile(
-                  value: state.dailyDigestEnabled,
+                PrismListTile(
+                  icon: Symbols.notifications_active,
                   title: Text('Daily Digest', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text('Morning notification with your spending snapshot', style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
-                  secondary: const CircleAvatar(child: Icon(Symbols.notifications_active)),
-                  onChanged: (value) async {
-                    context.read<AppCubit>().updateDailyDigest(value);
-                    if (value) {
-                      await DailyDigestService.schedule();
-                    } else {
-                      await DailyDigestService.cancel();
-                    }
-                  },
+                  trailing: Switch(
+                    value: state.dailyDigestEnabled,
+                    onChanged: (value) { _toggleDailyDigest(value); },
+                  ),
                 ),
+                ]),
 
                 // DATA SECTION
-                const _SectionHeader(title: "Data"),
-                ListTile(
+                PrismSection(
+                  title: "Data",
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
                   onTap: () async {
                     if (!context.mounted) return;
                     ConfirmModal.showConfirmDialog(
@@ -297,11 +290,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onCancel: () => Navigator.of(context).pop()
                     );
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.download)),
+                  icon: Symbols.download,
                   title: Text('Export JSON', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text("Full backup to JSON file", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     if (!context.mounted) return;
                     ConfirmModal.showConfirmDialog(
@@ -337,11 +330,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onCancel: () => Navigator.of(context).pop()
                     );
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.table_chart)),
+                  icon: Symbols.table_chart,
                   title: Text('Export CSV', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text("Spreadsheet for analysis", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     try {
                       FilePickerResult? pick = await FilePicker.platform.pickFiles(
@@ -396,11 +389,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       }
                     }
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.upload)),
+                  icon: Symbols.upload,
                   title: Text('Import', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text("Restore from JSON backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     final password = await _showPasswordDialog(context, title: 'Export Encrypted Backup', confirm: true);
                     if (password == null || password.isEmpty) return;
@@ -428,11 +421,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       }
                     }
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.lock)),
+                  icon: Symbols.lock,
                   title: Text('Export Encrypted', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text("Password-protected backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     try {
                       FilePickerResult? pick = await FilePicker.platform.pickFiles(
@@ -474,35 +467,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       }
                     }
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.lock_open)),
+                  icon: Symbols.lock_open,
                   title: Text('Import Encrypted', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text("Restore password-protected backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
+                ]),
 
                 // PREMIUM SECTION
-                const _SectionHeader(title: "Premium"),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.1),
-                        colorScheme.tertiary.withValues(alpha: 0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
+                PrismSection(
+                  title: "Premium",
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismCard(
+                  isGlass: true,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary.withValues(alpha: 0.12),
+                      colorScheme.tertiary.withValues(alpha: 0.06),
+                    ],
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(Symbols.workspace_premium, color: colorScheme.primary, fill: 1),
-                    ),
+                  borderColor: colorScheme.primary.withValues(alpha: 0.2),
+                  padding: EdgeInsets.zero,
+                  child: PrismListTile(
+                    icon: Symbols.workspace_premium,
                     title: Text(
                       state.isPro ? 'Gravity Pro' : state.isPlus ? 'Gravity Plus' : 'Upgrade',
                       style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
@@ -516,30 +505,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                     ),
                     trailing: state.isPlus || state.isPro
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text("Active", style: TextStyle(color: Color(0xFF2E7D32), fontSize: 12, fontWeight: FontWeight.w600)),
-                          )
+                        ? const PrismChip(label: "Active", color: AppTheme.incomeColor)
                         : const Icon(Icons.chevron_right),
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                        PrismPageRoute(builder: (_) => const PaywallScreen()),
                       );
                     },
                   ),
                 ),
+                ]),
 
                 // ABOUT SECTION
-                const _SectionHeader(title: "About"),
-                ListTile(
-                  leading: const CircleAvatar(child: Icon(Symbols.info)),
+                PrismSection(
+                  title: "About",
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
+                  icon: Symbols.info,
                   title: Text('Version', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text(AppConstants.appVersion, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
+                ]),
                 const SizedBox(height: 40),
               ],
             );
@@ -603,6 +590,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _toggleAppLock(bool value) async {
+    if (value) {
+      if (_biometricAvailable) {
+        try {
+          final authenticated = await _localAuth.authenticate(
+            localizedReason: 'Verify your identity to enable app lock',
+          );
+          if (authenticated && mounted) {
+            context.read<AppCubit>().updateAppLock(true);
+          }
+        } catch (e) {
+          debugPrint('Biometric auth error: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Biometric error: $e")),
+            );
+          }
+        }
+      } else if (_hasPin) {
+        context.read<AppCubit>().updateAppLock(true);
+      }
+    } else {
+      context.read<AppCubit>().updateAppLock(false);
+    }
+  }
+
+  Future<void> _toggleDailyDigest(bool value) async {
+    context.read<AppCubit>().updateDailyDigest(value);
+    if (value) {
+      await DailyDigestService.schedule();
+    } else {
+      await DailyDigestService.cancel();
+    }
   }
 
   void _showPinDialog(BuildContext context) {
@@ -768,26 +790,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 20, bottom: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.2,
-            ),
-      ),
-    );
-  }
-}
-
 class _ThemeOption extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -806,7 +808,7 @@ class _ThemeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return ListTile(
+    return PrismListTile(
       leading: Icon(icon, fill: 1, color: isSelected ? colorScheme.primary : null),
       title: Text(label, style: TextStyle(fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
       subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey)),

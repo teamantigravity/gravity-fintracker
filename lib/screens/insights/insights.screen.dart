@@ -25,8 +25,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
   Future<FinancialHealth>? _health;
   Future<List<Anomaly>>? _anomalies;
   Future<CashflowForecast>? _forecast;
-  final bool _plus = SubscriptionService().isPlus;
-  final bool _pro = SubscriptionService().isPro;
 
   @override
   void initState() {
@@ -38,7 +36,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     setState(() {
       _health = FinancialHealthService.compute();
       _anomalies = AnomalyDetectionService.detect();
-      if (_plus && SubscriptionService().canUseCashFlowForecast) {
+      if (SubscriptionService().isPlus && SubscriptionService().canUseCashFlowForecast) {
         _forecast = CashflowForecastService.forecast();
       }
     });
@@ -167,7 +165,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final unlocked = SubscriptionService().canUseCashFlowForecast;
     return _card(
       title: 'Cash Flow Forecast',
-      pro: !_plus,
+      pro: !SubscriptionService().isPlus,
       child: unlocked
           ? FutureBuilder<CashflowForecast>(
               future: _forecast,
@@ -212,7 +210,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final unlocked = SubscriptionService().canUseTaxReports;
     return _card(
       title: 'Tax & Export Reports',
-      pro: !_plus,
+      pro: !SubscriptionService().isPlus,
       child: unlocked
           ? _proTile('Generate category summaries and export tax-ready CSVs', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen())))
           : _proTile('Generate tax-ready reports and export CSVs', theme, () => _openPaywall()),
@@ -223,7 +221,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final unlocked = SubscriptionService().canUseWhatIfPlanner;
     return _card(
       title: 'What-If Planner',
-      pro: !_pro,
+      pro: !SubscriptionService().isPro,
       child: unlocked
           ? _proTile('Simulate changes to income, expenses, and recurring payments', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WhatIfScreen())))
           : _proTile('Run cash-flow scenarios before making financial decisions', theme, () => _openPaywall()),
@@ -234,7 +232,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final unlocked = SubscriptionService().canUseFinancialCoach;
     return _card(
       title: 'Financial Coach',
-      pro: !_pro,
+      pro: !SubscriptionService().isPro,
       child: unlocked
           ? FutureBuilder<List<CoachMessage>>(
               future: CoachService.generateInsights(),
@@ -252,7 +250,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final unlocked = SubscriptionService().canUseSavingsGoals;
     return _card(
       title: 'Savings Goals',
-      pro: !_plus,
+      pro: !SubscriptionService().isPlus,
       child: unlocked
           ? _proTile('Track goals and run what-if scenarios', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingsGoalsScreen())))
           : _proTile('Create savings goals and what-if plans', theme, () => _openPaywall()),

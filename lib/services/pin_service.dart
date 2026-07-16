@@ -32,7 +32,7 @@ class PinService {
         final parts = stored.split(':');
         if (parts.length == 3) {
           final salt = base64Decode(parts[1]);
-          return _pbkdf2Hash(pin, salt) == parts[2];
+          return _secureCompare(_pbkdf2Hash(pin, salt), parts[2]);
         }
         return false;
       }
@@ -40,11 +40,11 @@ class PinService {
       final parts = stored.split(':');
       if (parts.length == 2) {
         final salt = base64Decode(parts[0]);
-        return _hash(pin, salt) == parts[1];
+        return _secureCompare(_hash(pin, salt), parts[1]);
       }
 
       // Legacy unsalted SHA-256 fallback
-      return stored == _legacyHash(pin);
+      return _secureCompare(stored, _legacyHash(pin));
     } catch (e) {
       debugPrint('PIN verification error: $e');
       return false;
@@ -107,5 +107,15 @@ class PinService {
   String _legacyHash(String pin) {
     final bytes = utf8.encode(pin);
     return sha256.convert(bytes).toString();
+  }
+
+  /// Constant-time string comparison to mitigate timing side-channels.
+  bool _secureCompare(String a, String b) {
+    if (a.length != b.length) return false;
+    int diff = 0;
+    for (int i = 0; i < a.length; i++) {
+      diff |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return diff == 0;
   }
 }

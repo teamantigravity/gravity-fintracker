@@ -7,6 +7,7 @@ import 'package:fintracker/services/daily_digest_service.dart';
 import 'package:fintracker/services/desktop_service.dart';
 import 'package:fintracker/services/notification_service.dart';
 import 'package:fintracker/services/subscription_service.dart';
+import 'package:fintracker/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -31,6 +32,12 @@ void main() async {
     await RecurringDao().processDueTransactions();
   } catch (e) {
     debugPrint('Recurring processing failed: $e');
+  }
+
+  try {
+    await SyncService().initialize();
+  } catch (e) {
+    debugPrint('Sync init failed: $e');
   }
 
   try {

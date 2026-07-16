@@ -1,6 +1,7 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
+import 'package:fintracker/ui/prism.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -17,6 +18,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
   String _selectedTier = 'plus';
   bool _isYearly = true;
   bool _isLoading = false;
+
+  Future<void> _restorePurchases() async {
+    await _subscriptionService.restorePurchases();
+    if (!mounted) return;
+    if (_subscriptionService.isPro) {
+      context.read<AppCubit>().updatePro(true);
+    } else if (_subscriptionService.isPlus) {
+      context.read<AppCubit>().updatePlus(true);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Purchases restored")),
+    );
+  }
 
   Future<void> _handleLifetimePurchase() async {
     setState(() => _isLoading = true);
@@ -182,56 +196,27 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: FilledButton(
-                    onPressed: _isLoading ? null : _handlePurchase,
-                    style: FilledButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            "Start ${_selectedTier.toUpperCase()} — ${_isYearly ? yearlyPrice : monthlyPrice}",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                  ),
+                PrismButton(
+                  variant: PrismButtonVariant.primary,
+                  isLoading: _isLoading,
+                  label: "Start ${_selectedTier.toUpperCase()} — ${_isYearly ? yearlyPrice : monthlyPrice}",
+                  onPressed: () { _handlePurchase(); },
                 ),
                 const SizedBox(height: 12),
                 Center(
-                  child: TextButton(
-                    onPressed: _isLoading ? null : _handleLifetimePurchase,
-                    child: const Text("Or unlock Lifetime Pro"),
+                  child: PrismButton(
+                    variant: PrismButtonVariant.ghost,
+                    isStretched: false,
+                    label: "Or unlock Lifetime Pro",
+                    onPressed: () { _handleLifetimePurchase(); },
                   ),
                 ),
                 Center(
-                  child: TextButton(
-                    onPressed: () async {
-                      await _subscriptionService.restorePurchases();
-                      if (!context.mounted) return;
-                      if (_subscriptionService.isPro) {
-                        context.read<AppCubit>().updatePro(true);
-                      } else if (_subscriptionService.isPlus) {
-                        context.read<AppCubit>().updatePlus(true);
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Purchases restored")),
-                      );
-                    },
-                    child: const Text("Restore Purchases"),
+                  child: PrismButton(
+                    variant: PrismButtonVariant.ghost,
+                    isStretched: false,
+                    label: "Restore Purchases",
+                    onPressed: () { _restorePurchases(); },
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -273,79 +258,62 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return GestureDetector(
+
+    return PrismCard(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
-            width: isSelected ? 2 : 1,
-          ),
-          color: isSelected
-              ? colorScheme.primary.withValues(alpha: 0.05)
-              : Colors.transparent,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppTheme.incomeColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+      isGlass: true,
+      borderRadius: PrismTokens.radiusMd,
+      borderColor: isSelected ? colorScheme.primary : colorScheme.outlineVariant.withValues(alpha: 0.5),
+      borderWidth: isSelected ? 2 : 1,
+      backgroundColor: isSelected ? colorScheme.primary.withValues(alpha: 0.06) : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
-                  ),
+              ),
+              PrismChip(
+                label: subtitle,
+                color: AppTheme.incomeColor,
+                isSmall: true,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            price,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              price,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 10),
-            ...features.map((f) => Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Symbols.check, size: 12, color: colorScheme.primary),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          f,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurface.withValues(alpha: 0.7),
-                              ),
-                        ),
+          ),
+          const SizedBox(height: 10),
+          ...features.map((f) => Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Symbols.check, size: 12, color: colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        f,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                       ),
-                    ],
-                  ),
-                )),
-          ],
-        ),
+                    ),
+                  ],
+                ),
+              )),
+        ],
       ),
     );
   }
