@@ -16,6 +16,7 @@ import 'package:fintracker/screens/home/widgets/spending_chart.dart';
 import 'package:fintracker/screens/home/widgets/trend_chart.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/haptic_service.dart';
+import 'package:fintracker/widgets/ai/voice_input_button.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/currency.dart';
@@ -309,6 +310,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             ),
           ),
+          const SizedBox(width: 8),
+          const VoiceInputButton(),
         ],
       ),
     );
