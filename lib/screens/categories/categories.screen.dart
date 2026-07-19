@@ -4,6 +4,7 @@ import 'package:fintracker/events.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/widgets/dialog/category_form.dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 
 
 class CategoriesScreen extends StatefulWidget {
@@ -20,7 +21,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
 
   void loadData() async {
-    List<Category> categories = await _categoryDao.find();
+    final List<Category> categories = await _categoryDao.find();
+    if (!mounted) return;
     setState(() {
       _categories = categories;
     });
@@ -32,8 +34,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     super.initState();
     loadData();
 
-    _categoryEventListener = globalEvent.on("category_update", (data){
-      debugPrint("categories are changed");
+    _categoryEventListener = globalEvent.on('category_update', (data){
+      debugPrint('categories are changed');
       loadData();
     });
 
@@ -51,23 +53,23 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Categories", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
+          title: const Text(Strings.categories, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
         ),
         body: ListView.separated(
           itemCount: _categories.length,
           itemBuilder: (builder, index){
-            Category category = _categories[index];
-            double expenseProgress = (category.expense??0)/(category.budget??0);
+            final Category category = _categories[index];
+            final double expenseProgress = (category.expense??0)/(category.budget??0);
             return ListTile(
               onTap: (){
                 showDialog(context: context, builder: (builder)=>CategoryForm(category: category,));
               },
-              leading: CircleAvatar(backgroundColor: category.color.withOpacity(0.2),child: Icon(category.icon, color: category.color,),),
+              leading: CircleAvatar(backgroundColor: category.color.withValues(alpha: 0.2),child: Icon(category.icon, color: category.color,),),
               title: Text(category.name, overflow: TextOverflow.ellipsis,style: Theme.of(context).textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),),
               subtitle: expenseProgress.isFinite? ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(value: expenseProgress, semanticsLabel: expenseProgress.toString(),),
-              ):Text("No budget", style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis)),
+              ):Text(Strings.noBudget, style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
             );
           },

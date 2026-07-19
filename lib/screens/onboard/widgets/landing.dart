@@ -1,5 +1,7 @@
 import 'package:fintracker/config/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/theme/prism_colors.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class LandingPage extends StatelessWidget{
@@ -8,7 +10,7 @@ class LandingPage extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    ThemeData theme = Theme.of(context);
+    final ThemeData theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
@@ -18,11 +20,11 @@ class LandingPage extends StatelessWidget{
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Spacer(flex: 1),
+              const Spacer(),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(Symbols.account_balance_wallet, size: 36, color: colorScheme.primary, fill: 1),
@@ -39,33 +41,33 @@ class LandingPage extends StatelessWidget{
               Text(
                 AppConstants.appTagline,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.5),
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
                   fontWeight: FontWeight.w400,
                 ),
               ),
               const SizedBox(height: 40),
-              _FeatureRow(
+              const _FeatureRow(
                 icon: Symbols.shield,
-                text: "Your data stays on your device. Always.",
-                color: const Color(0xFF2E7D32),
+                text: 'Your data stays on your device. Always.',
+                color: PrismColors.income,
               ),
               const SizedBox(height: 16),
               _FeatureRow(
                 icon: Symbols.bar_chart,
-                text: "Beautiful charts and spending insights.",
+                text: 'Beautiful charts and spending insights.',
                 color: colorScheme.primary,
               ),
               const SizedBox(height: 16),
               _FeatureRow(
                 icon: Symbols.sync,
-                text: "Quantum-encrypted sync across all your devices.",
+                text: 'Quantum-encrypted sync across all your devices.',
                 color: colorScheme.tertiary,
               ),
               const SizedBox(height: 16),
-              _FeatureRow(
+              const _FeatureRow(
                 icon: Symbols.visibility_off,
-                text: "Zero analytics. Zero tracking. Zero ads.",
-                color: const Color(0xFFC62828),
+                text: 'Zero analytics. Zero tracking. Zero ads.',
+                color: PrismColors.expense,
               ),
               const Spacer(flex: 2),
               SizedBox(
@@ -79,7 +81,7 @@ class LandingPage extends StatelessWidget{
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Get Started", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Text(Strings.getStarted, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                       SizedBox(width: 8),
                       Icon(Symbols.arrow_forward, size: 20),
                     ],
@@ -89,9 +91,9 @@ class LandingPage extends StatelessWidget{
               const SizedBox(height: 16),
               Center(
                 child: Text(
-                  "No account required. No data collected.",
+                  Strings.noAccountRequiredNoDataCollected,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.3),
+                    color: colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -116,7 +118,7 @@ class _FeatureRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 18, fill: 1),

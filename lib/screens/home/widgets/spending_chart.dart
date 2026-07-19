@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'dart:math';
 
 class SpendingChart extends StatefulWidget {
@@ -15,12 +16,13 @@ class _SpendingChartState extends State<SpendingChart> {
   int _touchedIndex = -1;
 
   Map<String, _CategorySpend> _getCategoryBreakdown() {
-    Map<String, _CategorySpend> breakdown = {};
-    for (var payment in widget.payments) {
+    final Map<String, _CategorySpend> breakdown = {};
+    for (final payment in widget.payments) {
       if (payment.type == PaymentType.debit) {
-        String name = payment.category.name;
-        if (breakdown.containsKey(name)) {
-          breakdown[name]!.amount += payment.amount;
+        final String name = payment.category.name;
+        final spend = breakdown[name];
+        if (spend != null) {
+          spend.amount += payment.amount;
         } else {
           breakdown[name] = _CategorySpend(
             name: name,
@@ -50,7 +52,7 @@ class _SpendingChartState extends State<SpendingChart> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Spending Breakdown",
+            Strings.spendingBreakdown,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -68,13 +70,16 @@ class _SpendingChartState extends State<SpendingChart> {
                         touchCallback: (FlTouchEvent event, pieTouchResponse) {
                           setState(() {
                             if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
+                                pieTouchResponse == null) {
                               _touchedIndex = -1;
                               return;
                             }
-                            _touchedIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
+                            final touchedSection = pieTouchResponse.touchedSection;
+                            if (touchedSection == null) {
+                              _touchedIndex = -1;
+                              return;
+                            }
+                            _touchedIndex = touchedSection.touchedSectionIndex;
                           });
                         },
                       ),
@@ -85,10 +90,10 @@ class _SpendingChartState extends State<SpendingChart> {
                         final isTouched = i == _touchedIndex;
                         final fontSize = isTouched ? 14.0 : 11.0;
                         final radius = isTouched ? 50.0 : 42.0;
-                        final percentage = (entries[i].amount / total * 100);
+                        final percentage = total > 0 ? (entries[i].amount / total * 100) : 0.0;
 
                         return PieChartSectionData(
-                          color: entries[i].color.withOpacity(isTouched ? 1 : 0.85),
+                          color: entries[i].color.withValues(alpha: isTouched ? 1 : 0.85),
                           value: entries[i].amount,
                           title: '${percentage.toStringAsFixed(0)}%',
                           radius: radius,

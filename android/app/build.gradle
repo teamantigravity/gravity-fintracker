@@ -21,8 +21,17 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def keystorePropertiesFile = rootProject.file('key.properties')
+def keystoreProperties = new Properties()
+def hasKeystoreProperties = keystorePropertiesFile.exists()
+if (hasKeystoreProperties) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 android {
-    namespace "me.nafish.fintracker"
+    namespace "com.teamantigravity.gravityfintracker"
     compileSdk 36
     ndkVersion flutter.ndkVersion
 
@@ -37,23 +46,53 @@ android {
     }
 
     defaultConfig {
-        applicationId "me.nafish.fintracker"
-        minSdkVersion flutter.minSdkVersion        // Android 5.0 Lollipop — lowest compatible
+        applicationId "com.teamantigravity.gravityfintracker"
+        minSdk 21        // Android 5.0 Lollipop — lowest compatible
         targetSdk 36     // Android 16+ compatible
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
     }
 
+    signingConfigs {
+        release {
+            if (hasKeystoreProperties) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig hasKeystoreProperties ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}
+
+configurations.all {
+    resolutionStrategy {
+        eachDependency { details ->
+            if (details.requested.group == 'androidx.activity' && (details.requested.name == 'activity-ktx' || details.requested.name == 'activity')) {
+                details.useVersion '1.9.3'
+            }
+            if (details.requested.group == 'androidx.core' && (details.requested.name == 'core-ktx' || details.requested.name == 'core')) {
+                details.useVersion '1.13.1'
+            }
+            if (details.requested.group == 'androidx.navigationevent' && details.requested.name == 'navigationevent-android') {
+                details.useVersion '1.0.0'
+            }
+        }
+    }
 }
 
 flutter {

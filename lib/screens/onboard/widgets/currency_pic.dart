@@ -2,6 +2,7 @@ import 'package:currency_picker/currency_picker.dart';
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
 import 'package:fintracker/helpers/db.helper.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CurrencyPicWidget extends StatefulWidget {
@@ -14,7 +15,7 @@ class CurrencyPicWidget extends StatefulWidget {
 class _CurrencyPicWidget extends State<CurrencyPicWidget>{
   final CurrencyService _currencyService = CurrencyService();
   String? _currency;
-  String _keyword = "";
+  String _keyword = '';
 
   List<Currency> filter(){
     if(_keyword.isEmpty){
@@ -25,16 +26,15 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
 
   @override
   void initState() {
-    AppCubit cubit = context.read<AppCubit>();
-    setState(() {
-      _currency = cubit.state.currency;
-    });
     super.initState();
+    final cubit = context.read<AppCubit>();
+    _currency = cubit.state.currency;
   }
+
   @override
   Widget build(BuildContext context) {
-    ThemeData theme = Theme.of(context);
-    AppCubit cubit = context.read<AppCubit>();
+    final ThemeData theme = Theme.of(context);
+    final AppCubit cubit = context.read<AppCubit>();
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -45,7 +45,7 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
               const SizedBox(height: 50,),
               const Icon(Icons.currency_exchange, size: 40,),
               const SizedBox(height: 15,),
-              Text("Select Currency", style: theme.textTheme.headlineMedium!.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
+              Text(Strings.selectCurrency, style: theme.textTheme.headlineMedium?.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
               const SizedBox(height: 25,),
               TextFormField(
                 onChanged: (text){
@@ -57,7 +57,7 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
                   filled: true,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
                   prefixIcon: const Icon(Icons.search),
-                  hintText: "Search",
+                  hintText: Strings.search,
                 ),
               ),
               const SizedBox(height: 25,),
@@ -66,12 +66,14 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
                     child: Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: List.generate(filter().length, (index){
-                        Currency currency = filter()[index];
-                        return SizedBox(
+                      children: (){
+                        final currencies = filter();
+                        return List.generate(currencies.length, (index){
+                          final Currency currency = currencies[index];
+                          return SizedBox(
                             width: (MediaQuery.of(context).size.width /2) -  20,
                             child: MaterialButton(
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(18),
                                     side: BorderSide(
@@ -97,7 +99,7 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         CircleAvatar(
-                                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                                           child: Text(currency.symbol),
                                         ),
                                         const SizedBox(height: 10,),
@@ -107,8 +109,9 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
                                     )
                                 )
                             )
-                        );
-                      }),
+                          );
+                        });
+                      }(),
                     ),
                   )
               )
@@ -117,16 +120,16 @@ class _CurrencyPicWidget extends State<CurrencyPicWidget>{
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: (){
+        onPressed: () async {
           if(_currency == null) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select currency")));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pleaseSelectCurrency)));
           } else {
-            cubit.updateCurrency(_currency);
-            resetDatabase();
+            await resetDatabase();
+            await cubit.updateCurrency(_currency!);
           }
         },
         label: const Row(
-          children: <Widget>[Text("Next"), SizedBox(width: 10,), Icon(Icons.arrow_forward)],
+          children: <Widget>[Text(Strings.next), SizedBox(width: 10,), Icon(Icons.arrow_forward)],
         ),
       ),
     );

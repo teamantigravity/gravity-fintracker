@@ -59,6 +59,9 @@ ios/*.p12
 env/
 local.properties
 
+# Secrets (real values) — see env/secrets.example.json for the template
+env/secrets.json
+
 # Generated
 *.g.dart
 *.freezed.dart

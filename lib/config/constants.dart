@@ -1,34 +1,20 @@
+import 'package:fintracker/config/strings.dart';
+
+/// Application-level configuration, environment values, and feature flags.
+/// All user-facing copy lives in [Strings]; all design tokens live in
+/// [PrismColors] / [AppTheme].
 class AppConstants {
-  static const String appName = 'Gravity Fintracker';
-  static const String appTagline = 'Private by design. Powerful by nature.';
-  static const String appVersion = '1.0.0';
-  static const String appBuildNumber = '1';
-  static const String orgName = 'Team Antigravity';
-  static const String repoUrl = 'https://github.com/teamantigravity/gravity-fintracker';
-
-  // Privacy
-  static const String privacyPromise =
-      'Your financial data never leaves your device unless you explicitly enable quantum-encrypted sync.';
-  static const String encryptionStandard = 'AES-256-GCM + HKDF-SHA512';
-  static const String quantumShield =
-      'Quantum-resistant: AES-256 symmetric encryption withstands Grover\'s algorithm. '
-      'HKDF-SHA512 key derivation provides post-quantum key stretching.';
-
-  // Subscription tiers
-  static const String freeTierName = 'Free';
-  static const String proTierName = 'Pro';
-  static const double proMonthlyPrice = 3.99;
-  static const double proYearlyPrice = 34.99;
-
   // RevenueCat — disabled until app is published on stores
-  // Set keys and enableSubscriptions = true once published
-  static const String revenueCatAppleKey = '';
-  static const String revenueCatGoogleKey = '';
+  // Injected at build time via --dart-define. Never hardcode secrets in source.
+  static const String revenueCatAppleKey = String.fromEnvironment('REVENUECAT_APPLE_KEY');
+  static const String revenueCatGoogleKey = String.fromEnvironment('REVENUECAT_GOOGLE_KEY');
 
-  // Supabase
-  static const String supabaseUrl = 'https://ivjcgeyugeywqqxxtgyx.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2amNnZXl1Z2V5d3FxeHh0Z3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MDM0NTEsImV4cCI6MjA5OTM3OTQ1MX0.sLW3VUXb48RdcKM1Y5Dpa1poyXCYAGTgAS2DfGH3jz4';
-  static const String supabasePublishableKey = 'sb_publishable_ai8P_M9In2r7nqSCIbIvhw_6dqLmLyO';
+  // Supabase — injected at build time via --dart-define (see README "Secrets" section).
+  // Local dev: flutter run --dart-define-from-file=env/secrets.json
+  // CI: values are sourced from GitHub Actions encrypted secrets.
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const String supabasePublishableKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
   // Feature flags
   static const bool enableSync = false; // Enable after Supabase config
@@ -39,7 +25,7 @@ class AppConstants {
   static const bool enableSmartInsights = true;
 
   // Database
-  static const int dbVersion = 2;
+  static const int dbVersion = 4;
 
   // Recurring transaction intervals
   static const String intervalDaily = 'daily';
@@ -47,9 +33,37 @@ class AppConstants {
   static const String intervalMonthly = 'monthly';
   static const String intervalYearly = 'yearly';
 
-  // Google brand colors (for icon and accents)
-  static const int googleBlue = 0xFF4285F4;
-  static const int googleRed = 0xFFEA4335;
-  static const int googleYellow = 0xFFFBBC05;
-  static const int googleGreen = 0xFF34A853;
+  // Subscription pricing
+  static const double plusMonthlyPrice = 1.99;
+  static const double plusYearlyPrice = 14.99;
+  static const double proMonthlyPrice = 3.99;
+  static const double proYearlyPrice = 34.99;
+
+  // RevenueCat identifiers
+  static const String entitlementPro = 'pro';
+  static const String entitlementPlus = 'plus';
+
+  // Sync schema and storage constants
+  static const String syncTableName = 'sync_snapshots';
+  static const String syncUserIdColumn = 'user_id';
+  static const String syncEncryptedDataColumn = 'encrypted_data';
+  static const String syncUpdatedAtColumn = 'updated_at';
+  static const String syncMasterKeyStorageKey = 'gravity_quantum_master_key';
+  static const String syncCipherVersion = 'v2';
+  static const String syncHkdfInfo = 'gravity-fintracker-quantum-v2';
+  static const int syncPbkdf2Iterations = 100000;
+  static const String syncSelectColumns = '$syncEncryptedDataColumn, $syncUpdatedAtColumn';
+
+  // Post-quantum hybrid KEM-DEM sync constants
+  static const String pqKeyStorageKey = 'gravity_pq_keys';
+  static const String pqCipherVersion = 'v3';
+  static const String pqKemAlgorithm = 'ML-KEM-768';
+  static const String pqKdfAlgorithm = 'HKDF-SHA-512';
+  static const String pqSymmetricCipher = 'AES-256-GCM';
+  static const String pqKeyWrapHkdfInfo = 'gravity-fintracker-pq-keywrap-v1';
+  static const String pqHybridHkdfInfo = 'gravity-hybrid-kem-v3';
+
+  // Legacy aliases for strings and colors; prefer the canonical sources above.
+  static String get appName => Strings.appName;
+  static String get appTagline => Strings.appTagline;
 }

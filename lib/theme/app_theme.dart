@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fintracker/ui/prism_tokens.dart';
+import 'package:fintracker/theme/prism_colors.dart';
 
 enum AppThemeMode { light, dark, amoled, system }
 
 class AppTheme {
-  static const Color _defaultSeedColor = Color(0xFF6750A4);
+  static const Color _defaultSeedColor = PrismColors.primary;
 
-  static const Color successLight = Color(0xFF0AA553);
-  static const Color successDark = Color(0xFF4CAF50);
-  static const Color errorLight = Color(0xFFE0302A);
-  static const Color errorDark = Color(0xFFEF5350);
-  static const Color incomeColor = Color(0xFF2E7D32);
-  static const Color expenseColor = Color(0xFFC62828);
+  static const Color successLight = PrismColors.successLight;
+  static const Color successDark = PrismColors.successDark;
+  static const Color errorLight = PrismColors.errorLight;
+  static const Color errorDark = PrismColors.errorDark;
+  static const Color incomeColor = PrismColors.income;
+  static const Color expenseColor = PrismColors.expense;
 
   static TextTheme _buildTextTheme(TextTheme base) {
-    return GoogleFonts.interTextTheme(base);
+    return GoogleFonts.outfitTextTheme(base);
   }
 
   static Color _seedColor(int? themeColor) {
@@ -24,12 +27,13 @@ class AppTheme {
   static ThemeData light({int? themeColor}) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: _seedColor(themeColor),
-      brightness: Brightness.light,
     );
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.light,
+      pageTransitionsTheme: _pageTransitionsTheme,
+      splashFactory: InkSparkle.splashFactory,
     );
     return base.copyWith(
       textTheme: _buildTextTheme(base.textTheme),
@@ -39,19 +43,20 @@ class AppTheme {
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 1,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurface,
+          letterSpacing: -0.5,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusMd)),
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: DividerThemeData(
-        color: colorScheme.outlineVariant.withOpacity(0.3),
+        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
         thickness: 0.5,
       ),
     );
@@ -66,6 +71,8 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.dark,
+      pageTransitionsTheme: _pageTransitionsTheme,
+      splashFactory: InkSparkle.splashFactory,
     );
     return base.copyWith(
       textTheme: _buildTextTheme(base.textTheme),
@@ -75,19 +82,20 @@ class AppTheme {
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 1,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurface,
+          letterSpacing: -0.5,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusMd)),
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: DividerThemeData(
-        color: colorScheme.outlineVariant.withOpacity(0.3),
+        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
         thickness: 0.5,
       ),
     );
@@ -106,6 +114,8 @@ class AppTheme {
       colorScheme: colorScheme,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: Colors.black,
+      pageTransitionsTheme: _pageTransitionsTheme,
+      splashFactory: InkSparkle.splashFactory,
     );
     return base.copyWith(
       textTheme: _buildTextTheme(base.textTheme),
@@ -114,34 +124,35 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: const Color(0xFF121212),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusLg)),
+        color: PrismColors.darkSurface,
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.black,
         scrolledUnderElevation: 0,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: Colors.white,
+          letterSpacing: -0.5,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusMd)),
       ),
       inputDecorationTheme: _inputDecorationTheme(colorScheme),
       dividerTheme: const DividerThemeData(
-        color: Color(0xFF1E1E1E),
+        color: PrismColors.darkSurfaceVariant,
         thickness: 0.5,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Color(0xFF121212),
+        backgroundColor: PrismColors.darkSurface,
       ),
       dialogTheme: const DialogThemeData(
-        backgroundColor: Color(0xFF121212),
+        backgroundColor: PrismColors.darkSurface,
       ),
     );
   }
@@ -159,15 +170,19 @@ class AppTheme {
     }
   }
 
+  /// Selectable accent options — Google's four brand colors, offered as a
+  /// tasteful personalization choice rather than a decorative afterthought.
+  static const List<Color> accentOptions = PrismColors.brandAccentOptions;
+
   static NavigationBarThemeData _navigationBarTheme() {
     return NavigationBarThemeData(
       labelTextStyle: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-        TextStyle style = GoogleFonts.inter(
+        TextStyle style = GoogleFonts.outfit(
           fontWeight: FontWeight.w500,
-          fontSize: 11,
+          fontSize: 12,
         );
         if (states.contains(WidgetState.selected)) {
-          style = style.merge(const TextStyle(fontWeight: FontWeight.w600));
+          style = style.merge(const TextStyle(fontWeight: FontWeight.w700));
         }
         return style;
       }),
@@ -179,28 +194,39 @@ class AppTheme {
   static CardThemeData _cardTheme(ColorScheme colorScheme) {
     return CardThemeData(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PrismTokens.radiusLg)),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
     );
   }
 
   static InputDecorationTheme _inputDecorationTheme(ColorScheme colorScheme) {
     return InputDecorationTheme(
       filled: true,
-      fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(PrismTokens.radiusMd),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(PrismTokens.radiusMd),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(PrismTokens.radiusMd),
         borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
     );
   }
+
+  static const PageTransitionsTheme _pageTransitionsTheme = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: CupertinoPageTransitionsBuilder(),
+    },
+  );
 }

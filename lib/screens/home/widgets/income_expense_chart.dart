@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:intl/intl.dart';
 
 class IncomeExpenseChart extends StatelessWidget {
@@ -9,16 +11,14 @@ class IncomeExpenseChart extends StatelessWidget {
   const IncomeExpenseChart({super.key, required this.payments});
 
   Map<String, _DayData> _getDailyBreakdown() {
-    Map<String, _DayData> daily = {};
-    for (var payment in payments) {
-      String key = DateFormat('MM/dd').format(payment.datetime);
-      if (!daily.containsKey(key)) {
-        daily[key] = _DayData(date: key);
-      }
+    final Map<String, _DayData> daily = {};
+    for (final payment in payments) {
+      final String key = DateFormat(AppDateFormats.isoDate).format(payment.datetime);
+      final day = daily.putIfAbsent(key, () => _DayData(date: payment.datetime));
       if (payment.type == PaymentType.credit) {
-        daily[key]!.income += payment.amount;
+        day.income += payment.amount;
       } else {
-        daily[key]!.expense += payment.amount;
+        day.expense += payment.amount;
       }
     }
     return daily;
@@ -35,11 +35,11 @@ class IncomeExpenseChart extends StatelessWidget {
         : sortedKeys;
 
     double maxY = 0;
-    for (var key in displayKeys) {
-      double income = daily[key]!.income;
-      double expense = daily[key]!.expense;
-      if (income > maxY) maxY = income;
-      if (expense > maxY) maxY = expense;
+    for (final key in displayKeys) {
+      final data = daily[key];
+      if (data == null) continue;
+      if (data.income > maxY) maxY = data.income;
+      if (data.expense > maxY) maxY = data.expense;
     }
     maxY = maxY * 1.2;
     if (maxY == 0) maxY = 100;
@@ -54,15 +54,15 @@ class IncomeExpenseChart extends StatelessWidget {
           Row(
             children: [
               Text(
-                "Daily Overview",
+                Strings.dailyOverview,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
               ),
               const Spacer(),
-              _LegendDot(color: AppTheme.incomeColor, label: "Income"),
+              const _LegendDot(color: AppTheme.incomeColor, label: 'Income'),
               const SizedBox(width: 12),
-              _LegendDot(color: AppTheme.expenseColor, label: "Expense"),
+              const _LegendDot(color: AppTheme.expenseColor, label: 'Expense'),
             ],
           ),
           const SizedBox(height: 20),
@@ -75,7 +75,7 @@ class IncomeExpenseChart extends StatelessWidget {
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      String label = rodIndex == 0 ? 'Income' : 'Expense';
+                      final String label = rodIndex == 0 ? 'Income' : 'Expense';
                       return BarTooltipItem(
                         '$label\n${rod.toY.toStringAsFixed(0)}',
                         TextStyle(
@@ -88,17 +88,18 @@ class IncomeExpenseChart extends StatelessWidget {
                   ),
                 ),
                 titlesData: FlTitlesData(
-                  show: true,
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        int index = value.toInt();
+                        final int index = value.toInt();
                         if (index >= 0 && index < displayKeys.length) {
+                          final day = daily[displayKeys[index]];
+                          if (day == null) return const SizedBox.shrink();
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              displayKeys[index],
+                              DateFormat(AppDateFormats.shortDate).format(day.date),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 9,
                                     color: isDark ? Colors.white54 : Colors.black45,
@@ -112,17 +113,16 @@ class IncomeExpenseChart extends StatelessWidget {
                     ),
                   ),
                   leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                    
                   ),
                   topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                    
                   ),
                   rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                    
                   ),
                 ),
                 gridData: FlGridData(
-                  show: true,
                   drawVerticalLine: false,
                   horizontalInterval: maxY / 4,
                   getDrawingHorizontalLine: (value) => FlLine(
@@ -131,26 +131,31 @@ class IncomeExpenseChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: List.generate(displayKeys.length, (i) {
-                  final data = daily[displayKeys[i]]!;
-                  return BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: data.income,
-                        color: AppTheme.incomeColor.withOpacity(0.8),
-                        width: 8,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                      ),
-                      BarChartRodData(
-                        toY: data.expense,
-                        color: AppTheme.expenseColor.withOpacity(0.8),
-                        width: 8,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                      ),
-                    ],
-                  );
-                }),
+                barGroups: () {
+                  final groups = <BarChartGroupData>[];
+                  for (int i = 0; i < displayKeys.length; i++) {
+                    final data = daily[displayKeys[i]];
+                    if (data == null) continue;
+                    groups.add(BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: data.income,
+                          color: AppTheme.incomeColor.withValues(alpha: 0.8),
+                          width: 8,
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        ),
+                        BarChartRodData(
+                          toY: data.expense,
+                          color: AppTheme.expenseColor.withValues(alpha: 0.8),
+                          width: 8,
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        ),
+                      ],
+                    ));
+                  }
+                  return groups;
+                }(),
               ),
             ),
           ),
@@ -189,7 +194,7 @@ class _LegendDot extends StatelessWidget {
 }
 
 class _DayData {
-  final String date;
+  final DateTime date;
   double income = 0;
   double expense = 0;
 

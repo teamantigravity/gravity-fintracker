@@ -51,5 +51,11 @@
     <true/>
     <key>UIFileSharingEnabled</key>
     <true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Unlock Gravity Fintracker with Face ID.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Gravity Fintracker uses the microphone to record your voice for transaction input.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Gravity Fintracker uses speech recognition to convert your voice into transaction details.</string>
 </dict>
 </plist>

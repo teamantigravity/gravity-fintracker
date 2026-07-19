@@ -1,4 +1,5 @@
 import 'package:events_emitter/events_emitter.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
 import 'package:fintracker/dao/account_dao.dart';
 import 'package:fintracker/dao/payment_dao.dart';
@@ -10,30 +11,22 @@ import 'package:fintracker/screens/home/widgets/account_slider.dart';
 import 'package:fintracker/screens/home/widgets/income_expense_chart.dart';
 import 'package:fintracker/screens/home/widgets/payment_list_item.dart';
 import 'package:fintracker/screens/home/widgets/smart_insights.dart';
+import 'package:fintracker/screens/insights/insights.screen.dart';
 import 'package:fintracker/screens/home/widgets/spending_chart.dart';
 import 'package:fintracker/screens/home/widgets/trend_chart.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/haptic_service.dart';
+import 'package:fintracker/widgets/ai/voice_input_button.dart';
 import 'package:fintracker/theme/app_theme.dart';
+import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
-
-
-String greeting() {
-  var hour = DateTime.now().hour;
-  if (hour < 12) {
-    return 'Morning';
-  }
-  if (hour < 17) {
-    return 'Afternoon';
-  }
-  return 'Evening';
-}
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -73,15 +66,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _fetchTransactions();
 
-    _accountEventListener = globalEvent.on("account_update", (data){
+    _accountEventListener = globalEvent.on('account_update', (data){
       _fetchTransactions();
     });
 
-    _categoryEventListener = globalEvent.on("category_update", (data){
+    _categoryEventListener = globalEvent.on('category_update', (data){
       _fetchTransactions();
     });
 
-    _paymentEventListener = globalEvent.on("payment_update", (data){
+    _paymentEventListener = globalEvent.on('payment_update', (data){
       _fetchTransactions();
     });
 
@@ -117,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       firstDate: DateTime(2019),
       lastDate: DateTime.now(),
     );
-    if(selected != null) {
+    if(selected != null && mounted) {
       setState(() {
         _range = selected;
         _fetchTransactions();
@@ -126,16 +119,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchTransactions() async {
-    List<Payment> trans = await _paymentDao.find(range: _range, category: _category, account:_account);
+    final List<Payment> trans = await _paymentDao.find(range: _range, category: _category, account:_account);
     double income = 0;
     double expense = 0;
-    for (var payment in trans) {
+    for (final payment in trans) {
       if(payment.type == PaymentType.credit) income += payment.amount;
       if(payment.type == PaymentType.debit) expense += payment.amount;
     }
 
-    List<Account> accounts = await _accountDao.find(withSummery: true);
+    final List<Account> accounts = await _accountDao.find(withSummery: true);
 
+    if (!mounted) return;
     setState(() {
       _payments = trans;
       _filteredPayments = trans;
@@ -153,20 +147,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _deletePayment(Payment payment) async {
     HapticService.heavy();
-    await _paymentDao.deleteTransaction(payment.id!);
-    globalEvent.emit("payment_update");
+    final id = payment.id;
+    if (id != null) await _paymentDao.deleteTransaction(id);
+    globalEvent.emit('payment_update');
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Transaction deleted"),
+          content: const Text(Strings.transactionDeleted),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           action: SnackBarAction(
-            label: "Undo",
+            label: 'Undo',
             onPressed: () async {
               payment.id = null;
               await _paymentDao.upsert(payment);
-              globalEvent.emit("payment_update");
+              globalEvent.emit('payment_update');
             },
           ),
         ),
@@ -205,21 +200,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 60),
-                  _buildHeader(colorScheme, theme),
+                  _buildHeader(colorScheme, theme).animate().fade(duration: 400.ms).slideY(begin: -0.1),
                   const SizedBox(height: 16),
-                  AccountsSlider(accounts: _accounts),
+                  AccountsSlider(accounts: _accounts).animate().fade(duration: 500.ms, delay: 100.ms).slideY(begin: 0.1),
                   const SizedBox(height: 16),
-                  _SummaryCards(income: _income, expense: _expense),
+                  _SummaryCards(income: _income, expense: _expense).animate().fade(duration: 500.ms, delay: 200.ms).slideY(begin: 0.1),
                   if (_showCharts && _payments.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    TrendChart(payments: _payments),
-                    SpendingChart(payments: _payments),
-                    IncomeExpenseChart(payments: _payments),
+                    TrendChart(payments: _payments).animate().fade(duration: 400.ms),
+                    SpendingChart(payments: _payments).animate().fade(duration: 400.ms),
+                    IncomeExpenseChart(payments: _payments).animate().fade(duration: 400.ms),
                   ],
                   if (_payments.isNotEmpty)
-                    SmartInsightsCard(payments: _payments),
+                    SmartInsightsCard(payments: _payments).animate().fade(duration: 600.ms, delay: 300.ms).slideY(begin: 0.1),
                   _buildTransactionsHeader(theme, colorScheme),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -244,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     controller: _searchController,
                     autofocus: true,
                     decoration: InputDecoration(
-                      hintText: "Search transactions...",
+                      hintText: Strings.searchTransactions,
                       filled: true,
                       prefixIcon: const Icon(Symbols.search, size: 20),
                       suffixIcon: IconButton(
@@ -261,15 +256,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Good ${greeting()}",
+                        Strings.greeting(),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.5),
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                       BlocConsumer<AppCubit, AppState>(
                         listener: (context, state){},
                         builder: (context, state) => Text(
-                          state.username ?? "Guest",
+                          state.username ?? Strings.guest,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -285,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             },
             icon: Icon(_isSearching ? Symbols.close : Symbols.search, fill: 1, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(width: 8),
@@ -293,9 +288,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onPressed: () => setState(() => _showCharts = !_showCharts),
             icon: Icon(_showCharts ? Symbols.list : Symbols.bar_chart, fill: 1, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             ),
           ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => Navigator.push(context, PrismPageRoute(builder: (_) => const InsightsScreen())),
+            icon: const Icon(Symbols.insights, fill: 1, size: 22),
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const VoiceInputButton(),
         ],
       ),
     );
@@ -307,38 +312,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Row(
         children: [
           Text(
-            "Transactions",
+            Strings.transactions,
             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Expanded(child: SizedBox()),
           if (_filteredPayments.isNotEmpty)
-            Text(
-              "${_filteredPayments.length}",
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.5),
-              ),
+            PrismChip(
+              label: '${_filteredPayments.length}',
+              color: colorScheme.onSurface,
+              isSmall: true,
             ),
           const SizedBox(width: 8),
-          InkWell(
+          PrismChip(
+            icon: Symbols.calendar_month,
+            label: '${DateFormat(AppDateFormats.shortDate).format(_range.start)} - ${DateFormat(AppDateFormats.shortDate).format(_range.end)}',
+            color: colorScheme.primary,
             onTap: handleChooseDateRange,
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Icon(Icons.arrow_drop_down_outlined, size: 18, color: colorScheme.primary),
-                ],
-              ),
-            ),
+            isSmall: true,
           ),
         ],
       ),
@@ -348,34 +338,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildTransactionsList(ThemeData theme, ColorScheme colorScheme) {
     if (_filteredPayments.isEmpty) {
       return SliverToBoxAdapter(
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40),
-          alignment: Alignment.center,
-          child: Column(
-            children: [
-              Icon(
-                Symbols.receipt_long,
-                size: 48,
-                color: colorScheme.onSurface.withOpacity(0.15),
-                fill: 1,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _searchController.text.isEmpty ? "No transactions yet" : "No matches found",
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.3),
-                ),
-              ),
-              if (_searchController.text.isEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  "Tap + to add your first transaction",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.2),
-                  ),
-                ),
-              ],
-            ],
+          child: PrismEmptyState(
+            title: _searchController.text.isEmpty ? 'No transactions yet' : 'No matches found',
+            subtitle: _searchController.text.isEmpty ? 'Tap + to add your first transaction' : null,
           ),
         ),
       );
@@ -385,16 +352,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       delegate: SliverChildBuilderDelegate(
         (context, index) {
           final payment = _filteredPayments[index];
+          final begin = (index * 0.05).clamp(0.0, 1.0).toDouble();
           final animation = Tween<Offset>(
             begin: const Offset(0, 0.1),
             end: Offset.zero,
           ).animate(CurvedAnimation(
             parent: _listAnimationController,
-            curve: Interval(index * 0.05, 1.0, curve: Curves.easeOut),
+            curve: Interval(begin, 1.0, curve: Curves.easeOut),
           ));
           final opacity = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
             parent: _listAnimationController,
-            curve: Interval(index * 0.05, 1.0, curve: Curves.easeOut),
+            curve: Interval(begin, 1.0, curve: Curves.easeOut),
           ));
 
           return FadeTransition(
@@ -436,13 +404,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         SpeedDialChild(
           child: const Icon(Symbols.arrow_downward, color: Colors.white),
-          label: "Income",
+          label: 'Income',
           backgroundColor: AppTheme.incomeColor,
           onTap: () => openAddPaymentPage(PaymentType.credit),
         ),
         SpeedDialChild(
           child: const Icon(Symbols.arrow_upward, color: Colors.white),
-          label: "Expense",
+          label: 'Expense',
           backgroundColor: AppTheme.expenseColor,
           onTap: () => openAddPaymentPage(PaymentType.debit),
         ),
@@ -465,7 +433,7 @@ class _SummaryCards extends StatelessWidget {
         children: [
           Expanded(
             child: _SummaryCard(
-              label: "Income",
+              label: 'Income',
               amount: income,
               color: AppTheme.incomeColor,
               icon: Symbols.arrow_downward,
@@ -474,7 +442,7 @@ class _SummaryCards extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: _SummaryCard(
-              label: "Expense",
+              label: 'Expense',
               amount: expense,
               color: AppTheme.expenseColor,
               icon: Symbols.arrow_upward,
@@ -501,34 +469,43 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: color.withOpacity(0.08),
-        border: Border.all(
-          color: color.withOpacity(0.15),
-          width: 0.5,
-        ),
+    return PrismCard(
+      isGlass: true,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          color.withValues(alpha: 0.18),
+          color.withValues(alpha: 0.05),
+        ],
       ),
+      borderColor: color.withValues(alpha: 0.25),
+      shadowColor: color.withValues(alpha: 0.1),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
+              PrismAvatar(
+                icon: icon,
+                color: color,
+                size: 28,
+                iconSize: 14,
+                backgroundColor: color.withValues(alpha: 0.12),
+              ),
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: color.withOpacity(0.8),
+                  color: color.withValues(alpha: 0.8),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           CurrencyText(
             amount,
             style: TextStyle(

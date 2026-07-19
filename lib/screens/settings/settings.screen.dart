@@ -7,15 +7,20 @@ import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/screens/premium/paywall.screen.dart';
 import 'package:fintracker/screens/premium/privacy_dashboard.screen.dart';
 import 'package:fintracker/services/backup_service.dart';
+import 'package:fintracker/services/daily_digest_service.dart';
 import 'package:fintracker/services/pin_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
+import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/dialog/confirm.modal.dart';
 import 'package:fintracker/widgets/dialog/loading_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/theme/prism_colors.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -28,60 +33,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final LocalAuthentication _localAuth = LocalAuthentication();
   bool _biometricAvailable = false;
   bool _hasPin = false;
+  String _version = '';
 
   @override
   void initState() {
     super.initState();
     _checkBiometrics();
     _checkPin();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) setState(() => _version = '${info.version}+${info.buildNumber}');
   }
 
   Future<void> _checkBiometrics() async {
     try {
-      bool available = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
+      final bool available = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
       if (mounted) setState(() => _biometricAvailable = available);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Biometric check failed: $e');
+    }
   }
 
   Future<void> _checkPin() async {
     try {
-      bool hasPin = await PinService().hasPin();
+      final bool hasPin = await PinService().hasPin();
       if (mounted) setState(() => _hasPin = hasPin);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('PIN check failed: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    ThemeData theme = Theme.of(context);
+    final ThemeData theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Settings"),
+          title: const Text(Strings.settings),
         ),
         body: BlocBuilder<AppCubit, AppState>(
           builder: (context, state) {
             return ListView(
               children: [
                 // PROFILE SECTION
-                _SectionHeader(title: "Profile"),
-                ListTile(
+                PrismSection(
+                  title: Strings.profile,
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  children: [
+                PrismListTile(
                   onTap: () {
                     showDialog(context: context, builder: (context) {
-                      TextEditingController controller = TextEditingController(text: context.read<AppCubit>().state.username);
+                      final TextEditingController controller = TextEditingController(text: context.read<AppCubit>().state.username);
                       return AlertDialog(
-                        title: const Text("Profile", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                        title: const Text(Strings.profile, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("What should we call you?", style: theme.textTheme.bodyLarge!.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge!.color!), fontWeightDelta: 1)),
+                            Text(Strings.whatShouldWeCallYou, style: theme.textTheme.bodyLarge?.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface), fontWeightDelta: 1)),
                             const SizedBox(height: 15),
                             TextFormField(
                               controller: controller,
                               decoration: InputDecoration(
-                                  label: const Text("Name"),
-                                  hintText: "Enter your name",
+                                  label: const Text(Strings.name),
+                                  hintText: Strings.enterYourName,
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                                   contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15)
                               ),
@@ -95,14 +114,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   child: AppButton(
                                     onPressed: () {
                                       if (controller.text.isEmpty) {
-                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter name")));
+                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pleaseEnterName)));
                                       } else {
                                         context.read<AppCubit>().updateUsername(controller.text);
                                         Navigator.of(context).pop();
                                       }
                                     },
                                     height: 45,
-                                    label: "Save",
+                                    label: Strings.save,
                                   )
                               )
                             ],
@@ -111,41 +130,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     });
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.person)),
-                  title: Text('Name', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  icon: Symbols.person,
+                  title: Text(Strings.name, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text(state.username ?? 'Guest', style: theme.textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () {
                     showCurrencyPicker(context: context, onSelect: (Currency currency) {
                       context.read<AppCubit>().updateCurrency(currency.code);
                     });
                   },
                   leading: Builder(builder: (context) {
-                    Currency? currency = state.currency != null ? CurrencyService().findByCode(state.currency!) : null;
-                    return CircleAvatar(child: Text(currency?.symbol ?? '\$'));
+                    final currencyCode = state.currency;
+                    final currency = currencyCode != null ? CurrencyService().findByCode(currencyCode) : null;
+                    return PrismAvatar(
+                      child: Text(
+                        currency?.symbol ?? '\$',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.primary),
+                      ),
+                    );
                   }),
-                  title: Text('Currency', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  title: Text(Strings.currency, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Builder(builder: (context) {
-                    Currency? currency = state.currency != null ? CurrencyService().findByCode(state.currency!) : null;
+                    final currencyCode = state.currency;
+                    final currency = currencyCode != null ? CurrencyService().findByCode(currencyCode) : null;
                     return Text(currency?.name ?? 'Not set', style: theme.textTheme.bodySmall?.apply(color: Colors.grey, overflow: TextOverflow.ellipsis));
                   }),
                 ),
+                ]),
 
                 // APPEARANCE SECTION
-                _SectionHeader(title: "Appearance"),
-                ListTile(
-                  leading: const CircleAvatar(child: Icon(Symbols.palette)),
-                  title: Text('Theme', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                PrismSection(
+                  title: 'Appearance',
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
+                  icon: Symbols.palette,
+                  title: Text(Strings.theme, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   subtitle: Text(
                     _themeModeName(state.themeMode),
                     style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                   ),
                   onTap: () => _showThemeSelector(context, state.themeMode),
                 ),
-                ListTile(
-                  leading: const CircleAvatar(child: Icon(Symbols.format_paint)),
-                  title: Text('Accent Color', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                PrismListTile(
+                  icon: Symbols.format_paint,
+                  title: Text(Strings.accentColor, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -155,100 +185,110 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 2),
                             child: _ColorDot(
                               color: c,
-                              selected: false,
                               onTap: () => context.read<AppCubit>().updateThemeColor(c.toARGB32()),
                             ),
                           )),
                     ],
                   ),
                 ),
+                ]),
 
                 // SECURITY SECTION
-                _SectionHeader(title: "Security"),
+                PrismSection(
+                  title: 'Security',
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
                 if (AppConstants.enableBiometricLock && (_biometricAvailable || _hasPin))
-                  SwitchListTile(
-                    secondary: CircleAvatar(
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
-                      child: Icon(Symbols.fingerprint, color: colorScheme.primary),
-                    ),
-                    title: Text('App Lock', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  PrismListTile(
+                    icon: Symbols.fingerprint,
+                    iconColor: colorScheme.primary,
+                    title: Text(Strings.appLock, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                     subtitle: Text(
-                      "Require biometric or PIN to open app",
+                      Strings.requireBiometricOrPinToOpen,
                       style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                     ),
-                    value: state.appLockEnabled,
-                    onChanged: (value) async {
-                      if (value) {
-                        if (_biometricAvailable) {
-                          try {
-                            bool authenticated = await _localAuth.authenticate(
-                              localizedReason: 'Verify your identity to enable app lock',
-                            );
-                            if (authenticated && context.mounted) {
-                              context.read<AppCubit>().updateAppLock(true);
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Biometric error: $e")),
-                              );
-                            }
-                          }
-                        } else if (_hasPin) {
-                          context.read<AppCubit>().updateAppLock(true);
-                        }
-                      } else {
-                        context.read<AppCubit>().updateAppLock(false);
-                      }
-                    },
+                    trailing: Switch(
+                      value: state.appLockEnabled,
+                      onChanged: (value) { _toggleAppLock(value); },
+                    ),
                   ),
                 if (AppConstants.enableBiometricLock)
-                  ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
-                      child: Icon(Symbols.pin, color: colorScheme.primary),
-                    ),
+                  PrismListTile(
+                    icon: Symbols.pin,
                     title: Text(_hasPin ? 'Change PIN' : 'Set PIN', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
                     subtitle: Text(_hasPin ? 'Update your fallback PIN' : 'Set a PIN fallback for app lock', style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                     onTap: () => _showPinDialog(context),
                   ),
+                ]),
 
                 // PRIVACY SECTION
-                _SectionHeader(title: "Privacy"),
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF2E7D32).withOpacity(0.1),
-                    child: const Icon(Symbols.verified_user, color: Color(0xFF2E7D32)),
-                  ),
-                  title: Text('Privacy Dashboard', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
-                  subtitle: Text("Score: 100% — Zero tracking", style: theme.textTheme.bodySmall?.apply(color: const Color(0xFF2E7D32))),
+                PrismSection(
+                  title: 'Privacy',
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
+                  icon: Symbols.verified_user,
+                  iconColor: PrismColors.income,
+                  title: Text(Strings.privacyDashboard, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.score100ZeroTracking, style: theme.textTheme.bodySmall?.apply(color: PrismColors.income)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const PrivacyDashboardScreen()),
+                      PrismPageRoute(builder: (_) => const PrivacyDashboardScreen()),
                     );
                   },
                 ),
+                PrismListTile(
+                  icon: Symbols.visibility_off,
+                  title: Text(Strings.privacyMode, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.hideAllAmountsWith, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  trailing: Switch(
+                    value: state.privacyMode,
+                    onChanged: (value) { context.read<AppCubit>().updatePrivacyMode(value); },
+                  ),
+                ),
+                PrismListTile(
+                  icon: Symbols.notifications_active,
+                  title: Text(Strings.dailyDigest, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.morningNotificationWithYourSpendingSnapshot, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  trailing: Switch(
+                    value: state.dailyDigestEnabled,
+                    onChanged: (value) { _toggleDailyDigest(value); },
+                  ),
+                ),
+                ]),
 
                 // DATA SECTION
-                _SectionHeader(title: "Data"),
-                ListTile(
+                PrismSection(
+                  title: 'Data',
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
                   onTap: () async {
                     if (!context.mounted) return;
                     ConfirmModal.showConfirmDialog(
-                        context, title: "Export JSON Backup?",
-                        content: const Text("Export all data to a JSON backup file"),
+                        context, title: 'Export JSON Backup?',
+                        content: const Text(Strings.exportAllDataToAJson),
                         onConfirm: () async {
                           Navigator.of(context).pop();
-                          LoadingModal.showLoadingDialog(context, content: const Text("Exporting..."));
+                          final path = await FilePicker.platform.saveFile(
+                            dialogTitle: 'Save JSON backup',
+                            fileName: 'fintracker-backup.json',
+                            type: FileType.custom,
+                            allowedExtensions: ['json'],
+                          );
+                          if (path == null || path.isEmpty || !context.mounted) return;
+
+                          LoadingModal.showLoadingDialog(context, content: const Text(Strings.exporting));
                           try {
-                            final value = await export();
+                            final value = await export(filePath: path);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Strings.savedToFmt(value))));
                             }
                           } catch (err) {
+                            debugPrint('JSON export error: $err');
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export failed")));
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.exportFailed)));
                             }
                           } finally {
                             if (context.mounted) {
@@ -259,27 +299,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onCancel: () => Navigator.of(context).pop()
                     );
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.download)),
-                  title: Text('Export JSON', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
-                  subtitle: Text("Full backup to JSON file", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  icon: Symbols.download,
+                  title: Text(Strings.exportJson, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.fullBackupToJsonFile, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     if (!context.mounted) return;
                     ConfirmModal.showConfirmDialog(
-                        context, title: "Export CSV?",
-                        content: const Text("Export all transactions to a CSV spreadsheet"),
+                        context, title: 'Export CSV?',
+                        content: const Text(Strings.exportAllTransactionsToACsv),
                         onConfirm: () async {
                           Navigator.of(context).pop();
-                          LoadingModal.showLoadingDialog(context, content: const Text("Exporting CSV..."));
+                          final path = await FilePicker.platform.saveFile(
+                            dialogTitle: 'Save CSV export',
+                            fileName: 'gravity-fintracker.csv',
+                            type: FileType.custom,
+                            allowedExtensions: ['csv'],
+                          );
+                          if (path == null || path.isEmpty || !context.mounted) return;
+
+                          LoadingModal.showLoadingDialog(context, content: const Text(Strings.exportingCsv));
                           try {
-                            final value = await exportCsv();
+                            final value = await exportCsv(filePath: path);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $value")));
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Strings.savedToFmt(value))));
                             }
                           } catch (err) {
+                            debugPrint('CSV export error: $err');
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("CSV export failed")));
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.csvExportFailed)));
                             }
                           } finally {
                             if (context.mounted) {
@@ -290,49 +339,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onCancel: () => Navigator.of(context).pop()
                     );
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.table_chart)),
-                  title: Text('Export CSV', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
-                  subtitle: Text("Spreadsheet for analysis", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  icon: Symbols.table_chart,
+                  title: Text(Strings.exportCsv, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.spreadsheetForAnalysis, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     try {
-                      FilePickerResult? pick = await FilePicker.platform.pickFiles(
-                          dialogTitle: "Pick backup file",
-                          allowMultiple: false,
+                      final FilePickerResult? pick = await FilePicker.platform.pickFiles(
+                          dialogTitle: 'Pick backup file',
                           allowCompression: false,
                           type: FileType.custom,
-                          allowedExtensions: ["json"]
+                          allowedExtensions: ['json']
                       );
                       if (pick == null || pick.files.isEmpty) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select file")));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pleaseSelectFile)));
                         }
                         return;
                       }
-                      PlatformFile file = pick.files.first;
-                      if (file.path == null || file.path!.isEmpty) {
+                      final file = pick.files.first;
+                      final path = file.path;
+                      if (path == null || path.isEmpty) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selected file has no path")));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.selectedFileHasNoPath)));
                         }
                         return;
                       }
                       if (context.mounted) {
                         ConfirmModal.showConfirmDialog(
-                            context, title: "Import Backup?",
-                            content: const Text("All existing data will be replaced with the backup."),
+                            context, title: 'Import Backup?',
+                            content: const Text(Strings.allExistingDataWillBeReplaced),
                             onConfirm: () async {
                               Navigator.of(context).pop();
-                              LoadingModal.showLoadingDialog(context, content: const Text("Importing..."));
+                              LoadingModal.showLoadingDialog(context, content: const Text(Strings.importing));
                               try {
-                                await import(file.path!);
+                                await import(path);
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Successfully imported")));
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.successfullyImported)));
                                   Navigator.of(context).pop();
                                 }
                               } catch (err) {
+                                debugPrint('JSON import error: $err');
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.importFailed)));
                                   Navigator.of(context).pop();
                                 }
                               }
@@ -341,141 +391,149 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       }
                     } catch (err) {
+                      debugPrint('File picker import error: $err');
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.importFailed)));
                       }
                     }
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.upload)),
-                  title: Text('Import', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
-                  subtitle: Text("Restore from JSON backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  icon: Symbols.upload,
+                  title: Text(Strings.import, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.restoreFromJsonBackup, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     final password = await _showPasswordDialog(context, title: 'Export Encrypted Backup', confirm: true);
                     if (password == null || password.isEmpty) return;
                     if (!context.mounted) return;
-                    LoadingModal.showLoadingDialog(context, content: const Text("Encrypting..."));
+                    final path = await FilePicker.platform.saveFile(
+                      dialogTitle: 'Save encrypted backup',
+                      fileName: 'fintracker-encrypted-backup.json',
+                      type: FileType.custom,
+                      allowedExtensions: ['json'],
+                    );
+                    if (path == null || path.isEmpty || !context.mounted) return;
+
+                    LoadingModal.showLoadingDialog(context, content: const Text(Strings.encrypting));
                     try {
-                      final path = await BackupService.exportEncrypted(password);
+                      final value = await BackupService.exportEncrypted(password, filePath: path);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $path")));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Strings.savedToFmt(value))));
                         Navigator.of(context).pop();
                       }
                     } catch (err) {
+                      debugPrint('Encrypted export error: $err');
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export failed")));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.exportFailed)));
                         Navigator.of(context).pop();
                       }
                     }
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.lock)),
-                  title: Text('Export Encrypted', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
-                  subtitle: Text("Password-protected backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  icon: Symbols.lock,
+                  title: Text(Strings.exportEncrypted, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.passwordProtectedBackup, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
-                ListTile(
+                PrismListTile(
                   onTap: () async {
                     try {
-                      FilePickerResult? pick = await FilePicker.platform.pickFiles(
-                        dialogTitle: "Pick encrypted backup",
-                        allowMultiple: false,
+                      final FilePickerResult? pick = await FilePicker.platform.pickFiles(
+                        dialogTitle: 'Pick encrypted backup',
                         allowCompression: false,
                         type: FileType.custom,
-                        allowedExtensions: ["json"],
+                        allowedExtensions: ['json'],
                       );
                       if (pick == null || pick.files.isEmpty) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select file")));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pleaseSelectFile)));
                         }
                         return;
                       }
-                      PlatformFile file = pick.files.first;
-                      if (file.path == null || file.path!.isEmpty) {
+                      final file = pick.files.first;
+                      final path = file.path;
+                      if (path == null || path.isEmpty) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selected file has no path")));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.selectedFileHasNoPath)));
                         }
                         return;
                       }
+                      if (!context.mounted) return;
                       final password = await _showPasswordDialog(context, title: 'Import Encrypted Backup', confirm: false);
                       if (password == null || password.isEmpty) return;
                       if (!context.mounted) return;
-                      LoadingModal.showLoadingDialog(context, content: const Text("Decrypting..."));
-                      await BackupService.importEncrypted(file.path!, password);
+                      LoadingModal.showLoadingDialog(context, content: const Text(Strings.decrypting));
+                      await BackupService.importEncrypted(path, password);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Successfully imported")));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.successfullyImported)));
                         Navigator.of(context).pop();
                       }
                     } catch (err) {
+                      debugPrint('Encrypted import error: $err');
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Import failed")));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.importFailed)));
                         Navigator.of(context).pop();
                       }
                     }
                   },
-                  leading: const CircleAvatar(child: Icon(Symbols.lock_open)),
-                  title: Text('Import Encrypted', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
-                  subtitle: Text("Restore password-protected backup", style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                  icon: Symbols.lock_open,
+                  title: Text(Strings.importEncrypted, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(Strings.restorePasswordProtectedBackup, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
+                ]),
 
                 // PREMIUM SECTION
-                _SectionHeader(title: "Premium"),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary.withOpacity(0.1),
-                        colorScheme.tertiary.withOpacity(0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+                PrismSection(
+                  title: 'Premium',
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismCard(
+                  isGlass: true,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary.withValues(alpha: 0.12),
+                      colorScheme.tertiary.withValues(alpha: 0.06),
+                    ],
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(Symbols.workspace_premium, color: colorScheme.primary, fill: 1),
-                    ),
+                  borderColor: colorScheme.primary.withValues(alpha: 0.2),
+                  padding: EdgeInsets.zero,
+                  child: PrismListTile(
+                    icon: Symbols.workspace_premium,
                     title: Text(
-                      state.isPro ? 'Gravity Pro' : 'Upgrade to Pro',
+                      state.isPro ? Strings.gravityPro : state.isPlus ? Strings.gravityPlus : Strings.upgrade,
                       style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                     ),
                     subtitle: Text(
                       state.isPro
-                          ? "Sync, recurring, advanced reports"
-                          : "E2E sync, multi-device, and more",
+                          ? Strings.proDescription
+                          : state.isPlus
+                              ? Strings.plusDescription
+                              : Strings.freeDescription,
                       style: theme.textTheme.bodySmall?.apply(color: Colors.grey),
                     ),
-                    trailing: state.isPro
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2E7D32).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text("Active", style: TextStyle(color: Color(0xFF2E7D32), fontSize: 12, fontWeight: FontWeight.w600)),
-                          )
+                    trailing: state.isPlus || state.isPro
+                        ? const PrismChip(label: Strings.active, color: AppTheme.incomeColor)
                         : const Icon(Icons.chevron_right),
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                        PrismPageRoute(builder: (_) => const PaywallScreen()),
                       );
                     },
                   ),
                 ),
+                ]),
 
                 // ABOUT SECTION
-                _SectionHeader(title: "About"),
-                ListTile(
-                  leading: const CircleAvatar(child: Icon(Symbols.info)),
-                  title: Text('Version', style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
-                  subtitle: Text(AppConstants.appVersion, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
+                PrismSection(
+                  title: Strings.about,
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  children: [
+                PrismListTile(
+                  icon: Symbols.info,
+                  title: Text(Strings.version, style: theme.textTheme.bodyMedium?.merge(const TextStyle(fontWeight: FontWeight.w500, fontSize: 15))),
+                  subtitle: Text(_version, style: theme.textTheme.bodySmall?.apply(color: Colors.grey)),
                 ),
+                ]),
                 const SizedBox(height: 40),
               ],
             );
@@ -499,7 +557,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  labelText: 'Password',
+                  labelText: Strings.password,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                 ),
               ),
@@ -509,7 +567,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   controller: confirmController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Confirm Password',
+                    labelText: Strings.confirmPassword,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                   ),
                 ),
@@ -524,7 +582,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       if (passwordController.text.isEmpty) return;
                       if (confirm && passwordController.text != confirmController.text) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.passwordsDoNotMatch)));
                         return;
                       }
                       Navigator.of(context).pop(passwordController.text);
@@ -539,6 +597,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _toggleAppLock(bool value) async {
+    if (value) {
+      if (_biometricAvailable) {
+        try {
+          final authenticated = await _localAuth.authenticate(
+            localizedReason: Strings.verifyYourIdentityToEnableApp,
+          );
+          if (authenticated && mounted) {
+            context.read<AppCubit>().updateAppLock(true);
+          }
+        } catch (e) {
+          debugPrint('Biometric auth error: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(Strings.biometricError)),
+            );
+          }
+        }
+      } else if (_hasPin) {
+        context.read<AppCubit>().updateAppLock(true);
+      }
+    } else {
+      context.read<AppCubit>().updateAppLock(false);
+    }
+  }
+
+  Future<void> _toggleDailyDigest(bool value) async {
+    context.read<AppCubit>().updateDailyDigest(value);
+    if (value) {
+      await DailyDigestService.schedule();
+    } else {
+      await DailyDigestService.cancel();
+    }
   }
 
   void _showPinDialog(BuildContext context) {
@@ -558,8 +651,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 obscureText: true,
                 maxLength: 6,
                 decoration: InputDecoration(
-                  labelText: 'PIN',
-                  hintText: '4-6 digits',
+                  labelText: Strings.pin,
+                  hintText: Strings.s46Digits,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                   counterText: '',
                 ),
@@ -571,7 +664,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 obscureText: true,
                 maxLength: 6,
                 decoration: InputDecoration(
-                  labelText: 'Confirm PIN',
+                  labelText: Strings.confirmPin,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                   counterText: '',
                 ),
@@ -585,22 +678,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: AppButton(
                     onPressed: () async {
                       if (pinController.text.length < 4) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN must be at least 4 digits')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pinMustBeAtLeast4)));
                         return;
                       }
                       if (pinController.text != confirmController.text) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PINs do not match')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pinsDoNotMatch)));
                         return;
                       }
-                      await PinService().setPin(pinController.text);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN set')));
-                        _checkPin();
+                      try {
+                        await PinService().setPin(pinController.text);
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pinSet)));
+                          _checkPin();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pinSetFailed)));
+                        }
                       }
                     },
                     height: 45,
-                    label: 'Save',
+                    label: Strings.save,
                   ),
                 ),
               ],
@@ -614,13 +713,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _themeModeName(AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.light:
-        return "Light";
+        return 'Light';
       case AppThemeMode.dark:
-        return "Dark";
+        return 'Dark';
       case AppThemeMode.amoled:
-        return "AMOLED Dark";
+        return 'AMOLED Dark';
       case AppThemeMode.system:
-        return "System";
+        return 'System';
     }
   }
 
@@ -641,17 +740,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text("Choose Theme", style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text(Strings.chooseTheme, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 _ThemeOption(
                   icon: Symbols.brightness_auto,
-                  label: "System",
-                  subtitle: "Follow device settings",
+                  label: 'System',
+                  subtitle: 'Follow device settings',
                   isSelected: current == AppThemeMode.system,
                   onTap: () {
                     context.read<AppCubit>().updateThemeMode(AppThemeMode.system);
@@ -660,8 +759,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 _ThemeOption(
                   icon: Symbols.light_mode,
-                  label: "Light",
-                  subtitle: "Clean and bright",
+                  label: 'Light',
+                  subtitle: 'Clean and bright',
                   isSelected: current == AppThemeMode.light,
                   onTap: () {
                     context.read<AppCubit>().updateThemeMode(AppThemeMode.light);
@@ -670,8 +769,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 _ThemeOption(
                   icon: Symbols.dark_mode,
-                  label: "Dark",
-                  subtitle: "Easy on the eyes",
+                  label: 'Dark',
+                  subtitle: 'Easy on the eyes',
                   isSelected: current == AppThemeMode.dark,
                   onTap: () {
                     context.read<AppCubit>().updateThemeMode(AppThemeMode.dark);
@@ -680,8 +779,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 _ThemeOption(
                   icon: Symbols.nights_stay,
-                  label: "AMOLED Dark",
-                  subtitle: "True black, saves battery",
+                  label: 'AMOLED Dark',
+                  subtitle: 'True black, saves battery',
                   isSelected: current == AppThemeMode.amoled,
                   onTap: () {
                     context.read<AppCubit>().updateThemeMode(AppThemeMode.amoled);
@@ -694,26 +793,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 20, bottom: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.2,
-            ),
-      ),
     );
   }
 }
@@ -736,7 +815,7 @@ class _ThemeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return ListTile(
+    return PrismListTile(
       leading: Icon(icon, fill: 1, color: isSelected ? colorScheme.primary : null),
       title: Text(label, style: TextStyle(fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
       subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.grey)),
@@ -746,14 +825,7 @@ class _ThemeOption extends StatelessWidget {
   }
 }
 
-const List<Color> _accentColors = [
-  Color(0xFF6750A4),
-  Color(0xFF006A60),
-  Color(0xFF006D37),
-  Color(0xFF005AC1),
-  Color(0xFF984061),
-  Color(0xFF934B00),
-];
+const List<Color> _accentColors = PrismColors.accentOptions;
 
 class _ColorDot extends StatelessWidget {
   final Color color;
@@ -778,7 +850,7 @@ class _ColorDot extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

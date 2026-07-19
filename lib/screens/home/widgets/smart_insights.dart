@@ -1,51 +1,55 @@
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/services/insights_service.dart';
+import 'package:fintracker/services/forecasting_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/theme/prism_colors.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class SmartInsightsCard extends StatelessWidget {
+class SmartInsightsCard extends StatefulWidget {
   final List<Payment> payments;
   const SmartInsightsCard({super.key, required this.payments});
 
   @override
+  State<SmartInsightsCard> createState() => _SmartInsightsCardState();
+}
+
+class _SmartInsightsCardState extends State<SmartInsightsCard> {
+  final PageController _controller = PageController(viewportFraction: 0.9);
+  int _page = 0;
+
+  @override
   Widget build(BuildContext context) {
-    final insights = InsightsService.analyze(payments);
-    if (insights.isEmpty) return const SizedBox.shrink();
+    final insights = InsightsService.analyze(widget.payments);
+    final forecasts = ForecastingService.generateForecastInsights(widget.payments);
+    final allInsights = [...forecasts, ...insights];
+    if (allInsights.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
-          width: 0.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
             children: [
-              Icon(Symbols.auto_awesome, size: 18, color: colorScheme.primary, fill: 1),
-              const SizedBox(width: 8),
+              Icon(Symbols.auto_awesome, size: 16, color: colorScheme.primary, fill: 1),
+              const SizedBox(width: 6),
               Text(
-                "Smart Insights",
+                Strings.smartInsights,
                 style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "LOCAL",
+                  Strings.local,
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
@@ -56,61 +60,119 @@ class SmartInsightsCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          ...insights.take(3).map((insight) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 108,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: allInsights.length,
+            onPageChanged: (i) => setState(() => _page = i),
+            itemBuilder: (context, i) => _InsightCard(insight: allInsights[i]),
+          ),
+        ),
+        if (allInsights.length > 1) ...[
+          const SizedBox(height: 8),
+          Center(
             child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(allInsights.length, (i) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: _page == i ? 16 : 5,
+                  height: 5,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: BoxDecoration(
+                    color: _page == i
+                        ? _insightColor(allInsights[i].type)
+                        : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(60),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  final SpendingInsight insight;
+  const _InsightCard({required this.insight});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = _insightColor(insight.type);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: color.withValues(alpha: 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
+            child: Icon(_insightIcon(insight.type), size: 18, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: _insightColor(insight.type),
-                    shape: BoxShape.circle,
-                  ),
+                Text(
+                  insight.title,
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: color),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        insight.title,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: _insightColor(insight.type),
-                        ),
-                      ),
-                      Text(
-                        insight.description,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.5),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 4),
+                Text(
+                  insight.description,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    height: 1.35,
                   ),
                 ),
               ],
             ),
-          )),
+          ),
         ],
       ),
     );
   }
+}
 
-  Color _insightColor(InsightType type) {
-    switch (type) {
-      case InsightType.positive:
-        return const Color(0xFF2E7D32);
-      case InsightType.warning:
-        return const Color(0xFFC62828);
-      case InsightType.tip:
-        return const Color(0xFF1565C0);
-      case InsightType.neutral:
-        return const Color(0xFF757575);
-    }
+Color _insightColor(InsightType type) {
+  switch (type) {
+    case InsightType.positive:
+      return PrismColors.success;
+    case InsightType.warning:
+      return PrismColors.error;
+    case InsightType.tip:
+      return PrismColors.info;
+    case InsightType.neutral:
+      return PrismColors.warning;
+  }
+}
+
+IconData _insightIcon(InsightType type) {
+  switch (type) {
+    case InsightType.positive:
+      return Symbols.trending_up;
+    case InsightType.warning:
+      return Symbols.warning;
+    case InsightType.tip:
+      return Symbols.lightbulb;
+    case InsightType.neutral:
+      return Symbols.info;
   }
 }

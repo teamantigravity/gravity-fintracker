@@ -5,13 +5,12 @@ import 'package:fintracker/model/category.model.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter/services.dart';
-typedef Callback = void Function();
 class CategoryForm extends StatefulWidget {
   final Category? category;
-  final Callback? onSave;
 
-  const CategoryForm({super.key, this.category, this.onSave});
+  const CategoryForm({super.key, this.category});
 
   @override
   State<StatefulWidget> createState() => _CategoryForm();
@@ -19,35 +18,36 @@ class CategoryForm extends StatefulWidget {
 class _CategoryForm extends State<CategoryForm>{
   final CategoryDao _categoryDao = CategoryDao();
   final TextEditingController _nameController = TextEditingController();
-  Category _category = Category(name: "", icon: Icons.wallet_outlined, color: Colors.pink);
+  Category _category = Category(name: '', icon: Icons.wallet_outlined, color: Colors.pink);
 
   @override
   void initState() {
     super.initState();
-    if(widget.category != null){
-      _nameController.text = widget.category!.name;
-      _category = widget.category??Category(name: "", icon: Icons.wallet_outlined, color: Colors.pink);
+    final category = widget.category;
+    if (category != null) {
+      _nameController.text = category.name;
+      _category = category;
     }
   }
 
-  void onSave (context) async{
+  void onSave(BuildContext context) async {
+    if (_category.name.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(Strings.categoryNameIsRequired)),
+      );
+      return;
+    }
     await _categoryDao.upsert(_category);
-    if(widget.onSave != null) {
-      widget.onSave!();
-    }
+    if (!context.mounted) return;
     Navigator.pop(context);
-    globalEvent.emit("category_update");
-  }
-
-  void pickIcon(context)async {
-
+    globalEvent.emit('category_update');
   }
   @override
   Widget build(BuildContext context) {
     return  AlertDialog(
       scrollable: true,
       insetPadding: const EdgeInsets.all(10),
-      title: Text(widget.category!=null?"Edit Category":"New Category", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
+      title: Text(widget.category!=null?'Edit Category':'New Category', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
       content: SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Column(
@@ -55,7 +55,6 @@ class _CategoryForm extends State<CategoryForm>{
           children: [
             const SizedBox(height: 15,),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
 
@@ -74,8 +73,8 @@ class _CategoryForm extends State<CategoryForm>{
                     child: TextFormField(
                       initialValue: _category.name,
                       decoration: InputDecoration(
-                        labelText: 'Name',
-                        hintText: 'Enter Category name',
+                        labelText: Strings.name,
+                        hintText: Strings.enterCategoryName,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
@@ -93,24 +92,24 @@ class _CategoryForm extends State<CategoryForm>{
             Container(
               padding: const EdgeInsets.only(top: 20),
               child: TextFormField(
-                initialValue: _category.budget == null ?"":_category.budget.toString(),
+                initialValue: _category.budget == null ?'':_category.budget.toString(),
                 keyboardType: TextInputType.number,
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,4}')),
                 ],
                 decoration: InputDecoration(
-                    labelText: 'Budget',
-                    hintText: 'Enter budget',
+                    labelText: Strings.budget,
+                    hintText: Strings.enterBudget,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
                   prefixIcon: Padding(padding: const EdgeInsets.only(left: 15), child: CurrencyText(null)),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                  prefixIconConstraints: const BoxConstraints(),
                 ),
                 onChanged: (String text){
                   setState(() {
-                    _category.budget = double.parse(text.isEmpty? "0":text);
+                    _category.budget = double.tryParse(text) ?? 0.0;
                   });
                 },
               ),
@@ -172,7 +171,7 @@ class _CategoryForm extends State<CategoryForm>{
                             height: 50,
                             width: 50,
                             decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(40),
                                 border: Border.all(
                                     color: _category.icon == AppIcons.icons[index] ? Theme.of(context).colorScheme.primary: Colors.transparent,
@@ -197,7 +196,7 @@ class _CategoryForm extends State<CategoryForm>{
             onSave(context);
           },
           color: Theme.of(context).colorScheme.primary,
-          label: "Save",
+          label: 'Save',
         )
       ],
     );

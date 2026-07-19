@@ -1,11 +1,11 @@
 {
-    "name": "Gravity Fintracker",
-    "short_name": "Gravity Fintracker",
+    "name": "fintracker",
+    "short_name": "fintracker",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Gravity Fintracker — a quantum-encrypted, privacy-first expense tracker by Team Antigravity.",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

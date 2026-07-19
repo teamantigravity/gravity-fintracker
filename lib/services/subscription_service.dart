@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter/foundation.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 /// Subscription management service
 ///
@@ -15,11 +18,13 @@ class SubscriptionService {
   factory SubscriptionService() => _instance;
   SubscriptionService._internal();
 
+  bool _isPlus = false;
   bool _isPro = false;
-  bool get isPro => _isPro || !AppConstants.enableSubscriptions;
 
   // When subscriptions are disabled, all features are unlocked (development mode)
   // When enabled, checks RevenueCat entitlements
+  bool get isPlus => _isPlus || _isPro || !AppConstants.enableSubscriptions;
+  bool get isPro => _isPro || !AppConstants.enableSubscriptions;
 
   Future<void> initialize() async {
     if (!AppConstants.enableSubscriptions) {
@@ -27,10 +32,19 @@ class SubscriptionService {
       return;
     }
 
-    // TODO: Initialize RevenueCat
-    // await Purchases.configure(PurchasesConfiguration(
-    //   Platform.isIOS ? AppConstants.revenueCatAppleKey : AppConstants.revenueCatGoogleKey,
-    // ));
+    if (kIsWeb || Platform.isWindows || Platform.isLinux) {
+      _isPro = true; // Web/Desktop use mock pro for now
+      return;
+    }
+
+    await Purchases.setLogLevel(LogLevel.debug);
+    PurchasesConfiguration configuration;
+    if (Platform.isIOS || Platform.isMacOS) {
+      configuration = PurchasesConfiguration(AppConstants.revenueCatAppleKey);
+    } else {
+      configuration = PurchasesConfiguration(AppConstants.revenueCatGoogleKey);
+    }
+    await Purchases.configure(configuration);
 
     await _checkEntitlements();
   }
@@ -42,28 +56,31 @@ class SubscriptionService {
     }
 
     try {
-      // TODO: Check RevenueCat entitlements
-      // final customerInfo = await Purchases.getCustomerInfo();
-      // _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
-      _isPro = false;
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return;
+      final customerInfo = await Purchases.getCustomerInfo();
+      _isPro = customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+      _isPlus = customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
     } catch (e) {
       debugPrint('Error checking entitlements: $e');
       _isPro = false;
+      _isPlus = false;
     }
   }
 
-  Future<bool> purchaseMonthly() async {
+  Future<bool> purchasePlus({bool yearly = false}) async {
     if (!AppConstants.enableSubscriptions) return true;
 
     try {
-      // TODO: Implement RevenueCat purchase
-      // final offerings = await Purchases.getOfferings();
-      // final monthly = offerings.current?.monthly;
-      // if (monthly != null) {
-      //   await Purchases.purchasePackage(monthly);
-      //   await _checkEntitlements();
-      //   return _isPro;
-      // }
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return true;
+      final offerings = await Purchases.getOfferings();
+      final package = _findPackage(offerings, isPlus: true, yearly: yearly);
+      if (package != null) {
+        // ignore: deprecated_member_use
+        final purchaseResult = await Purchases.purchasePackage(package);
+        _isPro = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+        _isPlus = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
+        return isPlus;
+      }
       return false;
     } catch (e) {
       debugPrint('Purchase error: $e');
@@ -71,24 +88,76 @@ class SubscriptionService {
     }
   }
 
-  Future<bool> purchaseYearly() async {
+  Future<bool> purchasePro({bool yearly = false}) async {
     if (!AppConstants.enableSubscriptions) return true;
 
     try {
-      // TODO: Implement RevenueCat purchase
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return true;
+      final offerings = await Purchases.getOfferings();
+      final package = _findPackage(offerings, isPlus: false, yearly: yearly);
+      if (package != null) {
+        // ignore: deprecated_member_use
+        final purchaseResult = await Purchases.purchasePackage(package);
+        _isPro = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+        _isPlus = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
+        return isPro;
+      }
       return false;
     } catch (e) {
       debugPrint('Purchase error: $e');
       return false;
     }
+  }
+
+  Future<bool> purchaseLifetime() async {
+    if (!AppConstants.enableSubscriptions) return true;
+
+    try {
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return true;
+      final offerings = await Purchases.getOfferings();
+      final package = offerings.current?.lifetime;
+      if (package != null) {
+        // ignore: deprecated_member_use
+        final purchaseResult = await Purchases.purchasePackage(package);
+        _isPro = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+        _isPlus = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
+        return isPlus || isPro;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Purchase error: $e');
+      return false;
+    }
+  }
+
+  Package? _findPackage(Offerings? offerings, {required bool isPlus, required bool yearly}) {
+    final current = offerings?.current;
+    if (current == null) return null;
+
+    // Prefer explicit package identifiers
+    final tierKeyword = isPlus ? AppConstants.entitlementPlus : AppConstants.entitlementPro;
+    final intervalKeyword = yearly ? AppConstants.intervalYearly : AppConstants.intervalMonthly;
+    final packageId = '${tierKeyword}_$intervalKeyword';
+    for (final p in current.availablePackages) {
+      if (p.identifier == packageId) return p;
+    }
+
+    // Fallback: package identifier containing the tier and billing interval
+    for (final p in current.availablePackages) {
+      final id = p.identifier.toLowerCase();
+      if (id.contains(tierKeyword) && id.contains(intervalKeyword)) return p;
+    }
+
+    // Last-resort fallback to RevenueCat's current monthly/annual
+    return yearly ? current.annual : current.monthly;
   }
 
   Future<void> restorePurchases() async {
     if (!AppConstants.enableSubscriptions) return;
 
     try {
-      // TODO: Implement RevenueCat restore
-      // await Purchases.restorePurchases();
+      if (kIsWeb || Platform.isWindows || Platform.isLinux) return;
+      await Purchases.restorePurchases();
       await _checkEntitlements();
     } catch (e) {
       debugPrint('Restore error: $e');
@@ -97,28 +166,54 @@ class SubscriptionService {
 
   // Feature gates
   bool get canSync => isPro;
-  bool get canExportPdf => isPro;
-  bool get canUseRecurring => isPro || !AppConstants.enableSubscriptions;
-  bool get canUseAdvancedCharts => isPro;
+  bool get canExportPdf => isPlus;
+  bool get canUseTaxReports => isPlus;
+  bool get canUseRecurring => isPlus;
+  bool get canUseAdvancedCharts => isPlus;
   bool get canUseMultiDevice => isPro;
   bool get hasAutoBackup => isPro;
+  bool get canUseCashFlowForecast => isPlus;
+  bool get canUseFinancialCoach => isPro;
+  bool get canUseReceiptScanner => isPlus;
+  bool get canUseVoiceInput => isPlus;
+  bool get canUseSavingsGoals => isPlus;
+  bool get canUseWhatIfPlanner => isPro;
+  bool get canUseSubscriptionDashboard => isPlus;
+  bool get canUseSubscriptionScanner => isPlus;
+  bool get canUseRecurringRules => isPlus;
+  bool get canUseHouseholdSync => isPro;
+  bool get canUseDocumentVault => isPlus;
 
   // Offering details for paywall
   SubscriptionOffering get offering => SubscriptionOffering(
-    monthlyPrice: '\$${AppConstants.proMonthlyPrice.toStringAsFixed(2)}/mo',
-    yearlyPrice: '\$${AppConstants.proYearlyPrice.toStringAsFixed(2)}/yr',
-    yearlySavings: '${((1 - (AppConstants.proYearlyPrice / (AppConstants.proMonthlyPrice * 12))) * 100).round()}%',
+    plusMonthlyPrice: Strings.pricePerMonthFmt(AppConstants.plusMonthlyPrice.toStringAsFixed(2)),
+    plusYearlyPrice: Strings.pricePerYearFmt(AppConstants.plusYearlyPrice.toStringAsFixed(2)),
+    proMonthlyPrice: Strings.pricePerMonthFmt(AppConstants.proMonthlyPrice.toStringAsFixed(2)),
+    proYearlyPrice: Strings.pricePerYearFmt(AppConstants.proYearlyPrice.toStringAsFixed(2)),
+    plusYearlySavings: Strings.yearlySavingsFmt(_computeYearlySavings(AppConstants.plusYearlyPrice, AppConstants.plusMonthlyPrice)),
+    proYearlySavings: Strings.yearlySavingsFmt(_computeYearlySavings(AppConstants.proYearlyPrice, AppConstants.proMonthlyPrice)),
   );
+
+  static int _computeYearlySavings(double yearly, double monthly) {
+    if (monthly <= 0) return 0;
+    return ((1 - (yearly / (monthly * 12))) * 100).round();
+  }
 }
 
 class SubscriptionOffering {
-  final String monthlyPrice;
-  final String yearlyPrice;
-  final String yearlySavings;
+  final String plusMonthlyPrice;
+  final String plusYearlyPrice;
+  final String plusYearlySavings;
+  final String proMonthlyPrice;
+  final String proYearlyPrice;
+  final String proYearlySavings;
 
   SubscriptionOffering({
-    required this.monthlyPrice,
-    required this.yearlyPrice,
-    required this.yearlySavings,
+    required this.plusMonthlyPrice,
+    required this.plusYearlyPrice,
+    required this.plusYearlySavings,
+    required this.proMonthlyPrice,
+    required this.proYearlyPrice,
+    required this.proYearlySavings,
   });
 }

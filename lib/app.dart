@@ -1,7 +1,11 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
-import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/config/app_intents.dart';
+import 'package:fintracker/config/strings.dart';
+import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/screens/main.screen.dart';
+import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/pin_service.dart';
+import 'package:fintracker/services/receipt_scanner_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +15,10 @@ import 'package:local_auth/local_auth.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
+
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<MainScreenState> mainScreenKey = GlobalKey<MainScreenState>();
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(
@@ -27,10 +35,11 @@ class App extends StatelessWidget {
           ));
 
           return MaterialApp(
-            title: AppConstants.appName,
+            title: Strings.appName,
             debugShowCheckedModeBanner: false,
             theme: theme,
-            home: AppLockWrapper(child: const MainScreen()),
+            navigatorKey: navigatorKey,
+            home: AppLockWrapper(child: MainScreen(key: mainScreenKey)),
             localizationsDelegates: const [
               GlobalWidgetsLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -51,6 +60,8 @@ class AppLockWrapper extends StatefulWidget {
 class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObserver {
   bool _isLocked = false;
   bool _showPinInput = false;
+  bool _isAuthenticating = false;
+  bool _hasResumedOnce = false;
   final TextEditingController _pinController = TextEditingController();
 
   @override
@@ -67,55 +78,99 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
   void dispose() {
     _pinController.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    ReceiptScannerService.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkLock();
+    if (state == AppLifecycleState.detached) {
+      ReceiptScannerService.dispose();
+      return;
     }
+    if (state != AppLifecycleState.resumed) return;
+    // The first resumed event fires during launch and is already handled by
+    // the addPostFrameCallback in initState. Calling _checkLock again can
+    // trigger a second biometric prompt that confuses the plugin and locks
+    // the user out.
+    if (!_hasResumedOnce) {
+      _hasResumedOnce = true;
+      return;
+    }
+    _checkLock();
   }
 
   Future<void> _checkLock() async {
+    if (!mounted || _isAuthenticating) return;
+
     final appState = context.read<AppCubit>().state;
     if (!appState.appLockEnabled) {
       if (mounted) setState(() => _isLocked = false);
       return;
     }
 
-    if (mounted) setState(() => _isLocked = true);
+    if (mounted) setState(() { _isLocked = true; _showPinInput = false; });
 
+    _isAuthenticating = true;
     final LocalAuthentication localAuth = LocalAuthentication();
     try {
-      bool authenticated = await localAuth.authenticate(
-        localizedReason: 'Unlock ${AppConstants.appName}',
-        options: const AuthenticationOptions(biometricOnly: false),
+      final bool authenticated = await localAuth.authenticate(
+        localizedReason: Strings.unlockAppFmt(Strings.appName),
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+        ),
       );
       if (authenticated && mounted) {
         setState(() => _isLocked = false);
         return;
       }
     } catch (e) {
-      // Fall through to PIN fallback
+      debugPrint('Biometric unlock failed: $e');
+    } finally {
+      _isAuthenticating = false;
     }
 
-    if (await PinService().hasPin() && mounted) {
-      setState(() => _showPinInput = true);
+    try {
+      if (await PinService().hasPin() && mounted) {
+        setState(() => _showPinInput = true);
+        return;
+      }
+    } catch (e) {
+      debugPrint('PIN read failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(Strings.couldNotReadPin)),
+        );
+      }
+    }
+
+    // No biometric and no PIN: lock is not enforceable, so unlock
+    if (mounted) {
+      setState(() => _isLocked = false);
     }
   }
 
   Future<void> _verifyPin() async {
     final pin = _pinController.text;
     if (pin.isEmpty) return;
-    final valid = await PinService().verifyPin(pin);
-    if (valid && mounted) {
-      setState(() => _isLocked = false);
-      _pinController.clear();
-    } else {
+    try {
+      final valid = await PinService().verifyPin(pin);
+      if (valid && mounted) {
+        setState(() => _isLocked = false);
+        _pinController.clear();
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text(Strings.incorrectPin)),
+          );
+          _pinController.clear();
+        }
+      }
+    } catch (e) {
+      debugPrint('PIN verification failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Incorrect PIN')),
+          const SnackBar(content: Text(Strings.pinVerificationFailed)),
         );
         _pinController.clear();
       }
@@ -124,7 +179,34 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
-    if (!_isLocked) return widget.child;
+    if (!_isLocked) {
+      return Shortcuts(
+        shortcuts: AppShortcuts.shortcuts,
+        child: Actions(
+          actions: {
+            NewPaymentIntent: CallbackAction<NewPaymentIntent>(
+              onInvoke: (_) {
+                App.navigatorKey.currentState?.push(
+                  MaterialPageRoute(builder: (_) => const PaymentForm(type: PaymentType.debit)),
+                );
+                return null;
+              },
+            ),
+            NavigateToTabIntent: CallbackAction<NavigateToTabIntent>(
+              onInvoke: (intent) {
+                App.mainScreenKey.currentState?.navigateTo(intent.index);
+                return null;
+              },
+            ),
+          },
+          child: Focus(
+            autofocus: true,
+            canRequestFocus: true,
+            child: widget.child,
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: Center(
@@ -135,12 +217,12 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
             children: [
               Icon(Icons.lock, size: 64, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 16),
-              Text('Locked', style: Theme.of(context).textTheme.titleLarge),
+              Text(Strings.locked, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 24),
               if (!_showPinInput)
                 FilledButton(
                   onPressed: _checkLock,
-                  child: const Text('Unlock'),
+                  child: const Text(Strings.unlock),
                 ),
               if (_showPinInput) ...[
                 TextField(
@@ -149,7 +231,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
                   obscureText: true,
                   maxLength: 6,
                   decoration: InputDecoration(
-                    labelText: 'Enter PIN',
+                    labelText: Strings.enterPin,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                     counterText: '',
                   ),
@@ -158,11 +240,11 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: _verifyPin,
-                  child: const Text('Verify PIN'),
+                  child: const Text(Strings.verifyPin),
                 ),
                 TextButton(
                   onPressed: () => setState(() => _showPinInput = false),
-                  child: const Text('Use biometric'),
+                  child: const Text(Strings.useBiometric),
                 ),
               ],
             ],

@@ -1,3 +1,4 @@
+import 'package:fintracker/config/app_date_formats.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:intl/intl.dart';
@@ -33,45 +34,54 @@ class RecurringTransaction {
 
   factory RecurringTransaction.fromJson(Map<String, dynamic> data) {
     return RecurringTransaction(
-      id: data["id"],
-      title: data["title"] ?? "",
-      description: data["description"] ?? "",
-      account: Account.fromJson(data["account"] is Map ? data["account"] : {"id": data["account"]}),
-      category: Category.fromJson(data["category"] is Map ? data["category"] : {"id": data["category"]}),
-      amount: (data["amount"] as num).toDouble(),
-      type: data["type"] ?? "DR",
-      interval: _parseInterval(data["interval"]),
-      startDate: DateTime.parse(data["startDate"]),
-      nextDueDate: data["nextDueDate"] != null ? DateTime.parse(data["nextDueDate"]) : null,
-      isActive: data["isActive"] == 1,
+      id: data['id'],
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      account: Account.fromJson(data['account'] is Map ? data['account'] : {'id': data['account']}),
+      category: Category.fromJson(data['category'] is Map ? data['category'] : {'id': data['category']}),
+      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      type: data['type'] ?? 'DR',
+      interval: _parseInterval(data['interval']),
+      startDate: DateTime.tryParse(data['startDate'] ?? '') ?? DateTime.now(),
+      nextDueDate: data['nextDueDate'] != null ? (DateTime.tryParse(data['nextDueDate'].toString()) ?? DateTime.now()) : null,
+      isActive: data['isActive'] == true || data['isActive'] == 1,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "title": title,
-        "description": description,
-        "account": account.id,
-        "category": category.id,
-        "amount": amount,
-        "type": type,
-        "interval": interval.name,
-        "startDate": DateFormat('yyyy-MM-dd').format(startDate),
-        "nextDueDate": nextDueDate != null ? DateFormat('yyyy-MM-dd').format(nextDueDate!) : null,
-        "isActive": isActive ? 1 : 0,
-      };
+  Map<String, dynamic> toJson() {
+    final nextDueDate = this.nextDueDate;
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'account': account.id,
+      'category': category.id,
+      'amount': amount,
+      'type': type,
+      'interval': interval.name,
+      'startDate': DateFormat(AppDateFormats.isoDate).format(startDate),
+      'nextDueDate': nextDueDate != null ? DateFormat(AppDateFormats.isoDate).format(nextDueDate) : null,
+      'isActive': isActive ? 1 : 0,
+    };
+  }
 
   DateTime calculateNextDueDate() {
-    DateTime from = nextDueDate ?? startDate;
+    final DateTime from = nextDueDate ?? startDate;
     switch (interval) {
       case RecurringInterval.daily:
         return from.add(const Duration(days: 1));
       case RecurringInterval.weekly:
         return from.add(const Duration(days: 7));
       case RecurringInterval.monthly:
-        return DateTime(from.year, from.month + 1, from.day);
+        final targetDay = startDate.day;
+        final lastDay = DateTime(from.year, from.month + 2, 0).day;
+        final day = targetDay <= lastDay ? targetDay : lastDay;
+        return DateTime(from.year, from.month + 1, day);
       case RecurringInterval.yearly:
-        return DateTime(from.year + 1, from.month, from.day);
+        final targetDay = startDate.day;
+        final lastDay = DateTime(from.year + 1, from.month + 1, 0).day;
+        final day = targetDay <= lastDay ? targetDay : lastDay;
+        return DateTime(from.year + 1, from.month, day);
     }
   }
 

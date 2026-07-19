@@ -10,20 +10,25 @@ import 'package:fintracker/theme/colors.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:fintracker/widgets/dialog/account_form.dialog.dart';
 import 'package:fintracker/widgets/dialog/category_form.dialog.dart';
+import 'package:fintracker/widgets/ai/receipt_scanner_button.dart';
+import 'package:fintracker/widgets/ai/voice_input_button.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:fintracker/widgets/dialog/confirm.modal.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-typedef OnCloseCallback = Function(Payment payment);
-final DateFormat formatter = DateFormat('dd/MM/yyyy hh:mm a');
+final DateFormat formatter = DateFormat(AppDateFormats.fullDateTime);
 class PaymentForm extends StatefulWidget{
   final PaymentType  type;
   final Payment?  payment;
-  final OnCloseCallback? onClose;
+  final String? prefillTitle;
+  final double? prefillAmount;
+  final DateTime? prefillDate;
 
-  const PaymentForm({super.key, required this.type, this.payment, this.onClose});
+  const PaymentForm({super.key, required this.type, this.payment, this.prefillTitle, this.prefillAmount, this.prefillDate});
 
   @override
   State<PaymentForm> createState() => _PaymentForm();
@@ -43,54 +48,67 @@ class _PaymentForm extends State<PaymentForm>{
 
   //values
   int? _id;
-  String _title = "";
-  String _description="";
+  String _title = '';
+  String _description='';
   Account? _account;
   Category? _category;
   double _amount=0;
   PaymentType _type= PaymentType.credit;
   DateTime _datetime = DateTime.now();
 
-  loadAccounts(){
-    _accountDao.find().then((value){
+  Future<void> loadAccounts() async {
+    final List<Account> value = await _accountDao.find();
+    if (mounted) {
       setState(() {
         _accounts = value;
       });
-    });
+    }
   }
 
-  loadCategories(){
-    _categoryDao.find().then((value){
+  Future<void> loadCategories() async {
+    final List<Category> value = await _categoryDao.find();
+    if (mounted) {
       setState(() {
         _categories = value;
       });
-    });
+    }
   }
 
-  void populateState() async{
+  void populateState() async {
     await loadAccounts();
     await loadCategories();
-    if(widget.payment != null) {
-      setState(() {
-        _id = widget.payment!.id;
-        _title = widget.payment!.title;
-        _description = widget.payment!.description;
-        _account = widget.payment!.account;
-        _category = widget.payment!.category;
-        _amount = widget.payment!.amount;
-        _type = widget.payment!.type;
-        _datetime = widget.payment!.datetime;
-        _initialised = true;
-      });
-    }
-    else
-    {
-      setState(() {
-        _type =  widget.type;
-        _initialised = true;
-      });
-    }
+    if (!mounted) return;
 
+    final payment = widget.payment;
+    if (payment != null) {
+      final paymentAccount = payment.account;
+      final paymentCategory = payment.category;
+      setState(() {
+        _id = payment.id;
+        _title = payment.title;
+        _description = payment.description;
+        _account = _accounts.cast<Account?>().firstWhere(
+          (a) => a?.id == paymentAccount.id,
+          orElse: () => paymentAccount,
+        );
+        _category = _categories.cast<Category?>().firstWhere(
+          (c) => c?.id == paymentCategory.id,
+          orElse: () => paymentCategory,
+        );
+        _amount = payment.amount;
+        _type = payment.type;
+        _datetime = payment.datetime;
+        _initialised = true;
+      });
+    } else {
+      setState(() {
+        _type = widget.type;
+        _title = widget.prefillTitle ?? '';
+        _amount = widget.prefillAmount ?? 0;
+        _datetime = widget.prefillDate ?? DateTime.now();
+        _initialised = true;
+      });
+    }
   }
 
   Future<void> _suggestFromTitle(String title) async {
@@ -111,7 +129,7 @@ class _PaymentForm extends State<PaymentForm>{
   }
 
   Future<void> chooseDate(BuildContext context) async {
-    DateTime initialDate = _datetime;
+    final DateTime initialDate = _datetime;
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: initialDate,
@@ -119,6 +137,7 @@ class _PaymentForm extends State<PaymentForm>{
         lastDate: DateTime.now()
     );
     if(picked!=null  && initialDate != picked) {
+      if (!mounted) return;
       setState(() {
         _datetime = DateTime(
             picked.year,
@@ -132,14 +151,15 @@ class _PaymentForm extends State<PaymentForm>{
   }
 
   Future<void> chooseTime(BuildContext context) async {
-    DateTime initialDate = _datetime;
-    TimeOfDay initialTime = TimeOfDay(hour: initialDate.hour, minute: initialDate.minute);
+    final DateTime initialDate = _datetime;
+    final TimeOfDay initialTime = TimeOfDay(hour: initialDate.hour, minute: initialDate.minute);
     final TimeOfDay? time = await showTimePicker(
         context: context,
         initialTime: initialTime,
         initialEntryMode: TimePickerEntryMode.input
     );
     if (time != null && initialTime !=time) {
+      if (!mounted) return;
       setState(() {
         _datetime = DateTime(
             initialDate.year,
@@ -152,10 +172,13 @@ class _PaymentForm extends State<PaymentForm>{
     }
   }
 
-  void handleSaveTransaction(context) async{
-    Payment payment = Payment(id: _id,
-        account: _account!,
-        category: _category!,
+  void handleSaveTransaction(BuildContext context) async {
+    final account = _account;
+    final category = _category;
+    if (account == null || category == null) return;
+    final Payment payment = Payment(id: _id,
+        account: account,
+        category: category,
         amount: _amount,
         type: _type,
         datetime: _datetime,
@@ -163,11 +186,9 @@ class _PaymentForm extends State<PaymentForm>{
         description: _description
     );
     await _paymentDao.upsert(payment);
-    if (widget.onClose != null) {
-      widget.onClose!(payment);
-    }
+    if (!context.mounted) return;
     Navigator.of(context).pop();
-    globalEvent.emit("payment_update");
+    globalEvent.emit('payment_update');
   }
 
 
@@ -175,13 +196,13 @@ class _PaymentForm extends State<PaymentForm>{
   void initState()  {
     super.initState();
     populateState();
-    _accountEventListener = globalEvent.on("account_update", (data){
-      debugPrint("accounts are changed");
+    _accountEventListener = globalEvent.on('account_update', (data){
+      debugPrint('accounts are changed');
       loadAccounts();
     });
 
-    _categoryEventListener = globalEvent.on("category_update", (data){
-      debugPrint("categories are changed");
+    _categoryEventListener = globalEvent.on('category_update', (data){
+      debugPrint('categories are changed');
       loadCategories();
     });
   }
@@ -202,14 +223,17 @@ class _PaymentForm extends State<PaymentForm>{
     return
       Scaffold(
           appBar: AppBar(
-            title: Text("${widget.payment ==null? "New": "Edit"} Transaction", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
+            title: Text(widget.payment == null ? Strings.newTransaction : Strings.editTransaction, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
             actions: [
+              if (widget.payment == null) const ReceiptScannerButton(),
+              if (widget.payment == null) const VoiceInputButton(),
               _id!=null ? IconButton(
                   onPressed: (){
-                    ConfirmModal.showConfirmDialog(context, title: "Are you sure?", content: const Text("After deleting payment can't be recovered."),
+                    ConfirmModal.showConfirmDialog(context, title: Strings.areYouSure, content: const Text(Strings.afterDeletingPaymentCanTBe),
                         onConfirm: () async {
-                          await _paymentDao.deleteTransaction(_id!);
-                          globalEvent.emit("payment_update");
+                          final id = _id;
+                          if (id != null) await _paymentDao.deleteTransaction(id);
+                          globalEvent.emit('payment_update');
                           if (!context.mounted) return;
                           Navigator.pop(context);
                           Navigator.pop(context);
@@ -230,7 +254,6 @@ class _PaymentForm extends State<PaymentForm>{
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 25,),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
@@ -244,7 +267,7 @@ class _PaymentForm extends State<PaymentForm>{
                                           _type = PaymentType.credit;
                                         });
                                       },
-                                      label: "Income",
+                                      label: 'Income',
                                       color: Theme.of(context).colorScheme.primary,
                                       type: _type == PaymentType.credit? AppButtonType.filled: AppButtonType.outlined,
                                       borderRadius: BorderRadius.circular(45),
@@ -256,7 +279,7 @@ class _PaymentForm extends State<PaymentForm>{
                                           _type = PaymentType.debit;
                                         });
                                       },
-                                      label: "Expense",
+                                      label: 'Expense',
                                       color: Theme.of(context).colorScheme.primary,
                                       type: _type == PaymentType.debit? AppButtonType.filled: AppButtonType.outlined,
                                       borderRadius: BorderRadius.circular(45),
@@ -270,7 +293,7 @@ class _PaymentForm extends State<PaymentForm>{
                               child: TextFormField(
                                 decoration:  InputDecoration(
                                     filled: true,
-                                    hintText: "Title",
+                                    hintText: Strings.title,
                                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),),
                                     contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 15)
                                 ),
@@ -288,7 +311,7 @@ class _PaymentForm extends State<PaymentForm>{
                                 maxLines: null,
                                 decoration: InputDecoration(
                                     filled: true,
-                                    hintText: "Description",
+                                    hintText: Strings.description,
                                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                                     contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 15)
                                 ),
@@ -309,16 +332,16 @@ class _PaymentForm extends State<PaymentForm>{
                                   ],
                                   decoration: InputDecoration(
                                       filled: true,
-                                      hintText: "0.0",
+                                      hintText: Strings.s00,
                                       prefixIcon: Padding(padding: const EdgeInsets.only(left: 15), child: CurrencyText(null)),
-                                      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                                      prefixIconConstraints: const BoxConstraints(),
                                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                                       contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 15)
                                   ),
-                                  initialValue: _amount == 0 ? "" : _amount.toString(),
+                                  initialValue: _amount == 0 ? '' : _amount.toString(),
                                   onChanged: (String text){
                                     setState(() {
-                                      _amount = double.parse(text==""? "0":text);
+                                      _amount = double.tryParse(text) ?? 0.0;
                                     });
                                   },
                                 )
@@ -338,7 +361,7 @@ class _PaymentForm extends State<PaymentForm>{
                                               spacing: 10,
                                               children: [
                                                 Icon(Icons.calendar_today, size: 18, color: Theme.of(context).colorScheme.primary,),
-                                                Text(DateFormat("dd/MM/yyyy").format(_datetime))
+                                                Text(DateFormat(AppDateFormats.numericShortDate).format(_datetime))
                                               ],
                                             )
                                         )
@@ -353,7 +376,7 @@ class _PaymentForm extends State<PaymentForm>{
                                               spacing: 10,
                                               children: [
                                                 Icon(Icons.watch_later_outlined, size: 18, color: Theme.of(context).colorScheme.primary,),
-                                                Text(DateFormat("hh:mm a").format(_datetime))
+                                                Text(DateFormat(AppDateFormats.time12Hour).format(_datetime))
                                               ],
                                             )
                                         )
@@ -364,7 +387,7 @@ class _PaymentForm extends State<PaymentForm>{
 
                             Container(
                               padding: const EdgeInsets.only(left: 15, bottom: 15),
-                              child: const Text("Select Account", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),),
+                              child: const Text(Strings.selectAccount, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),),
                             ),
                             Container(
                               height: 70,
@@ -380,7 +403,7 @@ class _PaymentForm extends State<PaymentForm>{
                                       width: 190,
                                       child: MaterialButton(
                                           minWidth: double.infinity,
-                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                           shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(18),
                                               side: const BorderSide(
@@ -402,7 +425,7 @@ class _PaymentForm extends State<PaymentForm>{
                                             child: Row(
                                               children: [
                                                 CircleAvatar(
-                                                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                                                   child: const Icon(Icons.add, color: Colors.white),
                                                 ),
                                                 const SizedBox(width: 10,),
@@ -410,8 +433,8 @@ class _PaymentForm extends State<PaymentForm>{
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    Text("New", style: Theme.of(context).textTheme.bodyMedium?.apply(fontWeightDelta: 2)),
-                                                    Text("Create account", style: Theme.of(context).textTheme.bodySmall, overflow: TextOverflow.ellipsis,),
+                                                    Text(Strings.newText, style: Theme.of(context).textTheme.bodyMedium?.apply(fontWeightDelta: 2)),
+                                                    Text(Strings.createAccount, style: Theme.of(context).textTheme.bodySmall, overflow: TextOverflow.ellipsis,),
                                                   ],
                                                 )
                                               ],
@@ -420,14 +443,14 @@ class _PaymentForm extends State<PaymentForm>{
                                       ),
                                     );
                                   }
-                                  Account account = _accounts[index-1];
+                                  final Account account = _accounts[index-1];
                                   return Container(
                                       margin: const EdgeInsets.only(right: 5, left: 5),
                                       child: ConstrainedBox(
-                                          constraints:   const BoxConstraints(minWidth: 0,),
+                                          constraints:   const BoxConstraints(),
                                           child:  IntrinsicWidth(
                                             child:MaterialButton(
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                                 shape: RoundedRectangleBorder(
                                                     borderRadius: BorderRadius.circular(18),
                                                     side: BorderSide(
@@ -451,7 +474,7 @@ class _PaymentForm extends State<PaymentForm>{
                                                   child: Row(
                                                     children: [
                                                       CircleAvatar(
-                                                        backgroundColor: account.color.withOpacity(0.2),
+                                                        backgroundColor: account.color.withValues(alpha: 0.2),
                                                         child: Icon(account.icon, color: account.color),
                                                       ),
                                                       const SizedBox(width: 10,),
@@ -477,7 +500,7 @@ class _PaymentForm extends State<PaymentForm>{
 
                             Container(
                               padding: const EdgeInsets.only(left: 15, bottom: 15),
-                              child: const Text("Select Category", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),),
+                              child: const Text(Strings.selectCategory, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),),
                             ),
                             Container(
                               margin: const EdgeInsets.only(bottom: 25, left: 15, right: 15),
@@ -488,11 +511,11 @@ class _PaymentForm extends State<PaymentForm>{
                                   children: List.generate(_categories.length + 1, (index){
                                     if(_categories.length == index){
                                       return ConstrainedBox(
-                                          constraints:   const BoxConstraints(minWidth: 0,),
+                                          constraints:   const BoxConstraints(),
                                           child:  IntrinsicWidth(
                                             child:MaterialButton(
                                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                                 shape: RoundedRectangleBorder(
                                                     borderRadius: BorderRadius.circular(15),
                                                     side: const BorderSide(
@@ -500,7 +523,7 @@ class _PaymentForm extends State<PaymentForm>{
                                                         color: Colors.transparent
                                                     )
                                                 ),
-                                                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+                                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                                 elevation: 0,
                                                 focusElevation: 0,
                                                 hoverElevation: 0,
@@ -515,7 +538,7 @@ class _PaymentForm extends State<PaymentForm>{
                                                     children: [
                                                       Icon(Icons.add, color: Theme.of(context).colorScheme.primary,),
                                                       const SizedBox(width: 10,),
-                                                      Text("New Category", style: Theme.of(context).textTheme.bodyMedium),
+                                                      Text(Strings.newCategory, style: Theme.of(context).textTheme.bodyMedium),
                                                     ],
                                                   ),
                                                 )
@@ -523,12 +546,12 @@ class _PaymentForm extends State<PaymentForm>{
                                           )
                                       );
                                     }
-                                    Category category = _categories[index];
+                                    final Category category = _categories[index];
                                     return ConstrainedBox(
-                                        constraints:   const BoxConstraints(minWidth: 0,),
+                                        constraints:   const BoxConstraints(),
                                         child:  IntrinsicWidth(
                                             child:MaterialButton(
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                                 shape: RoundedRectangleBorder(
                                                     borderRadius: BorderRadius.circular(15),
                                                     side: BorderSide(
@@ -536,7 +559,7 @@ class _PaymentForm extends State<PaymentForm>{
                                                         color: _category?.id == category.id ? Theme.of(context).colorScheme.primary : Colors.transparent
                                                     )
                                                 ),
-                                                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+                                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                                 elevation: 0,
                                                 focusElevation: 0,
                                                 hoverElevation: 0,
@@ -577,7 +600,7 @@ class _PaymentForm extends State<PaymentForm>{
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                 child: AppButton(
-                  label: "Save Transaction",
+                  label: 'Save Transaction',
                   height: 50,
                   labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   isFullWidth: true,

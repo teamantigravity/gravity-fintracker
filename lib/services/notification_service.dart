@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:fintracker/config/strings.dart';
 
 /// Local, privacy-first notification service.
 /// No server, no analytics — notifications are generated on-device.
@@ -12,6 +13,8 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
+  FlutterLocalNotificationsPlugin get plugin => _notifications;
+
   Future<void> init() async {
     if (_initialized) return;
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -20,10 +23,16 @@ class NotificationService {
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
-    const InitializationSettings settings = InitializationSettings(
+
+    final LinuxInitializationSettings linuxSettings = LinuxInitializationSettings(
+      defaultActionName: Strings.openAppFmt(Strings.appName),
+    );
+
+    final InitializationSettings settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
       macOS: iosSettings,
+      linux: linuxSettings,
     );
     await _notifications.initialize(settings);
     _initialized = true;
@@ -38,6 +47,15 @@ class NotificationService {
       }
       return status.isGranted;
     }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+      final ios = _notifications.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (ios != null) {
+        final result = await ios.requestPermissions(alert: true, badge: true, sound: true);
+        return result ?? false;
+      }
+    }
+
     return true;
   }
 
@@ -54,7 +72,12 @@ class NotificationService {
         importance: Importance.high,
         priority: Priority.high,
       );
-      const NotificationDetails details = NotificationDetails(android: androidDetails, iOS: DarwinNotificationDetails());
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+        linux: LinuxNotificationDetails(),
+      );
 
       await _notifications.show(
         DateTime.now().millisecondsSinceEpoch % 2147483647,
@@ -62,8 +85,37 @@ class NotificationService {
         body ?? 'A recurring payment is due today',
         details,
       );
-    } catch (_) {
+    } catch (e) {
       // Notifications are best-effort; never break transaction processing
+      debugPrint('Show due bill notification failed: $e');
+    }
+  }
+
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    try {
+      if (!_initialized) await init();
+      final hasPermission = await requestPermission();
+      if (!hasPermission) return;
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'general_channel',
+        'General',
+        channelDescription: 'General app notifications',
+      );
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+        linux: LinuxNotificationDetails(),
+      );
+      await _notifications.show(id, title, body, details, payload: payload);
+    } catch (e) {
+      // Notifications are best-effort
+      debugPrint('Show notification failed: $e');
     }
   }
 }
