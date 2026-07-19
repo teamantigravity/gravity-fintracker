@@ -12,13 +12,13 @@ class FinancialHealthService {
     final recurring = await RecurringDao().find();
 
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final lastMonthStart = DateTime(now.year, now.month - 1, 1);
+    final monthStart = DateTime(now.year, now.month);
+    final lastMonthStart = DateTime(now.year, now.month - 1);
 
     double thisMonthIncome = 0;
     double thisMonthExpense = 0;
     double lastMonthExpense = 0;
-    Map<int, double> categorySpend = {};
+    final Map<int, double> categorySpend = {};
 
     for (final p in payments) {
       if (p.type == PaymentType.credit) {
@@ -118,13 +118,13 @@ class FinancialHealthService {
   }
 
   static List<String> _suggestions(double savingsRate, double budgetScore, double trendScore, double liquidityScore, double diversificationScore) {
-    List<String> suggestions = [];
-    if (savingsRate < 10) suggestions.add("Try to save at least 10% of your income each month.");
-    if (budgetScore < 70) suggestions.add("Some categories are over budget. Review your budget limits.");
-    if (trendScore < 70) suggestions.add("Your spending is trending up. Look for areas to cut back.");
-    if (liquidityScore < 70) suggestions.add("Build an emergency fund covering at least 3 months of expenses.");
-    if (diversificationScore < 70) suggestions.add("A large portion of spending is in one category. Diversify if possible.");
-    if (suggestions.isEmpty) suggestions.add("Great financial health! Keep up the good habits.");
+    final List<String> suggestions = [];
+    if (savingsRate < 10) suggestions.add('Try to save at least 10% of your income each month.');
+    if (budgetScore < 70) suggestions.add('Some categories are over budget. Review your budget limits.');
+    if (trendScore < 70) suggestions.add('Your spending is trending up. Look for areas to cut back.');
+    if (liquidityScore < 70) suggestions.add('Build an emergency fund covering at least 3 months of expenses.');
+    if (diversificationScore < 70) suggestions.add('A large portion of spending is in one category. Diversify if possible.');
+    if (suggestions.isEmpty) suggestions.add('Great financial health! Keep up the good habits.');
     return suggestions;
   }
 }

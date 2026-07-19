@@ -38,7 +38,7 @@ class BackupService {
 
     Digest digest = hmac.convert(saltWithI);
     Uint8List last = Uint8List.fromList(digest.bytes);
-    Uint8List result = Uint8List.fromList(last);
+    final Uint8List result = Uint8List.fromList(last);
 
     for (int i = 1; i < iterations; i++) {
       digest = hmac.convert(last);

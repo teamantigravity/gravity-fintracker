@@ -4,6 +4,7 @@ import 'package:fintracker/services/what_if_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../premium/paywall.screen.dart';
@@ -47,7 +48,7 @@ class _WhatIfScreenState extends State<WhatIfScreen> {
 
     if (!_unlocked) {
       return Scaffold(
-        appBar: AppBar(title: const Text('What-If Planner')),
+        appBar: AppBar(title: const Text(Strings.whatIfPlanner2)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -57,14 +58,14 @@ class _WhatIfScreenState extends State<WhatIfScreen> {
                 Icon(Symbols.lock, size: 64, color: colorScheme.primary.withAlpha(60)),
                 const SizedBox(height: 16),
                 Text(
-                  'What-If Planner is a Pro feature.',
+                  Strings.whatIfPlannerIsAPro,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen())),
-                  child: const Text('Unlock Pro'),
+                  child: const Text(Strings.unlockPro),
                 ),
               ],
             ),
@@ -74,7 +75,7 @@ class _WhatIfScreenState extends State<WhatIfScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('What-If Planner', style: TextStyle(fontWeight: FontWeight.w600))),
+      appBar: AppBar(title: const Text(Strings.whatIfPlanner2, style: TextStyle(fontWeight: FontWeight.w600))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -126,7 +127,7 @@ class _WhatIfScreenState extends State<WhatIfScreen> {
                   _buildProjectionCard(theme, forecast),
                   const SizedBox(height: 16),
                   Text(
-                    'Projected minimum balance in 90 days:',
+                    Strings.projectedMinimumBalanceIn90Days,
                     style: theme.textTheme.bodySmall,
                   ),
                   CurrencyText(
@@ -137,7 +138,7 @@ class _WhatIfScreenState extends State<WhatIfScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
-                        'Potential low balance on ${forecast.lowBalanceDates.length} upcoming day(s).',
+                        Strings.lowBalanceWarningFmt(forecast.lowBalanceDates.length),
                         style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.expenseColor),
                       ),
                     ),
@@ -167,7 +168,7 @@ class _WhatIfScreenState extends State<WhatIfScreen> {
           children: [
             Text(label, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
             Text(
-              '$prefix${value.toStringAsFixed(0)} / day',
+              Strings.perDayFmt('$prefix${value.toStringAsFixed(0)}'),
               style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.primary),
             ),
           ],

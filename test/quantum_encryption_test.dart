@@ -21,14 +21,14 @@ void main() {
       expect(hasKey, true);
     });
 
-    test('Encrypt and Decrypt data roundtrip (v2)', () async {
+    test('Encrypt and Decrypt data roundtrip (v3 hybrid PQ)', () async {
       final syncService = SyncService();
       await syncService.setEncryptionKey('test_passphrase');
       
       const plainText = '{"message": "Hello Quantum World", "balance": 1000000}';
       final encrypted = await syncService.encryptData(plainText);
       
-      expect(encrypted.startsWith('v2:'), true, reason: 'Should use v2 quantum format');
+      expect(encrypted.startsWith('v3:'), true, reason: 'Should use v3 hybrid post-quantum format');
       
       final decrypted = await syncService.decryptData(encrypted);
       expect(decrypted, plainText, reason: 'Decrypted data must match original exactly');

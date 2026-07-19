@@ -339,8 +339,6 @@ class _PrismListTileState extends State<PrismListTile> {
             ? PrismAvatar(
                 icon: widget.icon,
                 color: widget.iconColor,
-                size: PrismTokens.avatarSize,
-                iconSize: PrismTokens.avatarIconSize,
               )
             : null);
 

@@ -10,6 +10,8 @@ import 'package:fintracker/services/receipt_scanner_service.dart';
 import 'package:fintracker/services/subscription_scanner_service.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -48,13 +50,13 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
   Future<void> _scan(ImageSource source) async {
     if (!ReceiptScannerService.isSupported) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receipt scanning is only available on mobile devices.')),
+        const SnackBar(content: Text(Strings.receiptScanningIsOnlyAvailableOn)),
       );
       return;
     }
     if (_accounts.isEmpty || _categories.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please create at least one account and category first')),
+        const SnackBar(content: Text(Strings.pleaseCreateAtLeastOneAccount)),
       );
       return;
     }
@@ -73,7 +75,7 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
 
     if (suggestion == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No subscription details found. Try another image.')),
+        const SnackBar(content: Text(Strings.noSubscriptionDetailsFoundTryAnother)),
       );
     }
   }
@@ -85,13 +87,13 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
 
     if (!_unlocked) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Scan Subscription')),
+        appBar: AppBar(title: const Text(Strings.scanSubscription)),
         body: _paywall(theme, colorScheme),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Subscription')),
+      appBar: AppBar(title: const Text(Strings.scanSubscription)),
       body: _scanning
           ? const Center(child: CircularProgressIndicator())
           : _suggestion != null
@@ -109,20 +111,20 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
           Icon(Symbols.receipt_long, size: 64, color: colorScheme.primary),
           const SizedBox(height: 16),
           Text(
-            'Subscription Scanner is a Plus feature',
+            Strings.subscriptionScannerIsAPlusFeature,
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Turn a receipt or bill into a recurring transaction in seconds. On-device OCR.',
+            Strings.turnAReceiptOrBillInto,
             style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaywallScreen())),
-            child: const Text('Upgrade'),
+            child: const Text(Strings.upgrade),
           ),
         ],
       ),
@@ -138,13 +140,13 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
           Icon(Symbols.receipt_long, size: 64, color: colorScheme.primary, fill: 1),
           const SizedBox(height: 24),
           Text(
-            'Scan a subscription receipt',
+            Strings.scanASubscriptionReceipt,
             style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'Snap a photo or choose an image. OCR runs on your device and creates a recurring transaction suggestion.',
+            Strings.snapAPhotoOrChooseAn,
             style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
             textAlign: TextAlign.center,
           ),
@@ -155,7 +157,7 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
                 child: FilledButton.icon(
                   onPressed: () => _scan(ImageSource.camera),
                   icon: const Icon(Symbols.camera_alt),
-                  label: const Text('Camera'),
+                  label: const Text(Strings.camera),
                 ),
               ),
               const SizedBox(width: 12),
@@ -163,7 +165,7 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
                 child: FilledButton.icon(
                   onPressed: () => _scan(ImageSource.gallery),
                   icon: const Icon(Symbols.photo_library),
-                  label: const Text('Gallery'),
+                  label: const Text(Strings.gallery),
                 ),
               ),
             ],
@@ -181,13 +183,13 @@ class _SubscriptionScannerScreenState extends State<SubscriptionScannerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Confirm subscription', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          Text(Strings.confirmSubscription, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 16),
           Card(
             child: ListTile(
               leading: const Icon(Symbols.receipt_long, fill: 1),
               title: Text(suggestion.title),
-              subtitle: Text('Amount: ${suggestion.amount.toStringAsFixed(2)} · Monthly · ${DateFormat('dd MMM yyyy').format(suggestion.startDate)}'),
+              subtitle: Text(Strings.amountMonthlyDateFmt(suggestion.amount.toStringAsFixed(2), DateFormat(AppDateFormats.mediumDate).format(suggestion.startDate))),
             ),
           ),
           const SizedBox(height: 24),

@@ -1,3 +1,4 @@
+import 'package:fintracker/config/app_date_formats.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/model/category.model.dart';
 import 'package:intl/intl.dart';
@@ -30,25 +31,25 @@ class Payment {
 
   factory Payment.fromJson(Map<String, dynamic> data) {
     return Payment(
-      id: data["id"],
-      title: data["title"] ?? "",
-      description: data["description"] ?? "",
-      account: Account.fromJson(data["account"] is Map ? data["account"] : {"id": data["account"]}),
-      category: Category.fromJson(data["category"] is Map ? data["category"] : {"id": data["category"]}),
-      amount: (data["amount"] as num?)?.toDouble() ?? 0.0,
-      type: data["type"] == "CR" ? PaymentType.credit : PaymentType.debit,
-      datetime: DateTime.tryParse(data["datetime"] ?? '') ?? DateTime.now(),
+      id: data['id'],
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      account: Account.fromJson(data['account'] is Map ? data['account'] : {'id': data['account']}),
+      category: Category.fromJson(data['category'] is Map ? data['category'] : {'id': data['category']}),
+      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      type: data['type'] == 'CR' ? PaymentType.credit : PaymentType.debit,
+      datetime: DateTime.tryParse(data['datetime'] ?? '') ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "title": title,
-    "description": description,
-    "account": account.id,
-    "category": category.id,
-    "amount": amount,
-    "datetime": DateFormat('yyyy-MM-dd HH:mm:ss').format(datetime),
-    "type": type == PaymentType.credit ? "CR": "DR",
+    'id': id,
+    'title': title,
+    'description': description,
+    'account': account.id,
+    'category': category.id,
+    'amount': amount,
+    'datetime': DateFormat(AppDateFormats.sqlDateTimeSecond).format(datetime),
+    'type': type == PaymentType.credit ? 'CR': 'DR',
   };
 }

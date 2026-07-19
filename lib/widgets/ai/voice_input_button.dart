@@ -3,6 +3,7 @@ import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/services/voice_transaction_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../screens/premium/paywall.screen.dart';
@@ -22,13 +23,13 @@ class VoiceInputButton extends StatelessWidget {
     return IconButton(
       icon: const Icon(Symbols.mic),
       onPressed: () => _listen(context),
-      tooltip: 'Voice input',
+      tooltip: Strings.voiceInput,
     );
   }
 
   Future<void> _listen(BuildContext context) async {
     if (!VoiceTransactionService.isSupported) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Voice input is not supported on this device.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.voiceInputIsNotSupportedOn)));
       return;
     }
 
@@ -40,7 +41,7 @@ class VoiceInputButton extends StatelessWidget {
           children: [
             CircularProgressIndicator(),
             SizedBox(width: 20),
-            Text('Listening...'),
+            Text(Strings.listening),
           ],
         ),
       ),

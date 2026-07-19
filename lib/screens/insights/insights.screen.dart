@@ -6,6 +6,7 @@ import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../premium/paywall.screen.dart';
@@ -49,7 +50,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Insights', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(Strings.insights, style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
           IconButton(
             icon: const Icon(Symbols.refresh),
@@ -92,7 +93,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         final score = snapshot.data?.score ?? 0;
         final color = score >= 80 ? AppTheme.incomeColor : score >= 50 ? Colors.orange : AppTheme.expenseColor;
         return _card(
-          title: 'Financial Health',
+          title: Strings.financialHealth,
           child: snapshot.hasData
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,11 +107,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                score >= 80 ? 'Excellent' : score >= 50 ? 'Fair' : 'Needs Attention',
+                                Strings.scoreLabel(score),
                                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: color),
                               ),
                               Text(
-                                'Savings ${snapshot.data?.savingsRate.toStringAsFixed(0)}% · Budget ${snapshot.data?.budgetScore} · Liquidity ${snapshot.data?.liquidityScore}',
+                                Strings.scoreSummaryFmt(snapshot.data?.savingsRate.toStringAsFixed(0) ?? '', snapshot.data?.budgetScore ?? '', snapshot.data?.liquidityScore ?? ''),
                                 style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
                               ),
                             ],
@@ -144,13 +145,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
       builder: (context, snapshot) {
         final anomalies = snapshot.data ?? [];
         return _card(
-          title: 'Smart Alerts',
+          title: Strings.smartAlerts,
           child: anomalies.isEmpty
               ? Row(
                   children: [
                     const Icon(Symbols.check_circle, color: AppTheme.incomeColor),
                     const SizedBox(width: 8),
-                    Text('No anomalies detected', style: theme.textTheme.bodyMedium),
+                    Text(Strings.noAnomaliesDetected, style: theme.textTheme.bodyMedium),
                   ],
                 )
               : Column(
@@ -180,13 +181,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _forecastMetric('Daily Income', CurrencyText(forecast.dailyIncome), AppTheme.incomeColor),
-                        _forecastMetric('Daily Expense', CurrencyText(forecast.dailyExpense), AppTheme.expenseColor),
+                        _forecastMetric(Strings.dailyIncome, CurrencyText(forecast.dailyIncome), AppTheme.incomeColor),
+                        _forecastMetric(Strings.dailyExpense, CurrencyText(forecast.dailyExpense), AppTheme.expenseColor),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Projected minimum balance in 90 days:',
+                      Strings.projectedMinimumBalanceIn90Days,
                       style: theme.textTheme.bodySmall,
                     ),
                     CurrencyText(min, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: min < 0 ? AppTheme.expenseColor : AppTheme.incomeColor)),
@@ -194,7 +195,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          'Potential low balance on ${forecast.lowBalanceDates.length} upcoming day(s).',
+                          Strings.lowBalanceWarningFmt(forecast.lowBalanceDates.length),
                           style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.expenseColor),
                         ),
                       ),
@@ -202,36 +203,36 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 );
               },
             )
-          : _proTile('Get a 90-day balance forecast and low-balance alerts', theme, () => _openPaywall()),
+          : _proTile(Strings.balanceForecastPromo, theme, () => _openPaywall()),
     );
   }
 
   Widget _buildReportsCard(ThemeData theme, ColorScheme colorScheme) {
     final unlocked = SubscriptionService().canUseTaxReports;
     return _card(
-      title: 'Tax & Export Reports',
+      title: Strings.taxAndExportReports,
       pro: !SubscriptionService().isPlus,
       child: unlocked
-          ? _proTile('Generate category summaries and export tax-ready CSVs', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen())))
-          : _proTile('Generate tax-ready reports and export CSVs', theme, () => _openPaywall()),
+          ? _proTile(Strings.generateCategorySummariesAndExportTaxReadyCsvs, theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen())))
+          : _proTile(Strings.generateTaxReadyReportsAndExportCsvs, theme, () => _openPaywall()),
     );
   }
 
   Widget _buildWhatIfCard(ThemeData theme, ColorScheme colorScheme) {
     final unlocked = SubscriptionService().canUseWhatIfPlanner;
     return _card(
-      title: 'What-If Planner',
+      title: Strings.whatIfPlanner,
       pro: !SubscriptionService().isPro,
       child: unlocked
-          ? _proTile('Simulate changes to income, expenses, and recurring payments', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WhatIfScreen())))
-          : _proTile('Run cash-flow scenarios before making financial decisions', theme, () => _openPaywall()),
+          ? _proTile(Strings.simulateChangesToIncomeExpensesAndRecurring, theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WhatIfScreen())))
+          : _proTile(Strings.runCashFlowScenariosBeforeMakingFinancialDecisions, theme, () => _openPaywall()),
     );
   }
 
   Widget _buildCoachCard(ThemeData theme, ColorScheme colorScheme) {
     final unlocked = SubscriptionService().canUseFinancialCoach;
     return _card(
-      title: 'Financial Coach',
+      title: Strings.financialCoach,
       pro: !SubscriptionService().isPro,
       child: unlocked
           ? FutureBuilder<List<CoachMessage>>(
@@ -239,21 +240,21 @@ class _InsightsScreenState extends State<InsightsScreen> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()));
                 final messages = snapshot.data ?? [];
-                return _proTile('${messages.length} personalized insights ready', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoachScreen())));
+                return _proTile(Strings.personalizedInsightsReadyFmt(messages.length), theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoachScreen())));
               },
             )
-          : _proTile('Ask your on-device financial coach for personalized advice', theme, () => _openPaywall()),
+          : _proTile(Strings.askYourOnDeviceFinancialCoachForPersonalizedAdvice, theme, () => _openPaywall()),
     );
   }
 
   Widget _buildSavingsGoalsCard(ThemeData theme, ColorScheme colorScheme) {
     final unlocked = SubscriptionService().canUseSavingsGoals;
     return _card(
-      title: 'Savings Goals',
+      title: Strings.savingsGoals,
       pro: !SubscriptionService().isPlus,
       child: unlocked
-          ? _proTile('Track goals and run what-if scenarios', theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingsGoalsScreen())))
-          : _proTile('Create savings goals and what-if plans', theme, () => _openPaywall()),
+          ? _proTile(Strings.trackGoalsAndRunWhatIfScenarios, theme, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingsGoalsScreen())))
+          : _proTile(Strings.createSavingsGoalsAndWhatIfPlans, theme, () => _openPaywall()),
     );
   }
 
@@ -280,7 +281,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(color: colorScheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                  child: Text('PRO', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: colorScheme.primary)),
+                  child: Text(Strings.pro, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: colorScheme.primary)),
                 ),
               ],
             ],
@@ -305,7 +306,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             backgroundColor: color.withValues(alpha: 0.15),
             valueColor: AlwaysStoppedAnimation(color),
           ),
-          Center(child: Text('$score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color))),
+          Center(child: Text(score.toString(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color))),
         ],
       ),
     );

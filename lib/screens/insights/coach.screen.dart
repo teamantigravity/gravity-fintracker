@@ -1,6 +1,7 @@
 import 'package:fintracker/services/coach_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class CoachScreen extends StatefulWidget {
@@ -22,7 +23,7 @@ class _CoachScreenState extends State<CoachScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Financial Coach', style: TextStyle(fontWeight: FontWeight.w600))),
+      appBar: AppBar(title: const Text(Strings.financialCoach, style: TextStyle(fontWeight: FontWeight.w600))),
       body: FutureBuilder<List<CoachMessage>>(
         future: _messages,
         builder: (context, snapshot) {

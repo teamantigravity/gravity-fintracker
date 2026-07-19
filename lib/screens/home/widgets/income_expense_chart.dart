@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:intl/intl.dart';
 
 class IncomeExpenseChart extends StatelessWidget {
@@ -9,9 +11,9 @@ class IncomeExpenseChart extends StatelessWidget {
   const IncomeExpenseChart({super.key, required this.payments});
 
   Map<String, _DayData> _getDailyBreakdown() {
-    Map<String, _DayData> daily = {};
-    for (var payment in payments) {
-      String key = DateFormat('yyyy-MM-dd').format(payment.datetime);
+    final Map<String, _DayData> daily = {};
+    for (final payment in payments) {
+      final String key = DateFormat(AppDateFormats.isoDate).format(payment.datetime);
       final day = daily.putIfAbsent(key, () => _DayData(date: payment.datetime));
       if (payment.type == PaymentType.credit) {
         day.income += payment.amount;
@@ -33,7 +35,7 @@ class IncomeExpenseChart extends StatelessWidget {
         : sortedKeys;
 
     double maxY = 0;
-    for (var key in displayKeys) {
+    for (final key in displayKeys) {
       final data = daily[key];
       if (data == null) continue;
       if (data.income > maxY) maxY = data.income;
@@ -52,15 +54,15 @@ class IncomeExpenseChart extends StatelessWidget {
           Row(
             children: [
               Text(
-                "Daily Overview",
+                Strings.dailyOverview,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
               ),
               const Spacer(),
-              const _LegendDot(color: AppTheme.incomeColor, label: "Income"),
+              const _LegendDot(color: AppTheme.incomeColor, label: 'Income'),
               const SizedBox(width: 12),
-              const _LegendDot(color: AppTheme.expenseColor, label: "Expense"),
+              const _LegendDot(color: AppTheme.expenseColor, label: 'Expense'),
             ],
           ),
           const SizedBox(height: 20),
@@ -73,7 +75,7 @@ class IncomeExpenseChart extends StatelessWidget {
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      String label = rodIndex == 0 ? 'Income' : 'Expense';
+                      final String label = rodIndex == 0 ? 'Income' : 'Expense';
                       return BarTooltipItem(
                         '$label\n${rod.toY.toStringAsFixed(0)}',
                         TextStyle(
@@ -86,19 +88,18 @@ class IncomeExpenseChart extends StatelessWidget {
                   ),
                 ),
                 titlesData: FlTitlesData(
-                  show: true,
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        int index = value.toInt();
+                        final int index = value.toInt();
                         if (index >= 0 && index < displayKeys.length) {
                           final day = daily[displayKeys[index]];
                           if (day == null) return const SizedBox.shrink();
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              DateFormat('dd MMM').format(day.date),
+                              DateFormat(AppDateFormats.shortDate).format(day.date),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 9,
                                     color: isDark ? Colors.white54 : Colors.black45,
@@ -112,17 +113,16 @@ class IncomeExpenseChart extends StatelessWidget {
                     ),
                   ),
                   leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                    
                   ),
                   topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                    
                   ),
                   rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                    
                   ),
                 ),
                 gridData: FlGridData(
-                  show: true,
                   drawVerticalLine: false,
                   horizontalInterval: maxY / 4,
                   getDrawingHorizontalLine: (value) => FlLine(

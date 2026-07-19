@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/config/strings.dart';
 
 /// Local, privacy-first notification service.
 /// No server, no analytics — notifications are generated on-device.
@@ -24,11 +24,11 @@ class NotificationService {
       requestSoundPermission: false,
     );
 
-    const LinuxInitializationSettings linuxSettings = LinuxInitializationSettings(
-      defaultActionName: 'Open ${AppConstants.appName}',
+    final LinuxInitializationSettings linuxSettings = LinuxInitializationSettings(
+      defaultActionName: Strings.openAppFmt(Strings.appName),
     );
 
-    const InitializationSettings settings = InitializationSettings(
+    final InitializationSettings settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
       macOS: iosSettings,
@@ -105,8 +105,6 @@ class NotificationService {
         'general_channel',
         'General',
         channelDescription: 'General app notifications',
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
       );
       const NotificationDetails details = NotificationDetails(
         android: androidDetails,

@@ -39,7 +39,7 @@ class RuleService {
       );
 
       final db = await getDBInstance();
-      await db.insert("payments", child.toJson());
+      await db.insert('payments', child.toJson());
       created.add(child);
     }
 

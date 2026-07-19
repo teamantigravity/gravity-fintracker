@@ -11,14 +11,14 @@ class CoachService {
     final categories = await CategoryDao().find();
     final recurring = await RecurringDao().find();
 
-    List<CoachMessage> messages = [];
+    final List<CoachMessage> messages = [];
 
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
+    final monthStart = DateTime(now.year, now.month);
 
     double income = 0;
     double expense = 0;
-    Map<String, double> categorySpend = {};
+    final Map<String, double> categorySpend = {};
     for (final p in payments) {
       if (p.type == PaymentType.credit) {
         income += p.amount;
@@ -50,13 +50,13 @@ class CoachService {
     // Greeting
     messages.add(CoachMessage(
       type: CoachMessageType.greeting,
-      text: "Here is your personalized financial summary. Everything is computed on your device.",
+      text: 'Here is your personalized financial summary. Everything is computed on your device.',
     ));
 
     // Summary
     messages.add(CoachMessage(
       type: CoachMessageType.insight,
-      text: "Your current net balance across all accounts is ${_formatCurrency(balance)}. This month, you earned ${_formatCurrency(thisMonthIncome)} and spent ${_formatCurrency(thisMonthExpense)}.",
+      text: 'Your current net balance across all accounts is ${_formatCurrency(balance)}. This month, you earned ${_formatCurrency(thisMonthIncome)} and spent ${_formatCurrency(thisMonthExpense)}.',
     ));
 
     // Savings
@@ -116,12 +116,12 @@ class CoachService {
     if (projectedNet >= 0) {
       messages.add(CoachMessage(
         type: CoachMessageType.positive,
-        text: "Your tracked cashflow is positive. If you keep this pace, you will grow your balance by ${_formatCurrency(projectedNet)} over the current period.",
+        text: 'Your tracked cashflow is positive. If you keep this pace, you will grow your balance by ${_formatCurrency(projectedNet)} over the current period.',
       ));
     } else {
       messages.add(CoachMessage(
         type: CoachMessageType.warning,
-        text: "Your tracked cashflow is negative. Look for recurring subscriptions or discretionary spending you can reduce.",
+        text: 'Your tracked cashflow is negative. Look for recurring subscriptions or discretionary spending you can reduce.',
       ));
     }
 

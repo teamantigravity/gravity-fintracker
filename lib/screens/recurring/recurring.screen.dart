@@ -10,6 +10,8 @@ import 'package:fintracker/screens/subscriptions/subscription_scanner.screen.dar
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -25,7 +27,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
   List<RecurringTransaction> _recurring = [];
 
   Future<void> _loadData() async {
-    List<RecurringTransaction> recurring = await _recurringDao.find();
+    final List<RecurringTransaction> recurring = await _recurringDao.find();
     if (!mounted) return;
     setState(() {
       _recurring = recurring;
@@ -39,13 +41,13 @@ class _RecurringScreenState extends State<RecurringScreen> {
   }
 
   void _showAddRecurringDialog() async {
-    List<Category> categories = await CategoryDao().find(withSummery: false);
-    List<Account> accounts = await AccountDao().find();
+    final List<Category> categories = await CategoryDao().find(withSummery: false);
+    final List<Account> accounts = await AccountDao().find();
 
     if (!mounted) return;
     if (categories.isEmpty || accounts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please create at least one category and account first")),
+        const SnackBar(content: Text(Strings.pleaseCreateAtLeastOneCategory)),
       );
       return;
     }
@@ -85,7 +87,6 @@ class _RecurringScreenState extends State<RecurringScreen> {
         interval: recurring.interval,
         startDate: recurring.startDate,
         nextDueDate: recurring.nextDueDate,
-        isActive: true,
       ));
     }
     _loadData();
@@ -102,25 +103,25 @@ class _RecurringScreenState extends State<RecurringScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Recurring"),
+        title: const Text(Strings.recurring),
         actions: [
           IconButton(
             icon: const Icon(Symbols.insights, fill: 1),
-            tooltip: 'Subscription Intelligence',
+            tooltip: Strings.subscriptionIntelligence,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SubscriptionDashboardScreen()),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.rule),
-            tooltip: 'Automation Rules',
+            tooltip: Strings.automationRules,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const RulesScreen()),
             ),
           ),
           IconButton(
             icon: const Icon(Symbols.receipt_long, fill: 1),
-            tooltip: 'Scan Subscription',
+            tooltip: Strings.scanSubscription,
             onPressed: () async {
               await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
@@ -143,14 +144,14 @@ class _RecurringScreenState extends State<RecurringScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No recurring transactions",
+                    Strings.noRecurringTransactions,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Automate your bills, subscriptions,\nand income tracking",
+                    Strings.automateYourBillsSubscriptionsNandIncome,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
@@ -169,7 +170,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
               ),
               itemBuilder: (context, index) {
                 final item = _recurring[index];
-                final isCredit = item.type == "CR";
+                final isCredit = item.type == 'CR';
                 return Dismissible(
                   key: Key('recurring_${item.id}'),
                   direction: DismissDirection.endToStart,
@@ -201,10 +202,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      "${item.intervalLabel} · Next: ${() {
-                        final nextDueDate = item.nextDueDate;
-                        return nextDueDate != null ? DateFormat('dd MMM').format(nextDueDate) : 'N/A';
-                      }()}",
+                      Strings.recurringSubtitle(item.intervalLabel, item.nextDueDate != null ? DateFormat(AppDateFormats.shortDate).format(item.nextDueDate!) : null),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
@@ -263,7 +261,7 @@ class _RecurringFormState extends State<RecurringForm> {
   Category? _selectedCategory;
   Account? _selectedAccount;
   RecurringInterval _interval = RecurringInterval.monthly;
-  String _type = "DR";
+  String _type = 'DR';
   DateTime _startDate = DateTime.now();
   DateTime _nextDueDate = DateTime.now();
 
@@ -322,7 +320,7 @@ class _RecurringFormState extends State<RecurringForm> {
             ),
             const SizedBox(height: 20),
             Text(
-              "New Recurring Transaction",
+              Strings.newRecurringTransaction,
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 20),
@@ -330,8 +328,8 @@ class _RecurringFormState extends State<RecurringForm> {
             // Type toggle
             SegmentedButton<String>(
               segments: const [
-                ButtonSegment(value: "DR", label: Text("Expense"), icon: Icon(Symbols.arrow_upward)),
-                ButtonSegment(value: "CR", label: Text("Income"), icon: Icon(Symbols.arrow_downward)),
+                ButtonSegment(value: 'DR', label: Text(Strings.expense), icon: Icon(Symbols.arrow_upward)),
+                ButtonSegment(value: 'CR', label: Text(Strings.income), icon: Icon(Symbols.arrow_downward)),
               ],
               selected: {_type},
               onSelectionChanged: (v) => setState(() => _type = v.first),
@@ -340,21 +338,21 @@ class _RecurringFormState extends State<RecurringForm> {
 
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: "Title"),
+              decoration: const InputDecoration(labelText: Strings.title),
             ),
             const SizedBox(height: 12),
 
             TextField(
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: "Amount"),
+              decoration: const InputDecoration(labelText: Strings.amount),
             ),
             const SizedBox(height: 12),
 
             // Category dropdown
             DropdownButtonFormField<Category>(
               initialValue: _selectedCategory,
-              decoration: const InputDecoration(labelText: "Category"),
+              decoration: const InputDecoration(labelText: Strings.category),
               items: widget.categories.map((c) => DropdownMenuItem(
                 value: c,
                 child: Row(
@@ -372,7 +370,7 @@ class _RecurringFormState extends State<RecurringForm> {
             // Account dropdown
             DropdownButtonFormField<Account>(
               initialValue: _selectedAccount,
-              decoration: const InputDecoration(labelText: "Account"),
+              decoration: const InputDecoration(labelText: Strings.account),
               items: widget.accounts.map((a) => DropdownMenuItem(
                 value: a,
                 child: Text(a.name),
@@ -384,7 +382,7 @@ class _RecurringFormState extends State<RecurringForm> {
             // Interval dropdown
             DropdownButtonFormField<RecurringInterval>(
               initialValue: _interval,
-              decoration: const InputDecoration(labelText: "Frequency"),
+              decoration: const InputDecoration(labelText: Strings.frequency),
               items: RecurringInterval.values.map((i) => DropdownMenuItem(
                 value: i,
                 child: Text(i.name[0].toUpperCase() + i.name.substring(1)),
@@ -396,8 +394,8 @@ class _RecurringFormState extends State<RecurringForm> {
             // Start date
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text("Start Date"),
-              subtitle: Text(DateFormat('dd MMM yyyy').format(_startDate)),
+              title: const Text(Strings.startDate),
+              subtitle: Text(DateFormat(AppDateFormats.mediumDate).format(_startDate)),
               trailing: const Icon(Symbols.calendar_today),
               onTap: () async {
                 final picked = await showDatePicker(
@@ -418,7 +416,7 @@ class _RecurringFormState extends State<RecurringForm> {
 
             TextField(
               controller: _descriptionController,
-              decoration: const InputDecoration(labelText: "Description (optional)"),
+              decoration: const InputDecoration(labelText: Strings.descriptionOptional),
               maxLines: 2,
             ),
             const SizedBox(height: 24),
@@ -430,7 +428,7 @@ class _RecurringFormState extends State<RecurringForm> {
                 onPressed: () async {
                   if (_amountController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please enter an amount")),
+                      const SnackBar(content: Text(Strings.pleaseEnterAnAmount)),
                     );
                     return;
                   }
@@ -438,7 +436,7 @@ class _RecurringFormState extends State<RecurringForm> {
                   final amount = double.tryParse(_amountController.text);
                   if (amount == null || amount <= 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please enter a valid amount")),
+                      const SnackBar(content: Text(Strings.pleaseEnterAValidAmount)),
                     );
                     return;
                   }
@@ -447,7 +445,7 @@ class _RecurringFormState extends State<RecurringForm> {
                   final category = _selectedCategory;
                   if (account == null || category == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please select an account and category")),
+                      const SnackBar(content: Text(Strings.pleaseSelectAnAccountAndCategory)),
                     );
                     return;
                   }
@@ -462,7 +460,6 @@ class _RecurringFormState extends State<RecurringForm> {
                     interval: _interval,
                     startDate: _startDate,
                     nextDueDate: _nextDueDate,
-                    isActive: true,
                   );
 
                   await widget.onSave(recurring);
@@ -470,7 +467,7 @@ class _RecurringFormState extends State<RecurringForm> {
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text("Save", style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(Strings.save, style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           ],

@@ -1,4 +1,6 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
+import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/ui/prism.dart';
@@ -15,7 +17,7 @@ class PaywallScreen extends StatefulWidget {
 
 class _PaywallScreenState extends State<PaywallScreen> {
   final SubscriptionService _subscriptionService = SubscriptionService();
-  String _selectedTier = 'plus';
+  String _selectedTier = AppConstants.entitlementPlus;
   bool _isYearly = true;
   bool _isLoading = false;
 
@@ -28,7 +30,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       context.read<AppCubit>().updatePlus(true);
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Purchases restored")),
+      const SnackBar(content: Text(Strings.purchasesRestored)),
     );
   }
 
@@ -44,14 +46,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
           context.read<AppCubit>().updatePlus(true);
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(subscriptionService.isPro ? "Welcome to Lifetime Pro!" : "Welcome to Lifetime Plus!")),
+          SnackBar(content: Text(subscriptionService.isPro ? Strings.welcomeLifetimePro : Strings.welcomeLifetimePlus)),
         );
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Purchase failed: $e")),
+          const SnackBar(content: Text(Strings.purchaseFailed)),
         );
       }
     } finally {
@@ -63,26 +65,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
     setState(() => _isLoading = true);
     try {
       bool success;
-      if (_selectedTier == 'plus') {
+      if (_selectedTier == AppConstants.entitlementPlus) {
         success = await _subscriptionService.purchasePlus(yearly: _isYearly);
       } else {
         success = await _subscriptionService.purchasePro(yearly: _isYearly);
       }
       if (success && mounted) {
-        if (_selectedTier == 'pro') {
+        if (_selectedTier == AppConstants.entitlementPro) {
           context.read<AppCubit>().updatePro(true);
         } else {
           context.read<AppCubit>().updatePlus(true);
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_selectedTier == 'pro' ? "Welcome to Pro!" : "Welcome to Plus!")),
+          SnackBar(content: Text(_selectedTier == AppConstants.entitlementPro ? Strings.welcomePro : Strings.welcomePlus)),
         );
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Purchase failed: $e")),
+          const SnackBar(content: Text(Strings.purchaseFailed)),
         );
       }
     } finally {
@@ -95,7 +97,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final offering = _subscriptionService.offering;
-    final isPro = _selectedTier == 'pro';
+    final isPro = _selectedTier == AppConstants.entitlementPro;
     final monthlyPrice = isPro ? offering.proMonthlyPrice : offering.plusMonthlyPrice;
     final yearlyPrice = isPro ? offering.proYearlyPrice : offering.plusYearlyPrice;
 
@@ -122,7 +124,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    isPro ? "PRO" : "PLUS",
+                    isPro ? Strings.pro : Strings.plus,
                     style: TextStyle(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w700,
@@ -133,7 +135,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  isPro ? "Unlock Everything" : "Unlock Smart Recurring",
+                  isPro ? Strings.unlockEverything : Strings.unlockSmartRecurring,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -141,7 +143,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Privacy-first finance, everywhere.",
+                  Strings.privacyFirstFinanceEverywhere,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
@@ -151,35 +153,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   children: [
                     Expanded(
                       child: _PlanCard(
-                        title: "Plus",
+                        title: Strings.plusPlanTitle,
                         price: _isYearly ? offering.plusYearlyPrice : offering.plusMonthlyPrice,
-                        subtitle: "Save ${offering.plusYearlySavings}",
-                        features: const [
-                          'Subscription intelligence',
-                          'Smart recurring rules',
-                          'Advanced reports',
-                          'Receipt & voice input',
-                          'Savings goals',
-                        ],
+                        subtitle: Strings.saveYearlyFmt(offering.plusYearlySavings),
+                        features: Strings.plusPlanFeatures,
                         isSelected: !isPro,
-                        onTap: () => setState(() => _selectedTier = 'plus'),
+                        onTap: () => setState(() => _selectedTier = AppConstants.entitlementPlus),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _PlanCard(
-                        title: "Pro",
+                        title: Strings.proPlanTitle,
                         price: _isYearly ? offering.proYearlyPrice : offering.proMonthlyPrice,
-                        subtitle: "Save ${offering.proYearlySavings}",
-                        features: const [
-                          'Everything in Plus',
-                          'E2E encrypted sync',
-                          'Household P2P sync',
-                          'AI financial coach',
-                          'Document vault',
-                        ],
+                        subtitle: Strings.saveYearlyFmt(offering.proYearlySavings),
+                        features: Strings.proPlanFeatures,
                         isSelected: isPro,
-                        onTap: () => setState(() => _selectedTier = 'pro'),
+                        onTap: () => setState(() => _selectedTier = AppConstants.entitlementPro),
                       ),
                     ),
                   ],
@@ -188,8 +178,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Center(
                   child: SegmentedButton<bool>(
                     segments: const [
-                      ButtonSegment(value: false, label: Text('Monthly')),
-                      ButtonSegment(value: true, label: Text('Yearly')),
+                      ButtonSegment(value: false, label: Text(Strings.monthly)),
+                      ButtonSegment(value: true, label: Text(Strings.yearly)),
                     ],
                     selected: {_isYearly},
                     onSelectionChanged: (v) => setState(() => _isYearly = v.first),
@@ -197,9 +187,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 const SizedBox(height: 24),
                 PrismButton(
-                  variant: PrismButtonVariant.primary,
                   isLoading: _isLoading,
-                  label: "Start ${_selectedTier.toUpperCase()} — ${_isYearly ? yearlyPrice : monthlyPrice}",
+                  label: Strings.startPlanFmt(_selectedTier.toUpperCase(), _isYearly ? yearlyPrice : monthlyPrice),
                   onPressed: () { _handlePurchase(); },
                 ),
                 const SizedBox(height: 12),
@@ -207,7 +196,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   child: PrismButton(
                     variant: PrismButtonVariant.ghost,
                     isStretched: false,
-                    label: "Or unlock Lifetime Pro",
+                    label: Strings.orUnlockLifetimePro,
                     onPressed: () { _handleLifetimePurchase(); },
                   ),
                 ),
@@ -215,14 +204,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   child: PrismButton(
                     variant: PrismButtonVariant.ghost,
                     isStretched: false,
-                    label: "Restore Purchases",
+                    label: Strings.restorePurchases,
                     onPressed: () { _restorePurchases(); },
                   ),
                 ),
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    "Cancel anytime. No questions asked.",
+                    Strings.cancelAnytimeNoQuestionsAsked,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
@@ -266,7 +255,6 @@ class _PlanCard extends StatelessWidget {
       borderColor: isSelected ? colorScheme.primary : colorScheme.outlineVariant.withValues(alpha: 0.5),
       borderWidth: isSelected ? 2 : 1,
       backgroundColor: isSelected ? colorScheme.primary.withValues(alpha: 0.06) : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

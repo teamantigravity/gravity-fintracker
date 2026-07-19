@@ -16,7 +16,7 @@ class CurrencyText extends StatelessWidget{
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(builder: (context, state){
       final String currencyCode = state.currency ?? 'USD';
-      Currency? currency = currencyService.findByCode(currencyCode);
+      final Currency? currency = currencyService.findByCode(currencyCode);
       final bool privacy = state.privacyMode;
       final amountValue = amount;
       return Text(

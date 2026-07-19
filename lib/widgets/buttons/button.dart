@@ -41,8 +41,8 @@ class AppButton extends StatelessWidget{
   });
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = MediaQuery.of(context).platformBrightness == Brightness.dark;
-    Color fallBackColor = color ?? (isDarkMode ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary);
+    final bool isDarkMode = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final Color fallBackColor = color ?? (isDarkMode ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary);
     Color typoColor = Colors.transparent;
     Color backgroundColor = Colors.transparent;
     Color borderColor = Colors.transparent;
@@ -89,7 +89,7 @@ class AppButton extends StatelessWidget{
 
 
     double paddingStart = dimension*0.6;
-    double paddingEnd = dimension*0.6;
+    final double paddingEnd = dimension*0.6;
 
     if(icon != null){
       paddingStart = dimension*0.5;
@@ -130,11 +130,10 @@ class AppButton extends StatelessWidget{
                 splashColor: splashColor,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     icon != null ? Icon(icon, color: typoColor, size: iconSize ?? (dimension - (dimension*(55/100))),) : const SizedBox(),
                     icon != null && label!= null ? SizedBox(width: dimension*0.3,) : const SizedBox(),
-                    label!= null ?Text(label??"" ,style: TextStyle(color: typoColor).merge(labelStyle),): const SizedBox()
+                    label!= null ?Text(label??'' ,style: TextStyle(color: typoColor).merge(labelStyle),): const SizedBox()
                   ],
                 ),
               )

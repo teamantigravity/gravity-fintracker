@@ -2,6 +2,8 @@ import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/services/insights_service.dart';
 import 'package:fintracker/services/forecasting_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/theme/prism_colors.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class SmartInsightsCard extends StatefulWidget {
@@ -36,7 +38,7 @@ class _SmartInsightsCardState extends State<SmartInsightsCard> {
               Icon(Symbols.auto_awesome, size: 16, color: colorScheme.primary, fill: 1),
               const SizedBox(width: 6),
               Text(
-                "Smart Insights",
+                Strings.smartInsights,
                 style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 8),
@@ -47,7 +49,7 @@ class _SmartInsightsCardState extends State<SmartInsightsCard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "LOCAL",
+                  Strings.local,
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
@@ -111,7 +113,7 @@ class _InsightCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         color: color.withValues(alpha: 0.08),
-        border: Border.all(color: color.withValues(alpha: 0.18), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,13 +154,13 @@ class _InsightCard extends StatelessWidget {
 Color _insightColor(InsightType type) {
   switch (type) {
     case InsightType.positive:
-      return const Color(0xFF34A853);
+      return PrismColors.success;
     case InsightType.warning:
-      return const Color(0xFFEA4335);
+      return PrismColors.error;
     case InsightType.tip:
-      return const Color(0xFF4285F4);
+      return PrismColors.info;
     case InsightType.neutral:
-      return const Color(0xFFFBBC05);
+      return PrismColors.warning;
   }
 }
 

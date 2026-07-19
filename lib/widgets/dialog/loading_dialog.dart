@@ -11,7 +11,6 @@ class LoadingModal extends StatelessWidget{
     return AlertDialog(
       insetPadding: const EdgeInsets.all(20),
       content: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const CircularProgressIndicator(),
           const SizedBox(width: 20,),
@@ -21,7 +20,7 @@ class LoadingModal extends StatelessWidget{
     );
   }
 
-  static showLoadingDialog(BuildContext context, {
+  static void showLoadingDialog(BuildContext context, {
     required Widget content,
   }){
     showDialog(context: context,

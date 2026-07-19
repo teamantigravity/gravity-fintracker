@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 class AccountDao {
   Future<int> create(Account account) async {
     final db = await getDBInstance();
-    var result = await db.insert("accounts", account.toJson());
+    final result = await db.insert('accounts', account.toJson());
     return result;
   }
 
@@ -15,24 +15,24 @@ class AccountDao {
 
     List<Map<String, dynamic>> result;
     if(withSummery){
-      String fields = [
-        "a.id","a.name","a.holderName","a.accountNumber","a.icon","a.color","a.isDefault",
+      final String fields = [
+        'a.id','a.name','a.holderName','a.accountNumber','a.icon','a.color','a.isDefault',
         "SUM(CASE WHEN t.type='DR' AND t.account=a.id THEN t.amount END) as expense",
         "SUM(CASE WHEN t.type='CR' AND t.account=a.id THEN t.amount END) as income"
-      ].join(",");
-      String sql = "SELECT $fields FROM accounts a LEFT JOIN payments t ON t.account = a.id GROUP BY a.id";
+      ].join(',');
+      final String sql = 'SELECT $fields FROM accounts a LEFT JOIN payments t ON t.account = a.id GROUP BY a.id';
       result = await db.rawQuery(sql);
     } else {
-      result = await db.query("accounts",);
+      result = await db.query('accounts',);
     }
     List<Account> accounts = [];
     if (result.isNotEmpty) {
       accounts = result.map((item) {
-        Map<String, dynamic> nItem = Map.from(item);
+        final Map<String, dynamic> nItem = Map.from(item);
         if(withSummery) {
-          nItem["income"] = nItem["income"] ?? 0.0;
-          nItem["expense"] = nItem["expense"] ?? 0.0;
-          nItem["balance"] = (nItem["income"] as num? ?? 0.0).toDouble() - (nItem["expense"] as num? ?? 0.0).toDouble();
+          nItem['income'] = nItem['income'] ?? 0.0;
+          nItem['expense'] = nItem['expense'] ?? 0.0;
+          nItem['balance'] = (nItem['income'] as num? ?? 0.0).toDouble() - (nItem['expense'] as num? ?? 0.0).toDouble();
         }
         return Account.fromJson(nItem);
       }).toList();
@@ -42,7 +42,7 @@ class AccountDao {
 
   Future<int> update(Account account) async {
     final db = await getDBInstance();
-    var result = await db.update("accounts", account.toJson(), where: "id = ?", whereArgs: [account.id]);
+    final result = await db.update('accounts', account.toJson(), where: 'id = ?', whereArgs: [account.id]);
     return result;
   }
 
@@ -58,11 +58,11 @@ class AccountDao {
 
   Future<int> delete(int id) async {
     final db = await getDBInstance();
-    await db.delete("payments", where: "account = ?", whereArgs: [id]);
-    await db.delete("recurring_transactions", where: "account = ?", whereArgs: [id]);
-    await db.update("savings_goals", {"account": null}, where: "account = ?", whereArgs: [id]);
-    await db.delete("rules", where: "sourceAccount = ? OR targetAccount = ?", whereArgs: [id, id]);
-    var result = await db.delete("accounts", where: 'id = ?', whereArgs: [id]);
+    await db.delete('payments', where: 'account = ?', whereArgs: [id]);
+    await db.delete('recurring_transactions', where: 'account = ?', whereArgs: [id]);
+    await db.update('savings_goals', {'account': null}, where: 'account = ?', whereArgs: [id]);
+    await db.delete('rules', where: 'sourceAccount = ? OR targetAccount = ?', whereArgs: [id, id]);
+    final result = await db.delete('accounts', where: 'id = ?', whereArgs: [id]);
     return result;
   }
 }

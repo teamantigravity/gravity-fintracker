@@ -3,6 +3,7 @@ import 'package:fintracker/theme/colors.dart';
 import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
 import 'package:intl/intl.dart';
 
 class PaymentListItem extends StatelessWidget {
@@ -23,7 +24,6 @@ class PaymentListItem extends StatelessWidget {
         icon: payment.category.icon,
         color: payment.category.color,
         size: 48,
-        iconSize: 22,
         shape: BoxShape.rectangle,
         borderRadius: PrismTokens.radiusSm,
       ),
@@ -46,9 +46,9 @@ class PaymentListItem extends StatelessWidget {
       subtitle: Text.rich(
         TextSpan(
           children: [
-            TextSpan(text: DateFormat("dd MMM • HH:mm").format(payment.datetime)),
+            TextSpan(text: DateFormat(AppDateFormats.mediumDateTime).format(payment.datetime)),
             if (payment.account.name.isNotEmpty)
-              TextSpan(text: " • ${payment.account.name}"),
+              TextSpan(text: ' • ${payment.account.name}'),
           ],
           style: theme.textTheme.bodySmall?.apply(
             color: colorScheme.onSurface.withValues(alpha: 0.5),

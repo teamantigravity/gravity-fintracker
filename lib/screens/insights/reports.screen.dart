@@ -5,6 +5,7 @@ import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:fintracker/widgets/dialog/loading_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../premium/paywall.screen.dart';
@@ -18,7 +19,7 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   DateTimeRange _range = DateTimeRange(
-    start: DateTime(DateTime.now().year, 1, 1),
+    start: DateTime(DateTime.now().year),
     end: DateTime.now(),
   );
   Future<ReportSummary>? _summary;
@@ -60,15 +61,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
     if (path == null || path.isEmpty || !mounted) return;
 
-    if (mounted) LoadingModal.showLoadingDialog(context, content: const Text('Exporting report...'));
+    if (mounted) LoadingModal.showLoadingDialog(context, content: const Text(Strings.exportingReport));
     try {
       final value = await ReportsService.exportTaxReportCsv(_range, filePath: path);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved to $value')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Strings.savedToFmt(value))));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.exportFailed)));
       }
     } finally {
       if (mounted) Navigator.of(context).pop();
@@ -82,7 +83,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     if (!_unlocked) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Tax & Export Reports')),
+        appBar: AppBar(title: const Text(Strings.taxExportReports)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -92,14 +93,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Icon(Symbols.lock, size: 64, color: colorScheme.primary.withAlpha(60)),
                 const SizedBox(height: 16),
                 Text(
-                  'Tax & export reports are a Plus feature.',
+                  Strings.taxExportReportsAreAPlus,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen())),
-                  child: const Text('Unlock Plus'),
+                  child: const Text(Strings.unlockPlus),
                 ),
               ],
             ),
@@ -110,7 +111,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tax & Export Reports', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(Strings.taxExportReports, style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
           IconButton(
             icon: const Icon(Symbols.calendar_month),
@@ -138,9 +139,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 const SizedBox(height: 16),
                 _buildTotalsCard(theme, summary),
                 const SizedBox(height: 16),
-                Text('By Category', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text(Strings.byCategory, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
-                ...summary.categories.map((c) => _buildCategoryTile(c, theme)).toList(),
+                ...summary.categories.map((c) => _buildCategoryTile(c, theme)),
               ],
             );
           },
@@ -154,7 +155,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       children: [
         ActionChip(
           avatar: const Icon(Symbols.calendar_month, size: 16),
-          label: Text('${_formatDate(_range.start)} - ${_formatDate(_range.end)}'),
+          label: Text(Strings.dateRangeFmt(_formatDate(_range.start), _formatDate(_range.end))),
           onPressed: _selectRange,
         ),
       ],
@@ -181,7 +182,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Net', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(Strings.net, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
               CurrencyText(
                 summary.net,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -216,7 +217,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: color),
       ),
       subtitle: Text(
-        'In: ${category.income.toStringAsFixed(2)}  Out: ${category.expense.toStringAsFixed(2)}',
+        Strings.inOutFmt(category.income.toStringAsFixed(2), category.expense.toStringAsFixed(2)),
         style: theme.textTheme.bodySmall,
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
-import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/config/app_intents.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:fintracker/screens/main.screen.dart';
 import 'package:fintracker/screens/payment_form.screen.dart';
@@ -11,12 +12,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:local_auth/local_auth.dart';
-
-class NewPaymentIntent extends Intent { const NewPaymentIntent(); }
-class NavigateToTabIntent extends Intent {
-  final int index;
-  const NavigateToTabIntent(this.index);
-}
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -40,7 +35,7 @@ class App extends StatelessWidget {
           ));
 
           return MaterialApp(
-            title: AppConstants.appName,
+            title: Strings.appName,
             debugShowCheckedModeBanner: false,
             theme: theme,
             navigatorKey: navigatorKey,
@@ -119,10 +114,9 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
     _isAuthenticating = true;
     final LocalAuthentication localAuth = LocalAuthentication();
     try {
-      bool authenticated = await localAuth.authenticate(
-        localizedReason: 'Unlock ${AppConstants.appName}',
+      final bool authenticated = await localAuth.authenticate(
+        localizedReason: Strings.unlockAppFmt(Strings.appName),
         options: const AuthenticationOptions(
-          biometricOnly: false,
           stickyAuth: true,
         ),
       );
@@ -145,7 +139,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
       debugPrint('PIN read failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not read PIN: $e')),
+          const SnackBar(content: Text(Strings.couldNotReadPin)),
         );
       }
     }
@@ -167,7 +161,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Incorrect PIN')),
+            const SnackBar(content: Text(Strings.incorrectPin)),
           );
           _pinController.clear();
         }
@@ -176,7 +170,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
       debugPrint('PIN verification failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PIN verification failed: $e')),
+          const SnackBar(content: Text(Strings.pinVerificationFailed)),
         );
         _pinController.clear();
       }
@@ -187,20 +181,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
   Widget build(BuildContext context) {
     if (!_isLocked) {
       return Shortcuts(
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.keyN, control: true): NewPaymentIntent(),
-          SingleActivator(LogicalKeyboardKey.keyN, meta: true): NewPaymentIntent(),
-          SingleActivator(LogicalKeyboardKey.digit1, control: true): NavigateToTabIntent(0),
-          SingleActivator(LogicalKeyboardKey.digit1, meta: true): NavigateToTabIntent(0),
-          SingleActivator(LogicalKeyboardKey.digit2, control: true): NavigateToTabIntent(1),
-          SingleActivator(LogicalKeyboardKey.digit2, meta: true): NavigateToTabIntent(1),
-          SingleActivator(LogicalKeyboardKey.digit3, control: true): NavigateToTabIntent(2),
-          SingleActivator(LogicalKeyboardKey.digit3, meta: true): NavigateToTabIntent(2),
-          SingleActivator(LogicalKeyboardKey.digit4, control: true): NavigateToTabIntent(3),
-          SingleActivator(LogicalKeyboardKey.digit4, meta: true): NavigateToTabIntent(3),
-          SingleActivator(LogicalKeyboardKey.digit5, control: true): NavigateToTabIntent(4),
-          SingleActivator(LogicalKeyboardKey.digit5, meta: true): NavigateToTabIntent(4),
-        },
+        shortcuts: AppShortcuts.shortcuts,
         child: Actions(
           actions: {
             NewPaymentIntent: CallbackAction<NewPaymentIntent>(
@@ -236,12 +217,12 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
             children: [
               Icon(Icons.lock, size: 64, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 16),
-              Text('Locked', style: Theme.of(context).textTheme.titleLarge),
+              Text(Strings.locked, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 24),
               if (!_showPinInput)
                 FilledButton(
                   onPressed: _checkLock,
-                  child: const Text('Unlock'),
+                  child: const Text(Strings.unlock),
                 ),
               if (_showPinInput) ...[
                 TextField(
@@ -250,7 +231,7 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
                   obscureText: true,
                   maxLength: 6,
                   decoration: InputDecoration(
-                    labelText: 'Enter PIN',
+                    labelText: Strings.enterPin,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                     counterText: '',
                   ),
@@ -259,11 +240,11 @@ class _AppLockWrapperState extends State<AppLockWrapper> with WidgetsBindingObse
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: _verifyPin,
-                  child: const Text('Verify PIN'),
+                  child: const Text(Strings.verifyPin),
                 ),
                 TextButton(
                   onPressed: () => setState(() => _showPinInput = false),
-                  child: const Text('Use biometric'),
+                  child: const Text(Strings.useBiometric),
                 ),
               ],
             ],

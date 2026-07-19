@@ -4,7 +4,7 @@ import 'package:fintracker/model/payment.model.dart';
 class AnomalyDetectionService {
   static Future<List<Anomaly>> detect() async {
     final payments = await PaymentDao().find();
-    List<Anomaly> anomalies = [];
+    final List<Anomaly> anomalies = [];
 
     if (payments.isEmpty) return anomalies;
 
@@ -28,10 +28,10 @@ class AnomalyDetectionService {
 
     // Category spike: month-over-month category spend > 50% increase
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final prevMonthStart = DateTime(now.year, now.month - 1, 1);
-    Map<int, double> thisMonth = {};
-    Map<int, double> lastMonth = {};
+    final monthStart = DateTime(now.year, now.month);
+    final prevMonthStart = DateTime(now.year, now.month - 1);
+    final Map<int, double> thisMonth = {};
+    final Map<int, double> lastMonth = {};
     for (final p in expenses) {
       if (p.datetime.isAfter(monthStart) || p.datetime.isAtSameMomentAs(monthStart)) {
         thisMonth[p.category.id ?? 0] = (thisMonth[p.category.id ?? 0] ?? 0) + p.amount;
@@ -51,14 +51,13 @@ class AnomalyDetectionService {
           type: AnomalyType.categorySpike,
           title: 'Spike in $catName',
           description: 'This month you spent ${entry.value.toStringAsFixed(0)} — up ${((entry.value / prev - 1) * 100).toStringAsFixed(0)}% from last month.',
-          payment: null,
           severity: Severity.medium,
         ));
       }
     }
 
     // Duplicate detection: same amount, title, and category within same day
-    Map<String, List<Payment>> buckets = {};
+    final Map<String, List<Payment>> buckets = {};
     for (final p in payments) {
       final key = '${p.amount}_${p.title.toLowerCase().trim()}_${p.category.id}_${DateTime(p.datetime.year, p.datetime.month, p.datetime.day)}';
       buckets.putIfAbsent(key, () => []).add(p);
@@ -91,7 +90,6 @@ class AnomalyDetectionService {
           type: AnomalyType.spendingStreak,
           title: 'Spending streak',
           description: 'You spent money on ${streak + 1} consecutive days. Consider a no-spend day to reset.',
-          payment: null,
           severity: Severity.low,
         ));
         break;

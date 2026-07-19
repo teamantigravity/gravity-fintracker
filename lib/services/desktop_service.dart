@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:system_tray/system_tray.dart';
@@ -18,11 +18,11 @@ class DesktopService {
     if (!isDesktop || _initialized) return;
     try {
       await windowManager.ensureInitialized();
-      WindowOptions windowOptions = const WindowOptions(
+      const WindowOptions windowOptions = WindowOptions(
         size: Size(1200, 800),
         minimumSize: Size(800, 600),
         center: true,
-        title: AppConstants.appName,
+        title: Strings.appName,
       );
       await windowManager.waitUntilReadyToShow(windowOptions, () async {
         await windowManager.show();
@@ -30,17 +30,17 @@ class DesktopService {
       });
 
       await _systemTray.initSystemTray(
-        title: AppConstants.appName,
-        toolTip: AppConstants.appTagline,
+        title: Strings.appName,
+        toolTip: Strings.appTagline,
         iconPath: Platform.isWindows ? 'assets/app_icon.ico' : 'assets/app_icon.png',
       );
 
       final Menu menu = Menu();
       await menu.buildFrom([
-        MenuItemLabel(label: 'Open', onClicked: (menuItem) => _appWindow.show()),
+        MenuItemLabel(label: Strings.open, onClicked: (menuItem) => _appWindow.show()),
         MenuSeparator(),
-        MenuItemLabel(label: 'Hide', onClicked: (menuItem) => _appWindow.hide()),
-        MenuItemLabel(label: 'Exit', onClicked: (menuItem) => _appWindow.close()),
+        MenuItemLabel(label: Strings.hide, onClicked: (menuItem) => _appWindow.hide()),
+        MenuItemLabel(label: Strings.exit, onClicked: (menuItem) => _appWindow.close()),
       ]);
       await _systemTray.setContextMenu(menu);
 

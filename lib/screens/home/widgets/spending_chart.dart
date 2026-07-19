@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'dart:math';
 
 class SpendingChart extends StatefulWidget {
@@ -15,10 +16,10 @@ class _SpendingChartState extends State<SpendingChart> {
   int _touchedIndex = -1;
 
   Map<String, _CategorySpend> _getCategoryBreakdown() {
-    Map<String, _CategorySpend> breakdown = {};
-    for (var payment in widget.payments) {
+    final Map<String, _CategorySpend> breakdown = {};
+    for (final payment in widget.payments) {
       if (payment.type == PaymentType.debit) {
-        String name = payment.category.name;
+        final String name = payment.category.name;
         final spend = breakdown[name];
         if (spend != null) {
           spend.amount += payment.amount;
@@ -51,7 +52,7 @@ class _SpendingChartState extends State<SpendingChart> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Spending Breakdown",
+            Strings.spendingBreakdown,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),

@@ -17,7 +17,7 @@ class SavingsGoalDao {
       orderBy: 'deadline ASC',
     );
 
-    List<SavingsGoal> goals = [];
+    final List<SavingsGoal> goals = [];
     for (final row in rows) {
       final map = Map<String, dynamic>.from(row);
       final accountId = map['account'];

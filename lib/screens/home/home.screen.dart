@@ -21,23 +21,12 @@ import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/ui/prism.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
-
-
-String greeting() {
-  var hour = DateTime.now().hour;
-  if (hour < 12) {
-    return 'Morning';
-  }
-  if (hour < 17) {
-    return 'Afternoon';
-  }
-  return 'Evening';
-}
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -77,15 +66,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _fetchTransactions();
 
-    _accountEventListener = globalEvent.on("account_update", (data){
+    _accountEventListener = globalEvent.on('account_update', (data){
       _fetchTransactions();
     });
 
-    _categoryEventListener = globalEvent.on("category_update", (data){
+    _categoryEventListener = globalEvent.on('category_update', (data){
       _fetchTransactions();
     });
 
-    _paymentEventListener = globalEvent.on("payment_update", (data){
+    _paymentEventListener = globalEvent.on('payment_update', (data){
       _fetchTransactions();
     });
 
@@ -130,15 +119,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchTransactions() async {
-    List<Payment> trans = await _paymentDao.find(range: _range, category: _category, account:_account);
+    final List<Payment> trans = await _paymentDao.find(range: _range, category: _category, account:_account);
     double income = 0;
     double expense = 0;
-    for (var payment in trans) {
+    for (final payment in trans) {
       if(payment.type == PaymentType.credit) income += payment.amount;
       if(payment.type == PaymentType.debit) expense += payment.amount;
     }
 
-    List<Account> accounts = await _accountDao.find(withSummery: true);
+    final List<Account> accounts = await _accountDao.find(withSummery: true);
 
     if (!mounted) return;
     setState(() {
@@ -160,19 +149,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     HapticService.heavy();
     final id = payment.id;
     if (id != null) await _paymentDao.deleteTransaction(id);
-    globalEvent.emit("payment_update");
+    globalEvent.emit('payment_update');
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Transaction deleted"),
+          content: const Text(Strings.transactionDeleted),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           action: SnackBarAction(
-            label: "Undo",
+            label: 'Undo',
             onPressed: () async {
               payment.id = null;
               await _paymentDao.upsert(payment);
-              globalEvent.emit("payment_update");
+              globalEvent.emit('payment_update');
             },
           ),
         ),
@@ -250,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     controller: _searchController,
                     autofocus: true,
                     decoration: InputDecoration(
-                      hintText: "Search transactions...",
+                      hintText: Strings.searchTransactions,
                       filled: true,
                       prefixIcon: const Icon(Symbols.search, size: 20),
                       suffixIcon: IconButton(
@@ -267,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Good ${greeting()}",
+                        Strings.greeting(),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
@@ -275,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       BlocConsumer<AppCubit, AppState>(
                         listener: (context, state){},
                         builder: (context, state) => Text(
-                          state.username ?? "Guest",
+                          state.username ?? Strings.guest,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -323,20 +312,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Row(
         children: [
           Text(
-            "Transactions",
+            Strings.transactions,
             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Expanded(child: SizedBox()),
           if (_filteredPayments.isNotEmpty)
             PrismChip(
-              label: "${_filteredPayments.length}",
+              label: '${_filteredPayments.length}',
               color: colorScheme.onSurface,
               isSmall: true,
             ),
           const SizedBox(width: 8),
           PrismChip(
             icon: Symbols.calendar_month,
-            label: "${DateFormat("dd MMM").format(_range.start)} - ${DateFormat("dd MMM").format(_range.end)}",
+            label: '${DateFormat(AppDateFormats.shortDate).format(_range.start)} - ${DateFormat(AppDateFormats.shortDate).format(_range.end)}',
             color: colorScheme.primary,
             onTap: handleChooseDateRange,
             isSmall: true,
@@ -352,9 +341,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40),
           child: PrismEmptyState(
-            icon: Symbols.receipt_long,
-            title: _searchController.text.isEmpty ? "No transactions yet" : "No matches found",
-            subtitle: _searchController.text.isEmpty ? "Tap + to add your first transaction" : null,
+            title: _searchController.text.isEmpty ? 'No transactions yet' : 'No matches found',
+            subtitle: _searchController.text.isEmpty ? 'Tap + to add your first transaction' : null,
           ),
         ),
       );
@@ -416,13 +404,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         SpeedDialChild(
           child: const Icon(Symbols.arrow_downward, color: Colors.white),
-          label: "Income",
+          label: 'Income',
           backgroundColor: AppTheme.incomeColor,
           onTap: () => openAddPaymentPage(PaymentType.credit),
         ),
         SpeedDialChild(
           child: const Icon(Symbols.arrow_upward, color: Colors.white),
-          label: "Expense",
+          label: 'Expense',
           backgroundColor: AppTheme.expenseColor,
           onTap: () => openAddPaymentPage(PaymentType.debit),
         ),
@@ -445,7 +433,7 @@ class _SummaryCards extends StatelessWidget {
         children: [
           Expanded(
             child: _SummaryCard(
-              label: "Income",
+              label: 'Income',
               amount: income,
               color: AppTheme.incomeColor,
               icon: Symbols.arrow_downward,
@@ -454,7 +442,7 @@ class _SummaryCards extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: _SummaryCard(
-              label: "Expense",
+              label: 'Expense',
               amount: expense,
               color: AppTheme.expenseColor,
               icon: Symbols.arrow_upward,

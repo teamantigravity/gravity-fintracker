@@ -7,13 +7,14 @@ import 'package:fintracker/widgets/currency.dart';
 import 'package:fintracker/widgets/dialog/account_form.dialog.dart';
 import 'package:fintracker/widgets/dialog/confirm.modal.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 
-maskAccount(String value, [int lastLength = 4]){
+String maskAccount(String value, [int lastLength = 4]){
   if(value.length <4 ) return value;
-  int length = value.length - lastLength;
-  String generated = "";
+  final int length = value.length - lastLength;
+  String generated = '';
   if(length > 0){
-    generated+= value.substring(0, length).split("").map((e) => e==" "? " ": "X").join("");
+    generated+= value.substring(0, length).split('').map((e) => e==' '? ' ': 'X').join();
   }
   generated += value.substring(length);
   return generated;
@@ -32,7 +33,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
 
 
   void loadData() async {
-    List<Account> accounts = await _accountDao.find(withSummery: true);
+    final List<Account> accounts = await _accountDao.find(withSummery: true);
     if (!mounted) return;
     setState(() {
       _accounts = accounts;
@@ -45,8 +46,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
     super.initState();
     loadData();
 
-    _accountEventListener = globalEvent.on("account_update", (data){
-      debugPrint("accounts are changed");
+    _accountEventListener = globalEvent.on('account_update', (data){
+      debugPrint('accounts are changed');
       loadData();
     });
 
@@ -64,14 +65,14 @@ class _AccountsScreenState extends State<AccountsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Accounts", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
+          title: const Text(Strings.accounts, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
         ),
         body: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             itemCount: _accounts.length,
             itemBuilder: (builder, index){
-              Account account = _accounts[index];
-              GlobalKey accKey = GlobalKey();
+              final Account account = _accounts[index];
+              final GlobalKey accKey = GlobalKey();
               return Stack(
                 children: [
                   Container(
@@ -89,9 +90,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(account.holderName.isEmpty ? "---": account.holderName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
+                                  Text(account.holderName.isEmpty ? '---': account.holderName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),),
                                   Text(account.name, style: Theme.of(context).textTheme.bodySmall,),
-                                  Text(account.accountNumber.isEmpty ? "---": maskAccount(account.accountNumber), style: Theme.of(context).textTheme.bodySmall,),
+                                  Text(account.accountNumber.isEmpty ? '---': maskAccount(account.accountNumber), style: Theme.of(context).textTheme.bodySmall,),
                                 ],
                               )
                             ],
@@ -100,7 +101,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           const Text.rich(
                               TextSpan(
                                   children: [
-                                    TextSpan(text:"Total Balance", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                    TextSpan(text:Strings.totalBalance, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                                   ]
                               )
                           ),
@@ -116,7 +117,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                                           TextSpan(
                                               children: [
                                                 //TextSpan(text: "▼", style: TextStyle(color: ThemeColors.success)),
-                                                TextSpan(text:"Income", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                                TextSpan(text:Strings.income, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                                               ]
                                           )
                                       ),
@@ -132,7 +133,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                                           TextSpan(
                                               children: [
                                                 //TextSpan(text: "▲", style: TextStyle(color: ThemeColors.error)),
-                                                TextSpan(text:"Expense", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                                TextSpan(text:Strings.expense, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                                               ]
                                           )
                                       ),
@@ -175,7 +176,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                             items: [
                               PopupMenuItem<String>(
                                 value: '1',
-                                child: const Text('Edit'),
+                                child: const Text(Strings.edit),
                                 onTap: (){
                                   WidgetsBinding.instance.addPostFrameCallback((_) {
                                     showDialog(context: context, builder: (builder)=>AccountForm(account: account,));
@@ -184,19 +185,19 @@ class _AccountsScreenState extends State<AccountsScreen> {
                               ),
                               PopupMenuItem<String>(
                                 value: '2',
-                                child: const Text('Delete', style: TextStyle(color: ThemeColors.error),),
+                                child: const Text(Strings.delete, style: TextStyle(color: ThemeColors.error),),
                                 onTap: (){
                                   WidgetsBinding.instance.addPostFrameCallback((_) {
                                     ConfirmModal.showConfirmDialog(
                                         context,
-                                        title: "Are you sure?",
-                                        content: const Text("All payments belonging to this account will be deleted."),
+                                        title: 'Are you sure?',
+                                        content: const Text(Strings.allPaymentsBelongingToThisAccount),
                                         onConfirm: () async {
                                           final accountId = account.id;
                                           if (accountId == null) return;
                                           Navigator.pop(context);
                                           await _accountDao.delete(accountId);
-                                          globalEvent.emit("account_update");
+                                          globalEvent.emit('account_update');
                                         },
                                         onCancel: (){
                                           Navigator.pop(context);

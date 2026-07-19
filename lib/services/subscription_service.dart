@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:fintracker/config/constants.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -57,8 +58,8 @@ class SubscriptionService {
     try {
       if (kIsWeb || Platform.isWindows || Platform.isLinux) return;
       final customerInfo = await Purchases.getCustomerInfo();
-      _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
-      _isPlus = customerInfo.entitlements.all['plus']?.isActive ?? false;
+      _isPro = customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+      _isPlus = customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
     } catch (e) {
       debugPrint('Error checking entitlements: $e');
       _isPro = false;
@@ -76,8 +77,8 @@ class SubscriptionService {
       if (package != null) {
         // ignore: deprecated_member_use
         final purchaseResult = await Purchases.purchasePackage(package);
-        _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
-        _isPlus = purchaseResult.customerInfo.entitlements.all['plus']?.isActive ?? false;
+        _isPro = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+        _isPlus = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
         return isPlus;
       }
       return false;
@@ -97,8 +98,8 @@ class SubscriptionService {
       if (package != null) {
         // ignore: deprecated_member_use
         final purchaseResult = await Purchases.purchasePackage(package);
-        _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
-        _isPlus = purchaseResult.customerInfo.entitlements.all['plus']?.isActive ?? false;
+        _isPro = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+        _isPlus = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
         return isPro;
       }
       return false;
@@ -118,8 +119,8 @@ class SubscriptionService {
       if (package != null) {
         // ignore: deprecated_member_use
         final purchaseResult = await Purchases.purchasePackage(package);
-        _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
-        _isPlus = purchaseResult.customerInfo.entitlements.all['plus']?.isActive ?? false;
+        _isPro = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPro]?.isActive ?? false;
+        _isPlus = purchaseResult.customerInfo.entitlements.all[AppConstants.entitlementPlus]?.isActive ?? false;
         return isPlus || isPro;
       }
       return false;
@@ -134,14 +135,14 @@ class SubscriptionService {
     if (current == null) return null;
 
     // Prefer explicit package identifiers
-    final packageId = '${isPlus ? 'plus' : 'pro'}_${yearly ? 'yearly' : 'monthly'}';
+    final tierKeyword = isPlus ? AppConstants.entitlementPlus : AppConstants.entitlementPro;
+    final intervalKeyword = yearly ? AppConstants.intervalYearly : AppConstants.intervalMonthly;
+    final packageId = '${tierKeyword}_$intervalKeyword';
     for (final p in current.availablePackages) {
       if (p.identifier == packageId) return p;
     }
 
     // Fallback: package identifier containing the tier and billing interval
-    final tierKeyword = isPlus ? 'plus' : 'pro';
-    final intervalKeyword = yearly ? 'yearly' : 'monthly';
     for (final p in current.availablePackages) {
       final id = p.identifier.toLowerCase();
       if (id.contains(tierKeyword) && id.contains(intervalKeyword)) return p;
@@ -185,12 +186,12 @@ class SubscriptionService {
 
   // Offering details for paywall
   SubscriptionOffering get offering => SubscriptionOffering(
-    plusMonthlyPrice: '\$${AppConstants.plusMonthlyPrice.toStringAsFixed(2)}/mo',
-    plusYearlyPrice: '\$${AppConstants.plusYearlyPrice.toStringAsFixed(2)}/yr',
-    proMonthlyPrice: '\$${AppConstants.proMonthlyPrice.toStringAsFixed(2)}/mo',
-    proYearlyPrice: '\$${AppConstants.proYearlyPrice.toStringAsFixed(2)}/yr',
-    plusYearlySavings: '${_computeYearlySavings(AppConstants.plusYearlyPrice, AppConstants.plusMonthlyPrice)}%',
-    proYearlySavings: '${_computeYearlySavings(AppConstants.proYearlyPrice, AppConstants.proMonthlyPrice)}%',
+    plusMonthlyPrice: Strings.pricePerMonthFmt(AppConstants.plusMonthlyPrice.toStringAsFixed(2)),
+    plusYearlyPrice: Strings.pricePerYearFmt(AppConstants.plusYearlyPrice.toStringAsFixed(2)),
+    proMonthlyPrice: Strings.pricePerMonthFmt(AppConstants.proMonthlyPrice.toStringAsFixed(2)),
+    proYearlyPrice: Strings.pricePerYearFmt(AppConstants.proYearlyPrice.toStringAsFixed(2)),
+    plusYearlySavings: Strings.yearlySavingsFmt(_computeYearlySavings(AppConstants.plusYearlyPrice, AppConstants.plusMonthlyPrice)),
+    proYearlySavings: Strings.yearlySavingsFmt(_computeYearlySavings(AppConstants.proYearlyPrice, AppConstants.proMonthlyPrice)),
   );
 
   static int _computeYearlySavings(double yearly, double monthly) {

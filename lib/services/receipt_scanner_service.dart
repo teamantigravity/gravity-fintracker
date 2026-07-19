@@ -6,7 +6,7 @@ class ReceiptScannerService {
   static TextRecognizer? _recognizer;
 
   static TextRecognizer get _recognizerInstance {
-    return _recognizer ??= TextRecognizer(script: TextRecognitionScript.latin);
+    return _recognizer ??= TextRecognizer();
   }
 
   static bool get isSupported {

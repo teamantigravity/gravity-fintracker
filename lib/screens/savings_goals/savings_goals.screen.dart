@@ -5,6 +5,9 @@ import 'package:fintracker/model/savings_goal.model.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
+import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class SavingsGoalsScreen extends StatefulWidget {
@@ -38,7 +41,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Savings Goals', style: TextStyle(fontWeight: FontWeight.w600))),
+      appBar: AppBar(title: const Text(Strings.savingsGoals, style: TextStyle(fontWeight: FontWeight.w600))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -55,8 +58,8 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                         children: [
                           Icon(Symbols.savings, size: 64, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
                           const SizedBox(height: 16),
-                          Text('No savings goals yet', style: theme.textTheme.bodyLarge),
-                          Text('Tap + to create a goal and track progress.', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                          Text(Strings.noSavingsGoalsYet, style: theme.textTheme.bodyLarge),
+                          Text(Strings.tapToCreateAGoalAnd, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                         ],
                       ),
                     )
@@ -131,8 +134,8 @@ class _GoalCard extends StatelessWidget {
                   }
                 },
                 itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'add', child: Text('Add contribution')),
-                  const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppTheme.expenseColor))),
+                  const PopupMenuItem(value: 'add', child: Text(Strings.addContribution)),
+                  const PopupMenuItem(value: 'delete', child: Text(Strings.delete, style: TextStyle(color: AppTheme.expenseColor))),
                 ],
               ),
             ],
@@ -154,7 +157,7 @@ class _GoalCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                'Save ${goal.dailyRequired.toStringAsFixed(0)}/day to reach goal by deadline',
+                Strings.saveDailyFmt(goal.dailyRequired.toStringAsFixed(0)),
                 style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
               ),
             ),
@@ -168,14 +171,14 @@ class _GoalCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Contribution'),
+        title: const Text(Strings.addContribution2),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Amount'),
+          decoration: const InputDecoration(labelText: Strings.amount),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text(Strings.cancel)),
           FilledButton(
             onPressed: () async {
               final amount = double.tryParse(controller.text) ?? 0;
@@ -186,7 +189,7 @@ class _GoalCard extends StatelessWidget {
               }
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Add'),
+            child: const Text(Strings.add),
           ),
         ],
       ),
@@ -241,16 +244,16 @@ class _GoalFormState extends State<_GoalForm> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.goal == null ? 'New Goal' : 'Edit Goal', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            Text(widget.goal == null ? Strings.newGoal : Strings.editGoal, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
-            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Goal name')),
+            TextField(controller: _nameController, decoration: const InputDecoration(labelText: Strings.goalName)),
             const SizedBox(height: 12),
-            TextField(controller: _targetController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Target amount')),
+            TextField(controller: _targetController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: Strings.targetAmount)),
             const SizedBox(height: 12),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Deadline'),
-              subtitle: Text('${_deadline.toLocal()}'.split(' ')[0]),
+              title: const Text(Strings.deadline),
+              subtitle: Text(DateFormat(AppDateFormats.isoDate).format(_deadline.toLocal())),
               trailing: const Icon(Symbols.calendar_today),
               onTap: () async {
                 final picked = await showDatePicker(context: context, initialDate: _deadline, firstDate: DateTime.now(), lastDate: DateTime(2100));
@@ -310,7 +313,7 @@ class _GoalFormState extends State<_GoalForm> {
                     icon: _selectedIcon,
                   ));
                 },
-                child: const Text('Save Goal'),
+                child: const Text(Strings.saveGoal),
               ),
             ),
           ],
@@ -338,7 +341,7 @@ class _WhatIfPlannerState extends State<_WhatIfPlanner> {
 
   Future<void> _loadExpense() async {
     final now = DateTime.now();
-    final start = DateTime(now.year, now.month, 1);
+    final start = DateTime(now.year, now.month);
     final payments = await PaymentDao().find(range: DateTimeRange(start: start, end: now));
     double expense = 0;
     for (final p in payments) {
@@ -364,15 +367,14 @@ class _WhatIfPlannerState extends State<_WhatIfPlanner> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('What-if Planner', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(Strings.whatIfPlanner, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          Text('Reduce discretionary spending by ${_percent.toStringAsFixed(0)}% and save:', style: theme.textTheme.bodySmall),
+          Text(Strings.reduceDiscretionarySpendingFmt(_percent.toStringAsFixed(0)), style: theme.textTheme.bodySmall),
           Slider(
             value: _percent,
-            min: 0,
             max: 50,
             divisions: 10,
-            label: '${_percent.toStringAsFixed(0)}%',
+            label: Strings.percentFmt(_percent.toStringAsFixed(0)),
             onChanged: (v) => setState(() {
               _percent = v;
               _monthlySavings = _monthlyExpense * (v / 100);

@@ -6,6 +6,7 @@ import 'package:fintracker/helpers/db.helper.dart';
 import 'package:fintracker/model/payment.model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
 import 'package:intl/intl.dart';
 
 class CategorySummary {
@@ -130,8 +131,8 @@ class ReportsService {
     return file.path;
   }
 
-  static String _formatDate(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
-  static String _formatDateTime(DateTime date) => DateFormat('yyyy-MM-dd HH:mm').format(date);
+  static String _formatDate(DateTime date) => DateFormat(AppDateFormats.isoDate).format(date);
+  static String _formatDateTime(DateTime date) => DateFormat(AppDateFormats.sqlDateTimeMinute).format(date);
   static String _formatCurrency(double value) => value.toStringAsFixed(2);
-  static String _generateFileName() => 'gravity-tax-report-${DateFormat('yyyyMMdd-HHmmss').format(DateTime.now())}.csv';
+  static String _generateFileName() => 'gravity-tax-report-${DateFormat(AppDateFormats.fileNameDateTime).format(DateTime.now())}.csv';
 }

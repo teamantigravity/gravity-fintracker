@@ -26,7 +26,6 @@ class SubscriptionScannerService {
       interval: RecurringInterval.monthly,
       startDate: result.date,
       nextDueDate: result.date,
-      isActive: true,
     );
   }
 }

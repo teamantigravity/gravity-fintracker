@@ -2,6 +2,7 @@ import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:fintracker/widgets/dialog/account_form.dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class AccountsSlider extends StatefulWidget {
@@ -35,7 +36,6 @@ class _AccountSlider extends State<AccountsSlider> {
           width: double.infinity,
           height: 176,
           child: PageView.builder(
-            scrollDirection: Axis.horizontal,
             itemCount: _pageCount,
             controller: _pageController,
             padEnds: false,
@@ -54,7 +54,6 @@ class _AccountSlider extends State<AccountsSlider> {
         SizedBox(
           width: double.infinity,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_pageCount, (index) {
               final isAccount = index < widget.accounts.length;
@@ -162,7 +161,7 @@ class _AccountCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "BALANCE",
+                    Strings.balance,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 10,
@@ -247,7 +246,7 @@ class _AddAccountCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Add Account",
+                    Strings.addAccount,
                     style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                 ],

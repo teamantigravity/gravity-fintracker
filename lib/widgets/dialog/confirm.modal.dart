@@ -25,7 +25,7 @@ class ConfirmModal extends StatelessWidget{
           children: [
             Expanded(
                 child: AppButton(
-                    label: "No",
+                    label: 'No',
                     onPressed: onCancel,
                     color: Theme.of(context).colorScheme.primary,
                     type: AppButtonType.outlined
@@ -34,7 +34,7 @@ class ConfirmModal extends StatelessWidget{
             const SizedBox(width: 15,),
             Expanded(
                 child: AppButton(
-                  label: "Yes",
+                  label: 'Yes',
                   onPressed: onConfirm,
                   color: ThemeColors.error,
                 )
@@ -45,7 +45,7 @@ class ConfirmModal extends StatelessWidget{
     );
   }
 
-  static showConfirmDialog(BuildContext context, {
+  static void showConfirmDialog(BuildContext context, {
     required String title,
     required Widget content,
     required VoidCallback onConfirm,

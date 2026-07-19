@@ -6,6 +6,8 @@ import 'package:fintracker/services/subscription_service.dart';
 import 'package:fintracker/theme/app_theme.dart';
 import 'package:fintracker/widgets/currency.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/app_date_formats.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -37,18 +39,18 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
 
     if (!_unlocked) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Subscriptions')),
+        appBar: AppBar(title: const Text(Strings.subscriptions)),
         body: _paywall(theme, colorScheme),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Subscriptions'),
+        title: const Text(Strings.subscriptions),
         actions: [
           IconButton(
             icon: const Icon(Symbols.receipt_long, fill: 1),
-            tooltip: 'Scan Subscription',
+            tooltip: Strings.scanSubscription,
             onPressed: () async {
               await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SubscriptionScannerScreen()),
@@ -94,12 +96,12 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
                         ],
                         if (summary.possiblyUnused.isNotEmpty) ...[
                           _buildSectionTitle('Possibly unused'),
-                          ...summary.possiblyUnused.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'No payment since ${DateFormat('dd MMM').format(s.nextDue ?? DateTime.now())}')),
+                          ...summary.possiblyUnused.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'No payment since ${DateFormat(AppDateFormats.shortDate).format(s.nextDue ?? DateTime.now())}')),
                           const SizedBox(height: 16),
                         ],
                         if (summary.overdue.isNotEmpty) ...[
                           _buildSectionTitle('Overdue'),
-                          ...summary.overdue.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'Due ${DateFormat('dd MMM').format(s.nextDue ?? DateTime.now())}')),
+                          ...summary.overdue.take(3).map((s) => _buildAlertTile(s, theme, colorScheme, 'Due ${DateFormat(AppDateFormats.shortDate).format(s.nextDue ?? DateTime.now())}')),
                           const SizedBox(height: 16),
                         ],
                         _buildSectionTitle('All subscriptions'),
@@ -131,20 +133,20 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
           Icon(Symbols.workspace_premium, size: 64, color: colorScheme.primary),
           const SizedBox(height: 16),
           Text(
-            'Subscription Intelligence is a Plus feature',
+            Strings.subscriptionIntelligenceIsAPlusFeature,
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Detect recurring bills, price changes, duplicates, and unused subscriptions on-device.',
+            Strings.detectRecurringBillsPriceChangesDuplicates,
             style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaywallScreen())),
-            child: const Text('Upgrade'),
+            child: const Text(Strings.upgrade),
           ),
         ],
       ),
@@ -165,7 +167,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Monthly subscription spend', style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
+          Text(Strings.monthlySubscriptionSpend, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
           const SizedBox(height: 6),
           CurrencyText(
             -summary.monthlySpend,
@@ -174,9 +176,9 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
           const SizedBox(height: 12),
           Row(
             children: [
-              Text('${summary.totalSubscriptions} subscriptions · ', style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
+              Text(Strings.subscriptionsCountFmt(summary.totalSubscriptions), style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
               CurrencyText(-summary.yearlySpend, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
-              Text(' / year', style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
+              Text(Strings.year, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
             ],
           ),
         ],
@@ -233,7 +235,11 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
       ),
       title: Text(sub.title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
       subtitle: Text(
-        '${sub.frequency} · Last paid ${DateFormat('dd MMM').format(sub.lastPaid)}${() { final nextDue = sub.nextDue; return nextDue != null ? ' · Next ${DateFormat('dd MMM').format(nextDue)}' : ''; }()}',
+        () {
+          final lastPaid = DateFormat(AppDateFormats.shortDate).format(sub.lastPaid);
+          final nextDue = sub.nextDue;
+          return Strings.subscriptionLastPaid(sub.frequency, lastPaid) + (nextDue != null ? Strings.subscriptionNext(DateFormat(AppDateFormats.shortDate).format(nextDue)) : '');
+        }(),
         style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
       ),
       trailing: Column(
@@ -254,7 +260,7 @@ class _SubscriptionDashboardScreenState extends State<SubscriptionDashboardScree
                 isCredit ? sub.monthlyCost : -sub.monthlyCost,
                 style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.5)),
               ),
-              Text('/mo', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.5))),
+              Text(Strings.mo, style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.5))),
             ],
           ),
         ],

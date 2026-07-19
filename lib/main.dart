@@ -46,7 +46,7 @@ void main() async {
     debugPrint('Desktop service init failed: $e');
   }
 
-  AppState appState = await AppState.getState();
+  final AppState appState = await AppState.getState();
 
   if (appState.dailyDigestEnabled) {
     try {

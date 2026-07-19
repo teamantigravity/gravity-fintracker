@@ -3,6 +3,7 @@ import 'package:fintracker/events.dart';
 import 'package:fintracker/model/account.model.dart';
 import 'package:fintracker/widgets/buttons/button.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:fintracker/data/icons.dart';
 
 class AccountForm extends StatefulWidget {
@@ -32,31 +33,31 @@ class _AccountForm extends State<AccountForm>{
       );
     } else {
       _account = Account(
-          name: "",
-          holderName: "",
-          accountNumber: "",
+          name: '',
+          holderName: '',
+          accountNumber: '',
           icon: Icons.account_circle,
           color: Colors.grey
       );
     }
   }
 
-  void onSave (context) async{
+  void onSave(BuildContext context) async {
     if (_account.name.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Account name is required")),
+        const SnackBar(content: Text(Strings.accountNameIsRequired)),
       );
       return;
     }
     await _accountDao.upsert(_account);
     if (!context.mounted) return;
     Navigator.pop(context);
-    globalEvent.emit("account_update");
+    globalEvent.emit('account_update');
   }
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.account!=null?"Edit Account":"New Account", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
+      title: Text(widget.account!=null?'Edit Account':'New Account', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
       scrollable: true,
       insetPadding: const EdgeInsets.all(20),
       content: SizedBox(
@@ -66,7 +67,6 @@ class _AccountForm extends State<AccountForm>{
             children: [
               const SizedBox(height: 15,),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
 
@@ -85,8 +85,8 @@ class _AccountForm extends State<AccountForm>{
                       child: TextFormField(
                         initialValue: _account.name,
                         decoration: InputDecoration(
-                            labelText: 'Name',
-                            hintText: 'Account name',
+                            labelText: Strings.name,
+                            hintText: Strings.accountName,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),),
                             contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15)
                         ),
@@ -103,8 +103,8 @@ class _AccountForm extends State<AccountForm>{
                 padding: const EdgeInsets.only(bottom: 20, top: 20),
                 child: TextFormField(
                   decoration: InputDecoration(
-                      labelText: 'Holder name',
-                      hintText: 'Enter account holder name',
+                      labelText: Strings.holderName,
+                      hintText: Strings.enterAccountHolderName,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),),
                       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15)
                   ),
@@ -121,8 +121,8 @@ class _AccountForm extends State<AccountForm>{
                 padding: const EdgeInsets.only(bottom: 20,),
                 child: TextFormField(
                   decoration: InputDecoration(
-                      labelText: 'A/C Number',
-                      hintText: 'Enter account number',
+                      labelText: Strings.aCNumber,
+                      hintText: Strings.enterAccountNumber,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),),
                       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15)
                   ),
@@ -216,7 +216,7 @@ class _AccountForm extends State<AccountForm>{
             onSave(context);
           },
           color: Theme.of(context).colorScheme.primary,
-          label: "Save",
+          label: 'Save',
         )
       ],
     );

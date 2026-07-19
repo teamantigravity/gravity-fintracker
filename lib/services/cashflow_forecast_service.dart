@@ -14,7 +14,7 @@ class CashflowForecastService {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    double currentBalance = accounts.fold<double>(0, (s, a) => s + (a.balance ?? 0));
+    final double currentBalance = accounts.fold<double>(0, (s, a) => s + (a.balance ?? 0));
 
     // Daily averages from last 90 days
     final rangeStart = today.subtract(const Duration(days: 90));
@@ -32,7 +32,7 @@ class CashflowForecastService {
     final dailyIncome = creditDays.isEmpty ? 0.0 : creditDays.values.reduce((a, b) => a + b) / max(1, creditDays.length);
     final dailyExpense = debitDays.isEmpty ? 0.0 : debitDays.values.reduce((a, b) => a + b) / max(1, debitDays.length);
 
-    List<DailyBalance> forecast = [];
+    final List<DailyBalance> forecast = [];
     double running = currentBalance;
     forecast.add(DailyBalance(date: today, balance: running));
 

@@ -1,28 +1,9 @@
+import 'package:fintracker/config/strings.dart';
+
+/// Application-level configuration, environment values, and feature flags.
+/// All user-facing copy lives in [Strings]; all design tokens live in
+/// [PrismColors] / [AppTheme].
 class AppConstants {
-  static const String appName = 'Gravity Fintracker';
-  static const String appTagline = 'Private by design. Powerful by nature.';
-  static const String appVersion = '1.1.0';
-  static const String appBuildNumber = '2';
-  static const String orgName = 'Team Antigravity';
-  static const String repoUrl = 'https://github.com/teamantigravity/gravity-fintracker';
-
-  // Privacy
-  static const String privacyPromise =
-      'Your financial data never leaves your device unless you explicitly enable quantum-encrypted sync.';
-  static const String encryptionStandard = 'AES-256-GCM + HKDF-SHA512';
-  static const String quantumShield =
-      'Quantum-resistant: AES-256 symmetric encryption withstands Grover\'s algorithm. '
-      'HKDF-SHA512 key derivation provides post-quantum key stretching.';
-
-  // Subscription tiers
-  static const String freeTierName = 'Free';
-  static const String plusTierName = 'Plus';
-  static const String proTierName = 'Pro';
-  static const double plusMonthlyPrice = 1.99;
-  static const double plusYearlyPrice = 14.99;
-  static const double proMonthlyPrice = 3.99;
-  static const double proYearlyPrice = 34.99;
-
   // RevenueCat — disabled until app is published on stores
   // Injected at build time via --dart-define. Never hardcode secrets in source.
   static const String revenueCatAppleKey = String.fromEnvironment('REVENUECAT_APPLE_KEY');
@@ -52,9 +33,37 @@ class AppConstants {
   static const String intervalMonthly = 'monthly';
   static const String intervalYearly = 'yearly';
 
-  // Google brand colors (for icon and accents)
-  static const int googleBlue = 0xFF4285F4;
-  static const int googleRed = 0xFFEA4335;
-  static const int googleYellow = 0xFFFBBC05;
-  static const int googleGreen = 0xFF34A853;
+  // Subscription pricing
+  static const double plusMonthlyPrice = 1.99;
+  static const double plusYearlyPrice = 14.99;
+  static const double proMonthlyPrice = 3.99;
+  static const double proYearlyPrice = 34.99;
+
+  // RevenueCat identifiers
+  static const String entitlementPro = 'pro';
+  static const String entitlementPlus = 'plus';
+
+  // Sync schema and storage constants
+  static const String syncTableName = 'sync_snapshots';
+  static const String syncUserIdColumn = 'user_id';
+  static const String syncEncryptedDataColumn = 'encrypted_data';
+  static const String syncUpdatedAtColumn = 'updated_at';
+  static const String syncMasterKeyStorageKey = 'gravity_quantum_master_key';
+  static const String syncCipherVersion = 'v2';
+  static const String syncHkdfInfo = 'gravity-fintracker-quantum-v2';
+  static const int syncPbkdf2Iterations = 100000;
+  static const String syncSelectColumns = '$syncEncryptedDataColumn, $syncUpdatedAtColumn';
+
+  // Post-quantum hybrid KEM-DEM sync constants
+  static const String pqKeyStorageKey = 'gravity_pq_keys';
+  static const String pqCipherVersion = 'v3';
+  static const String pqKemAlgorithm = 'ML-KEM-768';
+  static const String pqKdfAlgorithm = 'HKDF-SHA-512';
+  static const String pqSymmetricCipher = 'AES-256-GCM';
+  static const String pqKeyWrapHkdfInfo = 'gravity-fintracker-pq-keywrap-v1';
+  static const String pqHybridHkdfInfo = 'gravity-hybrid-kem-v3';
+
+  // Legacy aliases for strings and colors; prefer the canonical sources above.
+  static String get appName => Strings.appName;
+  static String get appTagline => Strings.appTagline;
 }

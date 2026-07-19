@@ -7,6 +7,7 @@ import 'package:fintracker/model/rule.model.dart';
 import 'package:fintracker/screens/premium/paywall.screen.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class RulesScreen extends StatefulWidget {
@@ -82,14 +83,14 @@ class _RulesScreenState extends State<RulesScreen> {
 
     if (!_unlocked) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Automation Rules')),
+        appBar: AppBar(title: const Text(Strings.automationRules)),
         body: _paywall(theme, colorScheme),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Automation Rules'),
+        title: const Text(Strings.automationRules),
         actions: [
           IconButton(
             icon: const Icon(Symbols.add, fill: 1),
@@ -105,12 +106,12 @@ class _RulesScreenState extends State<RulesScreen> {
                   Icon(Icons.rule, size: 64, color: colorScheme.onSurface.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
                   Text(
-                    'No automation rules',
+                    Strings.noAutomationRules,
                     style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.4)),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Auto-save a percentage of income or route\nexpenses to a specific account',
+                    Strings.autoSaveAPercentageOfIncome,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.3)),
                   ),
@@ -132,7 +133,7 @@ class _RulesScreenState extends State<RulesScreen> {
                   ),
                   title: Text(rule.name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
                   subtitle: Text(
-                    '${_describeRule(rule)}${rule.minAmount != null || rule.maxAmount != null ? ' · amount filter' : ''}',
+                    Strings.ruleDescriptionFmt(_describeRule(rule), rule.minAmount != null || rule.maxAmount != null),
                     style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.5)),
                   ),
                   trailing: Switch(
@@ -156,20 +157,20 @@ class _RulesScreenState extends State<RulesScreen> {
           Icon(Icons.rule, size: 64, color: colorScheme.primary),
           const SizedBox(height: 16),
           Text(
-            'Automation Rules are a Plus feature',
+            Strings.automationRulesAreAPlusFeature,
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Auto-save, auto-allocate, and route transactions on-device without lifting a finger.',
+            Strings.autoSaveAutoAllocateAndRoute,
             style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.6)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaywallScreen())),
-            child: const Text('Upgrade'),
+            child: const Text(Strings.upgrade),
           ),
         ],
       ),
@@ -263,13 +264,13 @@ class _RuleFormState extends State<_RuleForm> {
             const SizedBox(height: 20),
             Text(widget.rule == null ? 'New Automation Rule' : 'Edit Rule', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 20),
-            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Rule name')),
+            TextField(controller: _nameController, decoration: const InputDecoration(labelText: Strings.ruleName)),
             const SizedBox(height: 12),
             SegmentedButton<String?>(
               segments: const [
-                ButtonSegment(value: null, label: Text('Any type')),
-                ButtonSegment(value: 'CR', label: Text('Income')),
-                ButtonSegment(value: 'DR', label: Text('Expense')),
+                ButtonSegment(value: null, label: Text(Strings.anyType)),
+                ButtonSegment(value: 'CR', label: Text(Strings.income)),
+                ButtonSegment(value: 'DR', label: Text(Strings.expense)),
               ],
               selected: {_type},
               onSelectionChanged: (v) => setState(() => _type = v.first),
@@ -277,9 +278,9 @@ class _RuleFormState extends State<_RuleForm> {
             const SizedBox(height: 12),
             DropdownButtonFormField<Account?>(
               initialValue: _sourceAccount,
-              decoration: const InputDecoration(labelText: 'Source account (optional)'),
+              decoration: const InputDecoration(labelText: Strings.sourceAccountOptional),
               items: [
-                const DropdownMenuItem<Account?>(value: null, child: Text('Any account')),
+                const DropdownMenuItem<Account?>(child: Text(Strings.anyAccount)),
                 ...widget.accounts.map<DropdownMenuItem<Account?>>((a) => DropdownMenuItem<Account?>(value: a, child: Text(a.name))),
               ],
               onChanged: (v) => setState(() => _sourceAccount = v),
@@ -287,9 +288,9 @@ class _RuleFormState extends State<_RuleForm> {
             const SizedBox(height: 12),
             DropdownButtonFormField<Category?>(
               initialValue: _sourceCategory,
-              decoration: const InputDecoration(labelText: 'Source category (optional)'),
+              decoration: const InputDecoration(labelText: Strings.sourceCategoryOptional),
               items: [
-                const DropdownMenuItem<Category?>(value: null, child: Text('Any category')),
+                const DropdownMenuItem<Category?>(child: Text(Strings.anyCategory)),
                 ...widget.categories.map<DropdownMenuItem<Category?>>((c) => DropdownMenuItem<Category?>(value: c, child: Row(children: [Icon(c.icon, size: 18, color: c.color), const SizedBox(width: 8), Text(c.name)]))),
               ],
               onChanged: (v) => setState(() => _sourceCategory = v),
@@ -301,7 +302,7 @@ class _RuleFormState extends State<_RuleForm> {
                   child: TextField(
                     controller: _minController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Min amount'),
+                    decoration: const InputDecoration(labelText: Strings.minAmount),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -309,7 +310,7 @@ class _RuleFormState extends State<_RuleForm> {
                   child: TextField(
                     controller: _maxController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Max amount'),
+                    decoration: const InputDecoration(labelText: Strings.maxAmount),
                   ),
                 ),
               ],
@@ -318,37 +319,37 @@ class _RuleFormState extends State<_RuleForm> {
             TextField(
               controller: _percentageController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Percentage to route (%)'),
+              decoration: const InputDecoration(labelText: Strings.percentageToRoute),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<Account?>(
               initialValue: _targetAccount,
-              decoration: const InputDecoration(labelText: 'Target account'),
+              decoration: const InputDecoration(labelText: Strings.targetAccount),
               items: widget.accounts.map<DropdownMenuItem<Account?>>((a) => DropdownMenuItem<Account?>(value: a, child: Text(a.name))).toList(),
               onChanged: (v) => setState(() => _targetAccount = v),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<Category?>(
               initialValue: _targetCategory,
-              decoration: const InputDecoration(labelText: 'Target category'),
+              decoration: const InputDecoration(labelText: Strings.targetCategory),
               items: widget.categories.map<DropdownMenuItem<Category?>>((c) => DropdownMenuItem<Category?>(value: c, child: Row(children: [Icon(c.icon, size: 18, color: c.color), const SizedBox(width: 8), Text(c.name)]))).toList(),
               onChanged: (v) => setState(() => _targetCategory = v),
             ),
             const SizedBox(height: 12),
             SegmentedButton<String?>(
               segments: const [
-                ButtonSegment(value: 'DR', label: Text('Debit')),
-                ButtonSegment(value: 'CR', label: Text('Credit')),
+                ButtonSegment(value: 'DR', label: Text(Strings.debit)),
+                ButtonSegment(value: 'CR', label: Text(Strings.credit)),
               ],
               selected: {_targetType},
               onSelectionChanged: (v) => setState(() => _targetType = v.first),
             ),
             const SizedBox(height: 12),
-            TextField(controller: _descController, decoration: const InputDecoration(labelText: 'Description (optional)'), maxLines: 2),
+            TextField(controller: _descController, decoration: const InputDecoration(labelText: Strings.descriptionOptional), maxLines: 2),
             const SizedBox(height: 12),
             Row(
               children: [
-                Text('Enabled', style: theme.textTheme.bodyMedium),
+                Text(Strings.enabled, style: theme.textTheme.bodyMedium),
                 const Spacer(),
                 Switch(value: _enabled, onChanged: (v) => setState(() => _enabled = v)),
               ],
@@ -360,7 +361,7 @@ class _RuleFormState extends State<_RuleForm> {
               child: FilledButton(
                 onPressed: _save,
                 style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(Strings.save, style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -374,18 +375,18 @@ class _RuleFormState extends State<_RuleForm> {
     final targetAccount = _targetAccount;
     final targetCategory = _targetCategory;
     if (name.isEmpty || targetAccount == null || targetCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name, target account, and target category are required')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.nameTargetAccountAndTargetCategory)));
       return;
     }
     final targetAccountId = targetAccount.id;
     final targetCategoryId = targetCategory.id;
     if (targetAccountId == null || targetCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selected account or category has no ID')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.selectedAccountOrCategoryHasNo)));
       return;
     }
     final percentage = double.tryParse(_percentageController.text) ?? 0;
     if (percentage <= 0 || percentage > 100) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Percentage must be between 1 and 100')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.percentageMustBeBetween1And)));
       return;
     }
     final rule = widget.rule ?? Rule(name: name, targetAccountId: targetAccountId, targetCategoryId: targetCategoryId);

@@ -1,7 +1,7 @@
 import 'package:fintracker/bloc/cubit/app_cubit.dart';
-import 'package:fintracker/config/constants.dart';
 import 'package:fintracker/helpers/color.helper.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProfileWidget extends StatefulWidget {
@@ -30,8 +30,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData theme = Theme.of(context);
-    AppCubit cubit = context.read<AppCubit>();
+    final ThemeData theme = Theme.of(context);
+    final AppCubit cubit = context.read<AppCubit>();
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -41,9 +41,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             children: [
               const Icon(Icons.account_balance_wallet, size: 70,),
               const SizedBox(height: 25,),
-              Text("Hi! welcome to ${AppConstants.appName}", style: theme.textTheme.headlineMedium?.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
+              Text(Strings.welcomeToAppFmt(Strings.appName), style: theme.textTheme.headlineMedium?.apply(color: theme.colorScheme.primary, fontWeightDelta: 1),),
               const SizedBox(height: 15,),
-              Text("What should we call you?", style: theme.textTheme.bodyLarge?.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface), fontWeightDelta: 1),),
+              Text(Strings.whatShouldWeCallYou, style: theme.textTheme.bodyLarge?.apply(color: ColorHelper.darken(theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface), fontWeightDelta: 1),),
               const SizedBox(height: 25,),
               TextFormField(
                 controller: _controller,
@@ -51,8 +51,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   filled: true,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
                   prefixIcon: const Icon(Icons.account_circle),
-                  hintText: "Enter your name",
-                  label: const Text("Name")
+                  hintText: Strings.enterYourName,
+                  label: const Text(Strings.name)
                 ),
               ),
             ],
@@ -62,14 +62,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           if(_controller.text.isEmpty){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter your name")));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.pleaseEnterYourName)));
           } else {
             await cubit.updateUsername(_controller.text);
             if (mounted) widget.onGetStarted();
           }
         },
         label: const Row(
-          children: <Widget>[Text("Next"), SizedBox(width: 10,), Icon(Icons.arrow_forward)],
+          children: <Widget>[Text(Strings.next), SizedBox(width: 10,), Icon(Icons.arrow_forward)],
         ),
       ),
     );

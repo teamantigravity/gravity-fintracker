@@ -53,7 +53,6 @@ class VoiceTransactionService {
           }
         },
         listenOptions: SpeechListenOptions(
-          listenMode: ListenMode.confirmation,
           cancelOnError: true,
         ),
       ).catchError((e) {
@@ -82,7 +81,7 @@ class VoiceTransactionService {
     }
 
     // Credit or debit
-    bool isCredit = lower.contains('income') || lower.contains('salary') || lower.contains('deposit') || lower.contains('received');
+    final bool isCredit = lower.contains('income') || lower.contains('salary') || lower.contains('deposit') || lower.contains('received');
     final type = isCredit ? 'CR' : 'DR';
 
     // Title: remove the matched amount and common words

@@ -7,6 +7,8 @@ import "package:flutter/foundation.dart" show kIsWeb;
 import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 import "package:path/path.dart";
+import "package:fintracker/config/app_date_formats.dart";
+import "package:fintracker/config/defaults.dart";
 import "package:fintracker/helpers/migrations/migrations.dart";
 import "package:sqflite/sqflite.dart";
 
@@ -177,7 +179,7 @@ Future<String> exportCsv({String? directory, String? filePath}) async {
   }
 
   final path = await getExternalDocumentPath(fallbackPath: directory);
-  String name = "gravity-fintracker-${DateFormat('yyyyMMdd-HHmmss').format(DateTime.now())}.csv";
+  String name = '${AppDefaults.csvFileNamePrefix}${DateFormat(AppDateFormats.fileNameDateTime).format(DateTime.now())}.csv';
   File file = File('$path/$name');
   await file.parent.create(recursive: true);
   await file.writeAsString(csvData);

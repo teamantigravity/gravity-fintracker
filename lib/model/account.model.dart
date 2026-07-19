@@ -29,25 +29,25 @@ class Account {
 
 
   factory Account.fromJson(Map<String, dynamic> data) => Account(
-    id: data["id"],
-    name: data["name"] ?? 'Unknown',
-    holderName: data["holderName"] ?? "",
-    accountNumber: data["accountNumber"] ?? "",
-    icon: data["icon"] is int ? IconHelper.lookup(data["icon"], fallback: Icons.account_balance) : Icons.account_balance,
-    color: data["color"] is int ? Color(data["color"]) : Colors.grey,
-    isDefault: data["isDefault"] == true || data["isDefault"] == 1,
-    income: (data["income"] as num?)?.toDouble(),
-    expense: (data["expense"] as num?)?.toDouble(),
-    balance: (data["balance"] as num?)?.toDouble(),
+    id: data['id'],
+    name: data['name'] ?? 'Unknown',
+    holderName: data['holderName'] ?? '',
+    accountNumber: data['accountNumber'] ?? '',
+    icon: data['icon'] is int ? IconHelper.lookup(data['icon'], fallback: Icons.account_balance) : Icons.account_balance,
+    color: data['color'] is int ? Color(data['color']) : Colors.grey,
+    isDefault: data['isDefault'] == true || data['isDefault'] == 1,
+    income: (data['income'] as num?)?.toDouble(),
+    expense: (data['expense'] as num?)?.toDouble(),
+    balance: (data['balance'] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "holderName": holderName,
-    "accountNumber": accountNumber,
-    "icon": icon.codePoint,
-    "color": color.toARGB32(),
-    "isDefault": (isDefault??false) ? 1:0
+    'id': id,
+    'name': name,
+    'holderName': holderName,
+    'accountNumber': accountNumber,
+    'icon': icon.codePoint,
+    'color': color.toARGB32(),
+    'isDefault': (isDefault??false) ? 1:0
   };
 }

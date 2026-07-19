@@ -21,7 +21,7 @@ class WhatIfService {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    double currentBalance = accounts.fold<double>(0, (s, a) => s + (a.balance ?? 0));
+    final double currentBalance = accounts.fold<double>(0, (s, a) => s + (a.balance ?? 0));
 
     final rangeStart = today.subtract(const Duration(days: 90));
     final creditDays = <String, double>{};
@@ -41,7 +41,7 @@ class WhatIfService {
     final adjustedDailyIncome = (dailyIncome + incomeDelta).clamp(0, double.infinity).toDouble();
     final adjustedDailyExpense = (dailyExpense + expenseDelta).clamp(0, double.infinity).toDouble();
 
-    List<DailyBalance> forecast = [];
+    final List<DailyBalance> forecast = [];
     double running = currentBalance;
     forecast.add(DailyBalance(date: today, balance: running));
 

@@ -8,6 +8,7 @@ import 'package:fintracker/screens/settings/settings.screen.dart';
 import 'package:fintracker/services/haptic_service.dart';
 import 'package:fintracker/ui/prism.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -18,23 +19,23 @@ class MainScreen extends StatefulWidget{
 }
 
 class MainScreenState extends State<MainScreen>{
-  final PageController _controller = PageController(keepPage: true);
+  final PageController _controller = PageController();
   int _selected = 0;
 
   final List<PrismBottomNavItem> _navItems = const [
-    PrismBottomNavItem(icon: Symbols.home, label: "Home"),
-    PrismBottomNavItem(icon: Symbols.wallet, label: "Accounts"),
-    PrismBottomNavItem(icon: Symbols.category, label: "Categories"),
-    PrismBottomNavItem(icon: Symbols.repeat, label: "Recurring"),
-    PrismBottomNavItem(icon: Symbols.settings, label: "Settings"),
+    PrismBottomNavItem(icon: Symbols.home, label: 'Home'),
+    PrismBottomNavItem(icon: Symbols.wallet, label: 'Accounts'),
+    PrismBottomNavItem(icon: Symbols.category, label: 'Categories'),
+    PrismBottomNavItem(icon: Symbols.repeat, label: 'Recurring'),
+    PrismBottomNavItem(icon: Symbols.settings, label: 'Settings'),
   ];
 
   final List<NavigationRailDestination> _railDestinations = const [
-    NavigationRailDestination(icon: Icon(Symbols.home, fill: 1,), label: Text("Home")),
-    NavigationRailDestination(icon: Icon(Symbols.wallet, fill: 1,), label: Text("Accounts")),
-    NavigationRailDestination(icon: Icon(Symbols.category, fill: 1,), label: Text("Categories")),
-    NavigationRailDestination(icon: Icon(Symbols.repeat, fill: 1,), label: Text("Recurring")),
-    NavigationRailDestination(icon: Icon(Symbols.settings, fill: 1,), label: Text("Settings")),
+    NavigationRailDestination(icon: Icon(Symbols.home, fill: 1,), label: Text(Strings.home)),
+    NavigationRailDestination(icon: Icon(Symbols.wallet, fill: 1,), label: Text(Strings.accounts)),
+    NavigationRailDestination(icon: Icon(Symbols.category, fill: 1,), label: Text(Strings.categories)),
+    NavigationRailDestination(icon: Icon(Symbols.repeat, fill: 1,), label: Text(Strings.recurring)),
+    NavigationRailDestination(icon: Icon(Symbols.settings, fill: 1,), label: Text(Strings.settings)),
   ];
 
   @override
@@ -90,7 +91,7 @@ class MainScreenState extends State<MainScreen>{
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(
       builder: (context, state){
-        AppCubit cubit = context.read<AppCubit>();
+        final AppCubit cubit = context.read<AppCubit>();
         if(cubit.state.currency == null || cubit.state.username == null){
           return const OnboardScreen();
         }

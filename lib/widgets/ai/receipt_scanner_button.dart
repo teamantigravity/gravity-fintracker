@@ -3,6 +3,7 @@ import 'package:fintracker/screens/payment_form.screen.dart';
 import 'package:fintracker/services/receipt_scanner_service.dart';
 import 'package:fintracker/services/subscription_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fintracker/config/strings.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../screens/premium/paywall.screen.dart';
@@ -22,13 +23,13 @@ class ReceiptScannerButton extends StatelessWidget {
     return IconButton(
       icon: const Icon(Symbols.receipt_long),
       onPressed: () => _scan(context),
-      tooltip: 'Scan receipt',
+      tooltip: Strings.scanReceipt,
     );
   }
 
   Future<void> _scan(BuildContext context) async {
     if (!ReceiptScannerService.isSupported) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt scanning is only available on mobile devices.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.receiptScanningIsOnlyAvailableOn)));
       return;
     }
 
@@ -40,12 +41,12 @@ class ReceiptScannerButton extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Symbols.camera_alt),
-              title: const Text('Camera'),
+              title: const Text(Strings.camera),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Symbols.photo_library),
-              title: const Text('Gallery'),
+              title: const Text(Strings.gallery),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
           ],
@@ -66,7 +67,7 @@ class ReceiptScannerButton extends StatelessWidget {
     }
 
     if (result.isEmpty) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No receipt details found. Please enter manually.')));
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(Strings.noReceiptDetailsFoundPleaseEnter)));
       return;
     }
 
